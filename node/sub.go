@@ -959,8 +959,34 @@ func generateProxyDeduplicationKey(proxy protocol.Proxy, protoType string, field
 	return strings.Join(parts, "|")
 }
 
+const defaultImportedECHResolver = "https://dns.alidns.com/dns-query"
+
 // GenerateProxyLink 从 Proxy 结构体生成节点链接
 func GenerateProxyLink(proxy protocol.Proxy) string {
+	if strings.EqualFold(proxy.Type, "vless") {
+		vless := protocol.ConvertProxyToVless(proxy)
+		if strings.TrimSpace(vless.Query.Ech) == "" {
+			enabled := true
+			if rawEnabled, ok := proxy.ECH_opts["enable"].(bool); ok {
+				enabled = rawEnabled
+			}
+			if enabled {
+				if queryServerName, ok := proxy.ECH_opts["query-server-name"].(string); ok {
+					queryServerName = strings.TrimSpace(queryServerName)
+					if queryServerName != "" {
+						vless.Query.Ech = queryServerName + "+" + defaultImportedECHResolver
+					}
+				}
+			}
+		}
+
+		if strings.TrimSpace(vless.Query.Ech) != "" {
+			vless.Name = strings.TrimSpace(vless.Name)
+			vless.Server = utils.WrapIPv6Host(vless.Server)
+			return protocol.EncodeVLESSURL(vless)
+		}
+	}
+
 	proxy.Name = strings.TrimSpace(proxy.Name)
 	proxy.Server = utils.WrapIPv6Host(proxy.Server)
 	link, err := protocol.EncodeProxyLink(proxy)

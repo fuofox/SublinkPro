@@ -90,3 +90,13 @@ func assertContains(t *testing.T, field string, str, substr string) {
 		t.Errorf("%s 应包含 [%s], 实际: [%s]", field, substr, str)
 	}
 }
+
+// AssertEqualString 导出版本，供其他测试包复用。
+func AssertEqualString(t *testing.T, field string, expected, actual string) {
+	assertEqualString(t, field, expected, actual)
+}
+
+// AssertContains 导出版本，供其他测试包复用。
+func AssertContains(t *testing.T, field string, str, substr string) {
+	assertContains(t, field, str, substr)
+}

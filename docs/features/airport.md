@@ -21,6 +21,7 @@ SublinkPro 提供了完善的机场订阅管理功能，不仅能将订阅转换
 - 当前已支持的 URL 顶层字段包括：`type`、`path`、`host`、`mode`、`extra`、`ech`。
 - `extra` 中已支持映射到 mihomo 的字段包括：`headers`、`noGRPCHeader`、`xPaddingBytes`、`downloadSettings` 及其已知子字段。
 - 顶层 `ech` 会优先映射到 mihomo 顶层 `ech-opts`：当值是固定 base64 ECHConfig 时写入 `config`，当值是 Xray 的 DNS / URI 风格时会按 mihomo 可表达的范围做最佳努力映射。
+- 当机场订阅本身是 Clash/mihomo YAML，且导入时只能从顶层 `ech-opts` 恢复出 `query-server-name` 时，系统会在保存节点链接前按本地兼容规则重建为 `ech=<query-server-name>+https://dns.alidns.com/dns-query`。
 - `extra.downloadSettings.echOpts` 仍只映射到 mihomo `xhttp-opts.download-settings.ech-opts`，不会和顶层 `ech-opts` 混写。
 - `xmux`、`sessionPlacement` 等在 Xray 侧存在但 mihomo 当前没有公开承载字段的扩展项，会被视为未支持，不会静默降级成 `http`、`h2` 或 `grpc`。
 
