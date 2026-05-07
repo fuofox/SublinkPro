@@ -244,7 +244,7 @@ func buildSyntheticErrorNodes(message string) []models.Node {
 }
 
 func buildSyntheticErrorLink(message string) string {
-	return protocol.EncodeSSURL(protocol.Ss{
+	link := protocol.EncodeSSURL(protocol.Ss{
 		Name:   message,
 		Server: "placeholder.invalid",
 		Port:   80,
@@ -253,6 +253,7 @@ func buildSyntheticErrorLink(message string) string {
 			Password: "placeholder",
 		},
 	})
+	return strings.Replace(link, "#"+url.QueryEscape(message), "#"+message, 1)
 }
 
 func buildSyntheticFallbackConfig() (string, error) {
@@ -416,11 +417,15 @@ func GetV2ray(c *gin.Context) {
 
 func renderPreparedV2ray(c *gin.Context, prepared preparedClientResponse) {
 	resolved, shouldWriteBody := prepareRendererResponse(c, prepared)
+	subName := resolved.SubName
+	filename := fmt.Sprintf("%s.txt", subName)
+	encodedFilename := url.QueryEscape(filename)
+	c.Writer.Header().Set("Content-Disposition", "inline; filename*=utf-8''"+encodedFilename)
+	c.Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if !shouldWriteBody {
 		return
 	}
 	sub := resolved.Subscription
-	subName := resolved.SubName
 	baselist := ""
 
 	for idx, v := range sub.Nodes {
@@ -465,11 +470,6 @@ func renderPreparedV2ray(c *gin.Context, prepared preparedClientResponse) {
 			baselist += nodeLink + "\n"
 		}
 	}
-	filename := fmt.Sprintf("%s.txt", subName)
-	encodedFilename := url.QueryEscape(filename)
-	c.Writer.Header().Set("Content-Disposition", "inline; filename*=utf-8''"+encodedFilename)
-	c.Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
-
 	// 执行脚本
 	for _, script := range sub.ScriptsWithSort {
 		res, err := utils.RunScript(script.Content, baselist, "v2ray")
@@ -519,11 +519,15 @@ func GetClash(c *gin.Context) {
 
 func renderPreparedClash(c *gin.Context, prepared preparedClientResponse) {
 	resolved, shouldWriteBody := prepareRendererResponse(c, prepared)
+	subName := resolved.SubName
+	filename := fmt.Sprintf("%s.yaml", subName)
+	encodedFilename := url.QueryEscape(filename)
+	c.Writer.Header().Set("Content-Disposition", "inline; filename*=utf-8''"+encodedFilename)
+	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if !shouldWriteBody {
 		return
 	}
 	sub := resolved.Subscription
-	subName := resolved.SubName
 	var urls []protocol.Urls
 
 	// 获取链式代理规则
@@ -674,11 +678,6 @@ func renderPreparedClash(c *gin.Context, prepared preparedClientResponse) {
 		c.Writer.WriteString(err.Error())
 		return
 	}
-	filename := fmt.Sprintf("%s.yaml", subName)
-	encodedFilename := url.QueryEscape(filename)
-	c.Writer.Header().Set("Content-Disposition", "inline; filename*=utf-8''"+encodedFilename)
-	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
-
 	// 执行脚本
 	for _, script := range sub.ScriptsWithSort {
 		res, err := utils.RunScript(script.Content, string(DecodeClash), "clash")
@@ -712,11 +711,15 @@ func GetSurge(c *gin.Context) {
 
 func renderPreparedSurge(c *gin.Context, prepared preparedClientResponse) {
 	resolved, shouldWriteBody := prepareRendererResponse(c, prepared)
+	subName := resolved.SubName
+	filename := fmt.Sprintf("%s.conf", subName)
+	encodedFilename := url.QueryEscape(filename)
+	c.Writer.Header().Set("Content-Disposition", "inline; filename*=utf-8''"+encodedFilename)
+	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if !shouldWriteBody {
 		return
 	}
 	sub := resolved.Subscription
-	subName := resolved.SubName
 	urls := []string{}
 	for idx, v := range sub.Nodes {
 		// 应用预处理规则到 LinkName
@@ -768,11 +771,6 @@ func renderPreparedSurge(c *gin.Context, prepared preparedClientResponse) {
 		c.Writer.WriteString(err.Error())
 		return
 	}
-	filename := fmt.Sprintf("%s.conf", subName)
-	encodedFilename := url.QueryEscape(filename)
-	c.Writer.Header().Set("Content-Disposition", "inline; filename*=utf-8''"+encodedFilename)
-	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
-
 	host := c.Request.Host
 	url := c.Request.URL.String()
 	// 如果包含头部更新信息
