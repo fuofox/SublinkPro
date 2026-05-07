@@ -47,6 +47,36 @@ type ProtocolMeta struct {
 	Fields []FieldMeta `json:"fields"`
 }
 
+const (
+	ClientClash  = "clash"
+	ClientMihomo = "mihomo"
+	ClientV2ray  = "v2ray"
+	ClientSurge  = "surge"
+)
+
+type clientSupportSet map[string]struct{}
+
+func newClientSupport(clients ...string) clientSupportSet {
+	support := make(clientSupportSet, len(clients))
+	for _, client := range clients {
+		client = normalizeClientName(client)
+		if client == "" {
+			continue
+		}
+		support[client] = struct{}{}
+	}
+	return support
+}
+
+func (s clientSupportSet) supports(client string) bool {
+	_, ok := s[normalizeClientName(client)]
+	return ok
+}
+
+func normalizeClientName(client string) string {
+	return strings.ToLower(strings.TrimSpace(client))
+}
+
 // LinkIdentity 表示从节点链接中提取出的规范化识别信息。
 type LinkIdentity struct {
 	// Protocol 是已注册的协议名称；通过 ExtractLinkIdentity 提取时，若协议实现未填写，该字段会被自动补齐。
@@ -75,6 +105,7 @@ type Protocol interface {
 	DecodeLink(string) (interface{}, error)
 	EncodeLink(interface{}) (string, error)
 	ExtractIdentity(interface{}) (LinkIdentity, error)
+	SupportsClient(string) bool
 }
 
 // ProxyCapable 表示协议支持与通用 Proxy 结构互相转换。
@@ -92,17 +123,20 @@ type SurgeCapable interface {
 
 // ProtocolSpec 是 Protocol 的通用实现，适用于通过函数组合注册协议元信息的场景。
 type ProtocolSpec struct {
-	name          string
-	aliases       []string
-	label         string
-	color         string
-	icon          string
-	prototype     interface{}
-	fields        []FieldMeta
-	nameFieldPath string
-	decode        func(string) (interface{}, error)
-	encode        func(interface{}) (string, error)
-	identity      func(interface{}) (LinkIdentity, error)
+	name                  string
+	aliases               []string
+	label                 string
+	color                 string
+	icon                  string
+	prototype             interface{}
+	fields                []FieldMeta
+	nameFieldPath         string
+	clientSupport         clientSupportSet
+	clientSupportExplicit bool
+	clientSupportAliases  []string
+	decode                func(string) (interface{}, error)
+	encode                func(interface{}) (string, error)
+	identity              func(interface{}) (LinkIdentity, error)
 }
 
 func (p *ProtocolSpec) Name() string {
@@ -138,6 +172,54 @@ func (p *ProtocolSpec) Fields() []FieldMeta {
 
 func (p *ProtocolSpec) NameFieldPath() string {
 	return p.nameFieldPath
+}
+
+// SupportsClient reports whether this protocol should be emitted for the named client.
+func (p *ProtocolSpec) SupportsClient(client string) bool {
+	if p == nil {
+		return false
+	}
+	return p.clientSupport.supports(client)
+}
+
+// WithClientSupport replaces the default client compatibility declaration for a protocol.
+// It is intended to be called from the protocol registration file when a protocol has
+// narrower or broader client support than its constructor default.
+func (p *ProtocolSpec) WithClientSupport(clients ...string) *ProtocolSpec {
+	if p == nil {
+		return p
+	}
+	p.clientSupport = newClientSupport(clients...)
+	p.clientSupportExplicit = true
+	return p
+}
+
+// WithClientSupportAliases adds link prefixes that should only participate in client
+// compatibility detection. These aliases are not registered for full decode/import.
+func (p *ProtocolSpec) WithClientSupportAliases(aliases ...string) *ProtocolSpec {
+	if p == nil {
+		return p
+	}
+	for _, alias := range aliases {
+		if normalized := normalizeAlias(alias); normalized != "" {
+			p.clientSupportAliases = append(p.clientSupportAliases, normalized)
+		}
+	}
+	return p
+}
+
+func (p *ProtocolSpec) ClientSupportAliases() []string {
+	if p == nil {
+		return nil
+	}
+	return append([]string(nil), p.clientSupportAliases...)
+}
+
+func (p *ProtocolSpec) applyDefaultClientSupport(clients ...string) {
+	if p == nil || p.clientSupportExplicit {
+		return
+	}
+	p.clientSupport = newClientSupport(clients...)
 }
 
 // DecodeLink 使用协议自身的解码函数解析链接；当协议未提供解码能力时返回错误。
@@ -326,6 +408,25 @@ func detectProtocol(link string) Protocol {
 	return nil
 }
 
+func detectProtocolByClientSupportAlias(link string) Protocol {
+	registryMu.RLock()
+	defer registryMu.RUnlock()
+
+	linkLower := strings.ToLower(strings.TrimSpace(link))
+	for _, protocol := range protocolList {
+		aliasProvider, ok := protocol.(interface{ ClientSupportAliases() []string })
+		if !ok {
+			continue
+		}
+		for _, alias := range aliasProvider.ClientSupportAliases() {
+			if strings.HasPrefix(linkLower, alias) {
+				return protocol
+			}
+		}
+	}
+	return nil
+}
+
 func getProxyProtocol(proxy Proxy) ProxyCapable {
 	registryMu.RLock()
 	defer registryMu.RUnlock()
@@ -402,6 +503,7 @@ func newProtocolSpec[T any](
 		prototype:     prototype,
 		fields:        append([]FieldMeta(nil), fieldMetas...),
 		nameFieldPath: nameFieldPath,
+		clientSupport: newClientSupport(ClientV2ray),
 		decode: func(link string) (interface{}, error) {
 			return decode(link)
 		},
@@ -430,6 +532,7 @@ func newProxyProtocolSpec[T any](
 	convert func(Proxy) T,
 	encode func(T) string,
 ) *ProxyProtocolSpec {
+	base.applyDefaultClientSupport(ClientClash, ClientMihomo, ClientV2ray)
 	return &ProxyProtocolSpec{
 		ProtocolSpec:   base,
 		toProxy:        toProxy,
@@ -449,10 +552,38 @@ func newProxySurgeProtocolSpec[T any](
 	encode func(T) string,
 	toSurgeLine func(string, OutputConfig) (string, string, error),
 ) *ProxySurgeProtocolSpec {
+	proxyProtocol := newProxyProtocolSpec(base, toProxy, canHandle, convert, encode)
+	base.applyDefaultClientSupport(ClientClash, ClientMihomo, ClientV2ray, ClientSurge)
 	return &ProxySurgeProtocolSpec{
-		ProxyProtocolSpec: newProxyProtocolSpec(base, toProxy, canHandle, convert, encode),
+		ProxyProtocolSpec: proxyProtocol,
 		toSurgeLine:       toSurgeLine,
 	}
+}
+
+// ProtocolSupportsClient reports whether a registered protocol supports a client.
+func ProtocolSupportsClient(protocolName, client string) bool {
+	protocol := getProtocolByName(protocolName)
+	if protocol == nil {
+		return false
+	}
+	return protocol.SupportsClient(client)
+}
+
+// SupportsClientForLink reports whether a link should be emitted for a client.
+// Unknown links are treated as supported to preserve raw-link subscription behavior.
+func SupportsClientForLink(link, client string) bool {
+	if strings.TrimSpace(link) == "" {
+		return false
+	}
+
+	protocol := detectProtocol(link)
+	if protocol == nil {
+		protocol = detectProtocolByClientSupportAlias(link)
+	}
+	if protocol == nil {
+		return true
+	}
+	return protocol.SupportsClient(client)
 }
 
 // InitProtocolMeta 在缓存脏标记存在时重建协议元数据缓存。

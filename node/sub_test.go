@@ -6,6 +6,8 @@ import (
 	"sublink/models"
 	"sublink/node/protocol"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestGenerateProxyLinkReconstructsDNSStyleECH(t *testing.T) {
@@ -162,5 +164,46 @@ func TestApplyAirportIntraNodeUniquifyCanNumberWithoutPrefix(t *testing.T) {
 	want := []string{"香港节点-01-1", "香港节点-01-2", "日本节点-01"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("无前缀时机场内编号结果不匹配: got=%v want=%v", got, want)
+	}
+}
+
+func TestGenerateProxyLinkRoundTripsMieruClashYAML(t *testing.T) {
+	var config ClashConfig
+	if err := yaml.Unmarshal([]byte(`proxies:
+  - name: mieru-import
+    type: mieru
+    server: mieru.example.com
+    port-range: 2090-2099
+    transport: TCP
+    username: user
+    password: password
+    multiplexing: MULTIPLEXING_LOW
+    traffic-pattern: dGVzdA==
+`), &config); err != nil {
+		t.Fatalf("yaml unmarshal failed: %v", err)
+	}
+	if len(config.Proxies) != 1 {
+		t.Fatalf("proxy count = %d, want 1", len(config.Proxies))
+	}
+
+	link := GenerateProxyLink(config.Proxies[0])
+	if link == "" {
+		t.Fatal("GenerateProxyLink returned empty link")
+	}
+	decoded, err := protocol.DecodeMieruURL(link)
+	if err != nil {
+		t.Fatalf("DecodeMieruURL failed: %v", err)
+	}
+	if decoded.PortRange != "2090-2099" {
+		t.Fatalf("port range = %q, want 2090-2099", decoded.PortRange)
+	}
+	if decoded.Transport != "TCP" {
+		t.Fatalf("transport = %q, want TCP", decoded.Transport)
+	}
+	if decoded.Multiplexing != "MULTIPLEXING_LOW" {
+		t.Fatalf("multiplexing = %q, want MULTIPLEXING_LOW", decoded.Multiplexing)
+	}
+	if decoded.TrafficPattern != "dGVzdA==" {
+		t.Fatalf("traffic pattern = %q, want dGVzdA==", decoded.TrafficPattern)
 	}
 }

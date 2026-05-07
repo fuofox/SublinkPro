@@ -438,7 +438,10 @@ func renderPreparedV2ray(c *gin.Context, prepared preparedClientResponse) {
 					links[i] = buildRenamedNodeLink(v, processedLinkName, sub.NodeNameRule, link, idx+1)
 				}
 			}
-			baselist += strings.Join(links, "\n") + "\n"
+			compatibleLinks := filterV2rayCompatibleLinks(links)
+			if len(compatibleLinks) > 0 {
+				baselist += strings.Join(compatibleLinks, "\n") + "\n"
+			}
 			continue
 		//如果是订阅转换（以 http:// 或 https:// 开头，但不是HTTP/HTTPS代理节点）
 		case (strings.HasPrefix(v.Link, "http://") || strings.HasPrefix(v.Link, "https://")) && !protocol.IsHTTPLink(v.Link):
@@ -450,9 +453,15 @@ func renderPreparedV2ray(c *gin.Context, prepared preparedClientResponse) {
 			defer resp.Body.Close()
 			body, _ := io.ReadAll(resp.Body)
 			nodes := utils.Base64Decode(string(body))
-			baselist += nodes + "\n"
+			compatibleLinks := filterV2rayCompatibleLinks(strings.Split(nodes, "\n"))
+			if len(compatibleLinks) > 0 {
+				baselist += strings.Join(compatibleLinks, "\n") + "\n"
+			}
 		// 默认
 		default:
+			if shouldSkipV2rayLink(nodeLink) {
+				continue
+			}
 			baselist += nodeLink + "\n"
 		}
 	}
@@ -472,6 +481,23 @@ func renderPreparedV2ray(c *gin.Context, prepared preparedClientResponse) {
 	}
 	c.Writer.WriteString(utils.Base64Encode(baselist))
 }
+
+func filterV2rayCompatibleLinks(links []string) []string {
+	filtered := make([]string, 0, len(links))
+	for _, link := range links {
+		link = strings.TrimSpace(link)
+		if link == "" || shouldSkipV2rayLink(link) {
+			continue
+		}
+		filtered = append(filtered, link)
+	}
+	return filtered
+}
+
+func shouldSkipV2rayLink(link string) bool {
+	return !protocol.SupportsClientForLink(link, protocol.ClientV2ray)
+}
+
 func GetClash(c *gin.Context) {
 	subName, ok := resolvedSubscriptionNameOrWriteError(c)
 	if !ok {

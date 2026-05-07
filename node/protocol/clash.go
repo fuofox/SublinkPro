@@ -53,15 +53,25 @@ func (fp FlexPort) Int() int {
 	return int(fp)
 }
 
+// IsZero lets YAML omitempty suppress absent ports for protocols that use
+// alternative port fields such as Mieru port-range.
+func (fp FlexPort) IsZero() bool {
+	return fp == 0
+}
+
 type Proxy struct {
 	Name                  string                 `yaml:"name,omitempty"`                  // 节点名称
 	Type                  string                 `yaml:"type,omitempty"`                  // 代理类型 (ss, vmess, trojan, etc.)
 	Server                string                 `yaml:"server,omitempty"`                // 服务器地址
 	Port                  FlexPort               `yaml:"port,omitempty"`                  // 服务器端口
+	PortRange             string                 `yaml:"port-range,omitempty"`            // 端口范围 (Mieru)
 	Ports                 string                 `yaml:"ports,omitempty"`                 // hysteria2端口跳跃
+	Transport             string                 `yaml:"transport,omitempty"`             // 传输协议 (Mieru TCP/UDP)
 	Cipher                string                 `yaml:"cipher,omitempty"`                // 加密方式
 	Username              string                 `yaml:"username,omitempty"`              // 用户名 (socks5 等)
 	Password              string                 `yaml:"password,omitempty"`              // 密码
+	Multiplexing          string                 `yaml:"multiplexing,omitempty"`          // Mieru 多路复用级别
+	TrafficPattern        string                 `yaml:"traffic-pattern,omitempty"`       // Mieru 流量模式
 	Client_fingerprint    string                 `yaml:"client-fingerprint,omitempty"`    // 客户端指纹 (uTLS)
 	Tfo                   bool                   `yaml:"tfo,omitempty"`                   // TCP Fast Open
 	Udp                   bool                   `yaml:"udp,omitempty"`                   // 是否启用 UDP

@@ -201,6 +201,7 @@ CGO_ENABLED=0 go build -tags=prod -ldflags="-s -w" -o sublinkPro
 - `Protocol`：核心协议规范
 - `ProxyCapable`：支持 Clash Proxy 结构体转换
 - `SurgeCapable`：支持 Surge 行导出
+- `SupportsClient(...)`：声明协议对 Clash / mihomo / v2ray / Surge 等客户端的订阅输出兼容性
 - `MustRegisterProtocol(...)`：协议注册入口
 
 新增协议后，以下链路会自动接入，不需要再去额外补 switch：
@@ -214,6 +215,7 @@ CGO_ENABLED=0 go build -tags=prod -ldflags="-s -w" -o sublinkPro
 - `LinkToProxy` 分发
 - `EncodeSurge` 分发
 - `EncodeProxyLink` 分发
+- v2ray raw 输出兼容性过滤（通过协议文件内声明的客户端支持能力）
 - 协议 UI 元数据输出
 
 ### 新增协议的推荐步骤
@@ -243,6 +245,15 @@ CGO_ENABLED=0 go build -tags=prod -ldflags="-s -w" -o sublinkPro
 
 7. 在同一个文件里 `init()` 自注册。
 
+8. 在协议文件内声明客户端兼容性；默认规则如下：
+
+   - `newProtocolSpec(...)` 默认支持 `ClientV2ray`。
+   - `newProxyProtocolSpec(...)` 默认支持 `ClientClash`、`ClientMihomo`、`ClientV2ray`。
+   - `newProxySurgeProtocolSpec(...)` 默认支持 `ClientClash`、`ClientMihomo`、`ClientV2ray`、`ClientSurge`。
+   - 如果协议只适合部分客户端，在 `base` 上调用 `WithClientSupport(...)` 覆盖默认值，例如 Mieru 只声明 `ClientClash` 与 `ClientMihomo`，因此 v2ray / Surge 输出会跳过它。
+
+   可用客户端常量当前包括：`ClientClash`、`ClientMihomo`、`ClientV2ray`、`ClientSurge`。新增客户端渲染器前，不要只在 `api/clients.go` 写协议特例，应先让协议注册文件声明支持关系。
+
 ### 标准注册模板
 
 ```go
@@ -262,6 +273,9 @@ func init() {
         },
         // 可选：手工字段 schema，若不传则从结构体反射生成
     )
+
+    // 可选：覆盖客户端兼容性；不写则使用构造器默认值。
+    // base = base.WithClientSupport(ClientClash, ClientMihomo)
 
     MustRegisterProtocol(newProxySurgeProtocolSpec(
         base,
@@ -283,6 +297,8 @@ MustRegisterProtocol(newProxyProtocolSpec(...))
 ```
 
 如果协议只是演示协议、只需要解析和 UI 元数据，也可以只注册 `newProtocolSpec(...)`。
+
+如果协议有不适合完整 Decode / Import 的额外分享链接前缀，但仍需要参与客户端兼容性判断，可以使用 `WithClientSupportAliases(...)` 增加“仅兼容性检测”的 alias。这样不会把该前缀注册成完整协议解析入口；例如 Mieru 对 `mierus://` 只用于判断 v2ray 不应输出，并不会声明已支持官方 `mierus://` 分享链接的逐字段解析。
 
 ### VLESS XHTTP 映射约定
 

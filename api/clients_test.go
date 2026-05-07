@@ -12,6 +12,7 @@ import (
 	"sublink/database"
 	"sublink/internal/testutil"
 	"sublink/models"
+	"sublink/node/protocol"
 	"sublink/utils"
 
 	"github.com/gin-gonic/gin"
@@ -207,6 +208,89 @@ func performClientRequest(t *testing.T, method, path string) *httptest.ResponseR
 	context.Request = httptest.NewRequest(method, path, nil)
 	GetClient(context)
 	return recorder
+}
+
+func TestRenderPreparedV2raySkipsProtocolUnsupportedLinks(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	context, _ := gin.CreateTestContext(recorder)
+	context.Request = httptest.NewRequest(http.MethodGet, "/c/?client=v2ray", nil)
+
+	prepared := preparedClientResponse{
+		ClientType: "v2ray",
+		Mode:       clientResponseNormal,
+		SubName:    "mieru-skip",
+		Subscription: models.Subcription{
+			Name:                  "mieru-skip",
+			RefreshUsageOnRequest: false,
+			Nodes: []models.Node{
+				{
+					Name:     "mieru-node",
+					LinkName: "mieru-node",
+					Link:     "mieru://user:password@mieru.example.com:2999?transport=TCP#m",
+					Protocol: "mieru",
+				},
+				{
+					Name:     "ss-node",
+					LinkName: "ss-node",
+					Link:     "ss://YWVzLTEyOC1nY206cGFzc0BleGFtcGxlLmNvbTo0NDM=#ss-node",
+					Protocol: "ss",
+				},
+				{
+					Name:     "official-mieru-node",
+					LinkName: "official-mieru-node",
+					Link:     "mierus://official.example.com:2999?profile=raw#official",
+					Protocol: "mieru",
+				},
+				{
+					Name:     "unknown-node",
+					LinkName: "unknown-node",
+					Link:     "unknown-protocol://example.com/raw#unknown",
+					Protocol: "other",
+				},
+				{
+					Name:     "mixed-node",
+					LinkName: "mixed-node",
+					Link:     "mieru://user:password@range.example.com?portRange=2090-2099&transport=UDP#range,ss://YWVzLTEyOC1nY206cGFzczJAZXhhbXBsZS5jb206NDQ0#ss-two",
+					Protocol: "ss",
+				},
+			},
+		},
+	}
+
+	renderPreparedV2ray(context, prepared)
+	decoded := utils.Base64Decode(recorder.Body.String())
+	if strings.Contains(decoded, "mieru://") || strings.Contains(decoded, "mierus://") {
+		t.Fatalf("v2ray output leaked mieru link: %s", decoded)
+	}
+	if !strings.Contains(decoded, "ss://") {
+		t.Fatalf("v2ray output should keep supported raw links: %s", decoded)
+	}
+	if !strings.Contains(decoded, "unknown-protocol://example.com/raw#unknown") {
+		t.Fatalf("v2ray output should preserve unregistered raw links: %s", decoded)
+	}
+}
+
+func TestShouldSkipV2rayLinkUsesProtocolClientSupport(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		link string
+		skip bool
+	}{
+		{name: "mieru unsupported", link: "mieru://user:password@mieru.example.com:2999?transport=TCP#m", skip: true},
+		{name: "mierus support alias unsupported", link: "mierus://official.example.com:2999?profile=raw#m", skip: true},
+		{name: "ss default supported", link: "ss://YWVzLTEyOC1nY206cGFzc0BleGFtcGxlLmNvbTo0NDM=#ss-node", skip: false},
+		{name: "unknown raw preserved", link: "unknown-protocol://example.com/raw#unknown", skip: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := shouldSkipV2rayLink(tc.link); got != tc.skip {
+				t.Fatalf("shouldSkipV2rayLink() = %v, want %v", got, tc.skip)
+			}
+			if got := !protocol.SupportsClientForLink(tc.link, protocol.ClientV2ray); got != tc.skip {
+				t.Fatalf("protocol support decision = %v, want %v", got, tc.skip)
+			}
+		})
+	}
 }
 
 func TestGetClientConcurrentRequestsKeepSubscriptionScoped(t *testing.T) {
