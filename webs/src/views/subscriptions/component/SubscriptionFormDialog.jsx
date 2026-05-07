@@ -398,6 +398,22 @@ export default function SubscriptionFormDialog({
     backgroundImage: accordionDetailsSurface
   };
 
+  const autocompleteChipSx = {
+    '& .MuiAutocomplete-tag': {
+      bgcolor: isDark ? withAlpha(palette.primary.main, 0.16) : undefined,
+      color: isDark ? primaryText : undefined,
+      border: isDark ? '1px solid' : undefined,
+      borderColor: isDark ? withAlpha(palette.primary.main, 0.3) : undefined,
+      '& .MuiChip-deleteIcon': {
+        color: isDark ? withAlpha(palette.primary.main, 0.7) : undefined,
+        transition: 'color 0.2s',
+        '&:hover': {
+          color: isDark ? palette.primary.main : undefined
+        }
+      }
+    }
+  };
+
   return (
     <Dialog
       open={open}
@@ -593,6 +609,7 @@ export default function SubscriptionFormDialog({
                     options={groupOptions}
                     value={formData.selectedGroups}
                     onChange={(e, newValue) => setFormData({ ...formData, selectedGroups: newValue })}
+                    sx={autocompleteChipSx}
                     renderInput={(params) => <TextField {...params} label="选择分组（动态）" />}
                     renderOption={(props, option) => (
                       <li {...props}>
@@ -1169,6 +1186,7 @@ export default function SubscriptionFormDialog({
                   getOptionLabel={(option) => `${option.name} (${option.version})`}
                   value={scripts.filter((s) => formData.selectedScripts.includes(s.id))}
                   onChange={(e, newValue) => setFormData({ ...formData, selectedScripts: newValue.map((s) => s.id) })}
+                  sx={autocompleteChipSx}
                   renderInput={(params) => (
                     <TextField {...params} label="数据处理脚本" helperText="脚本将在查询到节点数据后运行，多个脚本按顺序执行" />
                   )}
