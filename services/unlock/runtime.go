@@ -67,6 +67,14 @@ func createUnlockHTTPClient(proxyAdapter constant.Proxy, timeout time.Duration) 
 }
 
 func fetchUnlockProbe(runtime UnlockRuntime, target string, headers map[string]string) (*unlockHTTPResponse, error) {
+	return fetchUnlockProbeWithBodyLimit(runtime, target, headers, 32*1024)
+}
+
+func fetchUnlockProbeWithBodyLimit(runtime UnlockRuntime, target string, headers map[string]string, bodyLimit int64) (*unlockHTTPResponse, error) {
+	if bodyLimit <= 0 {
+		bodyLimit = 32 * 1024
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), runtime.Timeout)
 	defer cancel()
 
@@ -89,7 +97,7 @@ func fetchUnlockProbe(runtime UnlockRuntime, target string, headers map[string]s
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 32*1024))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, bodyLimit))
 	if err != nil {
 		return nil, err
 	}

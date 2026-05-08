@@ -3,8 +3,20 @@ package unlock
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"sublink/models"
 )
+
+const geminiUnlockProbeBodyLimit = 512 * 1024
+
+var geminiRestrictedMarkers = []string{
+	"gemini isn't available in your country",
+	"gemini is not available in your country",
+	"gemini isn't available in your region",
+	"gemini is not available in your region",
+	"not available in your country",
+	"not available in your region",
+}
 
 type geminiUnlockChecker struct{}
 
@@ -24,12 +36,22 @@ func (geminiUnlockChecker) Check(runtime UnlockRuntime) models.UnlockProviderRes
 	if runtime.LandingCountry == "CN" {
 		return models.UnlockProviderResult{Provider: models.UnlockProviderGemini, Status: models.UnlockStatusRestricted, Region: runtime.LandingCountry, Reason: "workspace_only_region"}
 	}
-	resp, err := fetchUnlockProbe(runtime, "https://gemini.google.com/", nil)
+	resp, err := fetchUnlockProbeWithBodyLimit(runtime, "https://gemini.google.com/", nil, geminiUnlockProbeBodyLimit)
 	if err != nil {
 		return models.UnlockProviderResult{Provider: models.UnlockProviderGemini, Status: models.UnlockStatusError, Region: runtime.LandingCountry, Reason: err.Error()}
 	}
+	return evaluateGeminiUnlockProbe(runtime, resp)
+}
+
+func evaluateGeminiUnlockProbe(runtime UnlockRuntime, resp *unlockHTTPResponse) models.UnlockProviderResult {
 	if resp.StatusCode >= 200 && resp.StatusCode < 400 {
-		return models.UnlockProviderResult{Provider: models.UnlockProviderGemini, Status: models.UnlockStatusReachable, Region: runtime.LandingCountry}
+		if strings.Contains(resp.Body, "45631641,null,true") {
+			return models.UnlockProviderResult{Provider: models.UnlockProviderGemini, Status: models.UnlockStatusAvailable, Region: runtime.LandingCountry}
+		}
+		if containsAny(resp.Body, geminiRestrictedMarkers) {
+			return models.UnlockProviderResult{Provider: models.UnlockProviderGemini, Status: models.UnlockStatusRestricted, Region: runtime.LandingCountry, Reason: "region_blocked"}
+		}
+		return models.UnlockProviderResult{Provider: models.UnlockProviderGemini, Status: models.UnlockStatusRestricted, Region: runtime.LandingCountry, Reason: "gemini_marker_missing"}
 	}
 	if resp.StatusCode == http.StatusForbidden {
 		return models.UnlockProviderResult{Provider: models.UnlockProviderGemini, Status: models.UnlockStatusRestricted, Region: runtime.LandingCountry, Reason: "status_403"}
