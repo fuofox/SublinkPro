@@ -1,6 +1,7 @@
 package unlock
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"io"
@@ -24,6 +25,7 @@ type unlockHTTPResponse struct {
 	StatusCode int
 	FinalURL   string
 	Body       string
+	RawBody    string
 	Header     http.Header
 }
 
@@ -71,6 +73,10 @@ func fetchUnlockProbe(runtime UnlockRuntime, target string, headers map[string]s
 }
 
 func fetchUnlockProbeWithBodyLimit(runtime UnlockRuntime, target string, headers map[string]string, bodyLimit int64) (*unlockHTTPResponse, error) {
+	return fetchUnlockRequest(runtime, http.MethodGet, target, headers, nil, bodyLimit)
+}
+
+func fetchUnlockRequest(runtime UnlockRuntime, method string, target string, headers map[string]string, body []byte, bodyLimit int64) (*unlockHTTPResponse, error) {
 	if bodyLimit <= 0 {
 		bodyLimit = 32 * 1024
 	}
@@ -78,7 +84,7 @@ func fetchUnlockProbeWithBodyLimit(runtime UnlockRuntime, target string, headers
 	ctx, cancel := context.WithTimeout(context.Background(), runtime.Timeout)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	req, err := http.NewRequestWithContext(ctx, method, target, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -97,15 +103,16 @@ func fetchUnlockProbeWithBodyLimit(runtime UnlockRuntime, target string, headers
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(io.LimitReader(resp.Body, bodyLimit))
+	bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, bodyLimit))
 	if err != nil {
 		return nil, err
 	}
+	bodyText := string(bodyBytes)
 	finalURL := target
 	if resp.Request != nil && resp.Request.URL != nil {
 		finalURL = resp.Request.URL.String()
 	}
-	return &unlockHTTPResponse{StatusCode: resp.StatusCode, FinalURL: finalURL, Body: strings.ToLower(string(body)), Header: resp.Header.Clone()}, nil
+	return &unlockHTTPResponse{StatusCode: resp.StatusCode, FinalURL: finalURL, Body: strings.ToLower(bodyText), RawBody: bodyText, Header: resp.Header.Clone()}, nil
 }
 
 func containsAny(text string, needles []string) bool {

@@ -24,7 +24,7 @@ SublinkPro 现在支持在节点检测流程中附带执行 **流媒体 / AI 服
 - Claude
 
 > [!NOTE]
-> 当前版本优先追求 **可维护性、运行效率和稳定性**，因此首版主要使用低成本 HTTP 探测与区域可用性判断，不依赖外部脚本、浏览器自动化或复杂登录流程。
+> 当前内置 Provider 会尽量采用与主流解锁检测脚本一致的服务级探针：例如 OpenAI 会分别检查 Web / iOS 入口，Disney+ 会走设备、令牌与地区 GraphQL 探针，YouTube Premium、Gemini、Claude、Netflix 也会读取对应页面或最终跳转中的可用性标记。
 >
 > 上面的列表表示**当前内置** Provider，而不是前端或规则系统中的固定枚举。新增 checker 后，相关 Provider 选择器和 unlock 条件会通过后端元数据自动更新。
 
@@ -74,7 +74,7 @@ SublinkPro 现在支持在节点检测流程中附带执行 **流媒体 / AI 服
   - 表示同一条解锁结果必须同时满足这三个条件
 - 多条规则：
   - `Gemini + 解锁`
-  - `YouTube Premium + 直连`
+  - `YouTube Premium + 解锁`
   - 在 OR 模式下：满足其中任意一条即可通过筛选
   - 在 AND 模式下：需要同时满足全部规则
 
@@ -88,7 +88,7 @@ SublinkPro 现在支持在节点检测流程中附带执行 **流媒体 / AI 服
 
 推荐：
 
-- `$Unlock(provider)`：按具体 Provider 输出紧凑结果，例如 `$Unlock(openai)` → `直连-US`
+- `$Unlock(provider)`：按具体 Provider 输出紧凑结果，例如 `$Unlock(openai)` → `解锁-US`
 - `$Unlock`：主解锁摘要，例如 `Netflix-解锁-US-+2`
 
 不建议把多个平台的详细结果全部拼进节点名称，否则会导致名称过长、难读、难搜索。
@@ -96,8 +96,8 @@ SublinkPro 现在支持在节点检测流程中附带执行 **流媒体 / AI 服
 这适合以下场景：
 
 - 想找“Gemini 解锁”的节点
-- 想找“Gemini 解锁 或 YouTube Premium 直连”的节点
-- 想找“Claude 直连且带 US 关键词”的节点
+- 想找“Gemini 解锁 或 YouTube Premium 解锁”的节点
+- 想找“Claude 解锁且带 US 关键词”的节点
 
 ---
 
@@ -126,8 +126,9 @@ SublinkPro 现在支持在节点检测流程中附带执行 **流媒体 / AI 服
 > [!IMPORTANT]
 > `reachable` 与 `available` 不完全等价。
 > 
-> 对部分 AI 或媒体平台，首版只提供“该地区是否可进入 / 可访问”的可维护判定，而不是模拟完整登录后真实业务调用。
+> Provider 返回 `available` 时表示检测到了该服务对应的解锁标记或 API 可用性结果；`reachable` 仅表示入口可达，不应视为完整解锁。
 > Gemini 检测会进一步读取页面内的功能可用性标记；只有出现明确可用标记时才判定为 `available`，未找到该标记时按 `restricted` 处理，避免把地域受限但仍返回 HTTP 成功的页面误判为“解锁”。
+> OpenAI 的 `partial` 表示上游检测语义中的“Only Available with Web Browser”或“Only Available with Mobile APP”；Disney+ 的 `partial` 表示该地区处于 `Available Soon` 状态；Netflix 的 `partial` 表示 Originals Only。
 
 ---
 

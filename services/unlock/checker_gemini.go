@@ -7,7 +7,7 @@ import (
 	"sublink/models"
 )
 
-const geminiUnlockProbeBodyLimit = 512 * 1024
+const geminiUnlockProbeBodyLimit = 1024 * 1024
 
 var geminiRestrictedMarkers = []string{
 	"gemini isn't available in your country",

@@ -22,18 +22,26 @@ func (claudeUnlockChecker) RenameVariableMeta() models.UnlockRenameVariableMeta 
 }
 
 func (claudeUnlockChecker) Check(runtime UnlockRuntime) models.UnlockProviderResult {
-	if runtime.LandingCountry != "" && !isClaudeSupportedCountry(runtime.LandingCountry) {
-		return models.UnlockProviderResult{Provider: models.UnlockProviderClaude, Status: models.UnlockStatusRestricted, Region: runtime.LandingCountry, Reason: "unsupported_country"}
-	}
 	resp, err := fetchUnlockProbe(runtime, "https://claude.ai/", nil)
 	if err != nil {
 		return models.UnlockProviderResult{Provider: models.UnlockProviderClaude, Status: models.UnlockStatusError, Region: runtime.LandingCountry, Reason: err.Error()}
 	}
-	if resp.StatusCode >= 200 && resp.StatusCode < 400 {
-		return models.UnlockProviderResult{Provider: models.UnlockProviderClaude, Status: models.UnlockStatusReachable, Region: runtime.LandingCountry}
+	return evaluateClaudeUnlockProbe(runtime, resp)
+}
+
+func evaluateClaudeUnlockProbe(runtime UnlockRuntime, resp *unlockHTTPResponse) models.UnlockProviderResult {
+	finalURL := strings.TrimRight(strings.ToLower(strings.TrimSpace(resp.FinalURL)), "/")
+	if finalURL == "https://claude.ai" {
+		return models.UnlockProviderResult{Provider: models.UnlockProviderClaude, Status: models.UnlockStatusAvailable, Region: runtime.LandingCountry}
+	}
+	if finalURL == "https://www.anthropic.com/app-unavailable-in-region" {
+		return models.UnlockProviderResult{Provider: models.UnlockProviderClaude, Status: models.UnlockStatusRestricted, Region: runtime.LandingCountry, Reason: "app_unavailable_in_region"}
 	}
 	if resp.StatusCode == http.StatusForbidden {
 		return models.UnlockProviderResult{Provider: models.UnlockProviderClaude, Status: models.UnlockStatusRestricted, Region: runtime.LandingCountry, Reason: "status_403"}
+	}
+	if resp.StatusCode >= 200 && resp.StatusCode < 400 {
+		return models.UnlockProviderResult{Provider: models.UnlockProviderClaude, Status: models.UnlockStatusUnknown, Region: runtime.LandingCountry, Reason: "unexpected_final_url", Detail: resp.FinalURL}
 	}
 	return models.UnlockProviderResult{Provider: models.UnlockProviderClaude, Status: models.UnlockStatusUnknown, Region: runtime.LandingCountry, Reason: fmt.Sprintf("status_%d", resp.StatusCode)}
 }
