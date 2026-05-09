@@ -1146,7 +1146,7 @@ export default function TemplateList() {
         }
       }}
     >
-      {!fullscreen && renderAIFloatingCommandBar({ fullscreen })}
+      {renderAIFloatingCommandBar({ fullscreen })}
       {converting && (
         <Box
           sx={{
@@ -1215,67 +1215,65 @@ export default function TemplateList() {
           }}
         />
       )}
-      {!fullscreen && (
-        <Box
-          sx={{
-            position: 'absolute',
-            right: { xs: 24, sm: 32 },
-            bottom: 16,
-            maxWidth: { xs: 'calc(100% - 48px)', sm: 380 },
-            px: 1.25,
-            py: 0.75,
-            borderRadius: 1,
-            bgcolor: alpha(theme.palette.grey[900], 0.76),
-            backdropFilter: 'blur(8px)',
-            border: 1,
-            borderColor: alpha(theme.palette.common.white, 0.12),
-            boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.22)}`,
-            zIndex: 5,
-            pointerEvents: 'none'
-          }}
-        >
-          <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-            {aiStateChips}
-            <Typography
-              variant="caption"
-              sx={{
-                color: aiCandidateMatchesEditor ? 'common.white' : isAISetupIssue ? alpha(theme.palette.common.white, 0.94) : aiStatusColor,
-                display: 'block',
-                lineHeight: 1.45,
-                textShadow: aiCandidateMatchesEditor ? `0 1px 2px ${alpha(theme.palette.common.black, 0.45)}` : 'none'
-              }}
-            >
-              {isAISetupIssue ? aiFriendlyGenerationError : aiStatusText}
+      <Box
+        sx={{
+          position: 'absolute',
+          right: { xs: 24, sm: 32 },
+          bottom: 16,
+          maxWidth: { xs: 'calc(100% - 48px)', sm: 380 },
+          px: 1.25,
+          py: 0.75,
+          borderRadius: 1,
+          bgcolor: alpha(theme.palette.grey[900], 0.76),
+          backdropFilter: 'blur(8px)',
+          border: 1,
+          borderColor: alpha(theme.palette.common.white, 0.12),
+          boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.22)}`,
+          zIndex: 5,
+          pointerEvents: 'none'
+        }}
+      >
+        <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+          {aiStateChips}
+          <Typography
+            variant="caption"
+            sx={{
+              color: aiCandidateMatchesEditor ? 'common.white' : isAISetupIssue ? alpha(theme.palette.common.white, 0.94) : aiStatusColor,
+              display: 'block',
+              lineHeight: 1.45,
+              textShadow: aiCandidateMatchesEditor ? `0 1px 2px ${alpha(theme.palette.common.black, 0.45)}` : 'none'
+            }}
+          >
+            {isAISetupIssue ? aiFriendlyGenerationError : aiStatusText}
+          </Typography>
+          {isAISetupIssue ? (
+            <Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.76), display: 'block', lineHeight: 1.4 }}>
+              {aiSetupGuidanceText}
             </Typography>
-            {isAISetupIssue ? (
-              <Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.76), display: 'block', lineHeight: 1.4 }}>
-                {aiSetupGuidanceText}
-              </Typography>
-            ) : null}
-            {aiUsageItems.length > 0 ? (
-              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                {aiUsageItems.map((item) => (
-                  <Chip
-                    key={item.key}
-                    size="small"
-                    variant="outlined"
-                    label={`${item.label} ${item.value}`}
-                    sx={{
-                      color: alpha(theme.palette.common.white, 0.92),
-                      borderColor: alpha(theme.palette.common.white, 0.18),
-                      bgcolor: alpha(theme.palette.common.white, 0.04),
-                      '& .MuiChip-label': {
-                        px: 1,
-                        fontWeight: 500
-                      }
-                    }}
-                  />
-                ))}
-              </Stack>
-            ) : null}
-          </Stack>
-        </Box>
-      )}
+          ) : null}
+          {aiUsageItems.length > 0 ? (
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+              {aiUsageItems.map((item) => (
+                <Chip
+                  key={item.key}
+                  size="small"
+                  variant="outlined"
+                  label={`${item.label} ${item.value}`}
+                  sx={{
+                    color: alpha(theme.palette.common.white, 0.92),
+                    borderColor: alpha(theme.palette.common.white, 0.18),
+                    bgcolor: alpha(theme.palette.common.white, 0.04),
+                    '& .MuiChip-label': {
+                      px: 1,
+                      fontWeight: 500
+                    }
+                  }}
+                />
+              ))}
+            </Stack>
+          ) : null}
+        </Stack>
+      </Box>
     </Box>
   );
 
