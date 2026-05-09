@@ -58,7 +58,6 @@ const NodeMap = ({ data = {}, loading = false }) => {
   const cardBackground = isDark
     ? 'radial-gradient(circle at center, rgba(17, 42, 78, 0.98) 0%, rgba(6, 18, 38, 0.99) 72%, rgba(3, 10, 24, 1) 100%)'
     : `radial-gradient(circle at center, ${alpha(theme.palette.background.paper, 1)} 0%, ${alpha(theme.palette.background.default, 0.94)} 100%)`;
-  const cardBorderColor = isDark ? alpha('#4dd0e1', 0.24) : 'divider';
   const overlaySurface = isDark
     ? 'linear-gradient(180deg, rgba(10, 30, 58, 0.78) 0%, rgba(5, 18, 38, 0.84) 100%)'
     : alpha(theme.palette.background.paper, 0.72);
@@ -390,18 +389,20 @@ const NodeMap = ({ data = {}, loading = false }) => {
 
   return (
     <Card
-      sx={{
+      sx={(theme) => ({
         height: '100%',
         width: '100%',
         background: cardBackground,
         color: 'text.primary',
         position: 'relative',
         overflow: 'hidden',
-        boxShadow: isDark ? `0 22px 44px ${alpha('#020915', 0.56)}, inset 0 0 0 1px ${alpha('#63f2ff', 0.08)}` : 'none',
+        boxShadow: isDark
+          ? `0 18px 42px ${alpha(theme.palette.common.black, 0.22)}, inset 0 1px 0 ${alpha(theme.palette.common.white, 0.035)}`
+          : `0 14px 34px ${alpha(theme.palette.primary.dark, 0.055)}, 0 3px 10px ${alpha(theme.palette.grey[500], 0.075)}`,
         border: '1px solid',
-        borderColor: cardBorderColor,
-        borderRadius: 0
-      }}
+        borderColor: isDark ? alpha(theme.palette.common.white, 0.08) : alpha(theme.palette.primary.main, 0.1),
+        borderRadius: 3
+      })}
     >
       <Box
         sx={{
