@@ -74,7 +74,7 @@ MainCard.propTypes = {
   darkTitle: PropTypes.bool,
   secondary: PropTypes.any,
   shadow: PropTypes.string,
-  sx: PropTypes.object,
+  sx: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   title: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
   ref: PropTypes.object,
   others: PropTypes.any
