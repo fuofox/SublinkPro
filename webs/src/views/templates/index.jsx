@@ -65,6 +65,7 @@ import {
 } from 'api/templates';
 import { getBaseTemplates, updateBaseTemplate } from 'api/settings';
 import { getNodes } from 'api/nodes';
+import { withAlpha } from 'utils/colorUtils';
 
 // Monaco Editor
 import Editor, { DiffEditor } from '@monaco-editor/react';
@@ -247,6 +248,8 @@ const extractCandidatePreviewFromStream = (streamBuffer) => {
 
 export default function TemplateList() {
   const theme = useTheme();
+  const palette = theme.vars?.palette || theme.palette;
+  const isDark = theme.palette.mode === 'dark';
   const navigate = useNavigate();
   const matchDownMd = useMediaQuery(theme.breakpoints.down('md'));
   const aiGenerationAbortRef = useRef(null);
@@ -1287,6 +1290,19 @@ export default function TemplateList() {
     </Box>
   );
 
+  const getCategoryChipSx = (category) => {
+    const semanticColor = category === 'surge' ? palette.secondary : palette.primary;
+
+    return {
+      bgcolor: withAlpha(semanticColor.main, isDark ? 0.12 : 0.08),
+      color: isDark ? semanticColor.main : semanticColor.dark,
+      borderColor: withAlpha(semanticColor.main, isDark ? 0.28 : 0.22),
+      borderWidth: 1,
+      borderStyle: 'solid',
+      fontWeight: 600
+    };
+  };
+
   return (
     <MainCard
       title="模板管理"
@@ -1386,8 +1402,8 @@ export default function TemplateList() {
                   <TableCell>
                     <Chip
                       label={template.category === 'surge' ? 'Surge' : 'Clash'}
-                      color={template.category === 'surge' ? 'secondary' : 'primary'}
                       size="small"
+                      sx={getCategoryChipSx(template.category)}
                     />
                   </TableCell>
                   <TableCell>
