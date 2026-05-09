@@ -6,6 +6,9 @@ import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
+import { alpha } from '@mui/material/styles';
+
+import useResolvedColorScheme from 'hooks/useResolvedColorScheme';
 
 // constant
 const headerStyle = {
@@ -29,19 +32,31 @@ export default function MainCard({
   ...others
 }) {
   const defaultShadow = '0 2px 14px 0 rgb(32 40 45 / 8%)';
+  const { isDark } = useResolvedColorScheme();
+  const pagePanel = Boolean(title) && !border;
 
   return (
     <Card
       ref={ref}
       {...others}
-      sx={(theme) => ({
-        border: border ? '1px solid' : 'none',
-        borderColor: 'divider',
-        ':hover': {
-          boxShadow: boxShadow ? shadow || defaultShadow : 'inherit'
-        },
-        ...(typeof sx === 'function' ? sx(theme) : sx || {})
-      })}
+      sx={(theme) => {
+        const pagePanelShadow = isDark
+          ? `0 18px 42px ${alpha(theme.palette.common.black, 0.22)}, inset 0 1px 0 ${alpha(theme.palette.common.white, 0.035)}`
+          : `0 14px 34px ${alpha(theme.palette.primary.dark, 0.055)}, 0 3px 10px ${alpha(theme.palette.grey[500], 0.075)}`;
+
+        return {
+          border: border || pagePanel ? '1px solid' : 'none',
+          borderColor: pagePanel ? (isDark ? alpha(theme.palette.common.white, 0.08) : alpha(theme.palette.primary.main, 0.1)) : 'divider',
+          borderRadius: pagePanel ? 3 : undefined,
+          bgcolor: pagePanel ? 'background.paper' : undefined,
+          boxShadow: pagePanel ? pagePanelShadow : undefined,
+          overflow: pagePanel ? 'hidden' : undefined,
+          ':hover': {
+            boxShadow: boxShadow ? shadow || defaultShadow : pagePanel ? pagePanelShadow : 'inherit'
+          },
+          ...(typeof sx === 'function' ? sx(theme) : sx || {})
+        };
+      }}
     >
       {/* card header and action */}
       {!darkTitle && title && <CardHeader sx={{ ...headerStyle, ...headerSX }} title={title} action={secondary} />}

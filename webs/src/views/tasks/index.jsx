@@ -63,7 +63,6 @@ import {
   getTaskDialogPaperSx,
   getTaskIconBoxSx,
   getTaskProgressSx,
-  getTaskShellSx,
   getTaskStatusMeta,
   getTaskTriggerMeta,
   getTaskTypeMeta,
@@ -668,7 +667,6 @@ export default function TaskList() {
     <MainCard
       title="任务管理"
       sx={{
-        ...getTaskShellSx(theme, tokens, TASK_CLUSTER_ACCENT, { interactive: false }),
         borderRadius: 3,
         overflow: 'hidden'
       }}
