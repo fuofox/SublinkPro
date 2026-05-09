@@ -750,19 +750,6 @@ export default function TemplateList() {
     }
   };
 
-  const compactOutlinedFieldSx = {
-    '& .MuiInputLabel-root': {
-      px: 0.5,
-      backgroundColor: 'background.paper',
-      lineHeight: 1.35,
-      maxWidth: 'calc(100% - 24px)'
-    },
-    '& .MuiInputLabel-shrink': {
-      transform: 'translate(14px, -4px) scale(0.75)',
-      maxWidth: 'calc(133% - 32px)'
-    }
-  };
-
   const outlinedLabelFixSx = {
     '& .MuiInputLabel-shrink': {
       px: 0.5,
@@ -1159,7 +1146,7 @@ export default function TemplateList() {
         }
       }}
     >
-      {renderAIFloatingCommandBar({ fullscreen })}
+      {!fullscreen && renderAIFloatingCommandBar({ fullscreen })}
       {converting && (
         <Box
           sx={{
@@ -1228,65 +1215,67 @@ export default function TemplateList() {
           }}
         />
       )}
-      <Box
-        sx={{
-          position: 'absolute',
-          right: { xs: 24, sm: 32 },
-          bottom: 16,
-          maxWidth: { xs: 'calc(100% - 48px)', sm: 380 },
-          px: 1.25,
-          py: 0.75,
-          borderRadius: 1,
-          bgcolor: alpha(theme.palette.grey[900], 0.76),
-          backdropFilter: 'blur(8px)',
-          border: 1,
-          borderColor: alpha(theme.palette.common.white, 0.12),
-          boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.22)}`,
-          zIndex: 5,
-          pointerEvents: 'none'
-        }}
-      >
-        <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-          {aiStateChips}
-          <Typography
-            variant="caption"
-            sx={{
-              color: aiCandidateMatchesEditor ? 'common.white' : isAISetupIssue ? alpha(theme.palette.common.white, 0.94) : aiStatusColor,
-              display: 'block',
-              lineHeight: 1.45,
-              textShadow: aiCandidateMatchesEditor ? `0 1px 2px ${alpha(theme.palette.common.black, 0.45)}` : 'none'
-            }}
-          >
-            {isAISetupIssue ? aiFriendlyGenerationError : aiStatusText}
-          </Typography>
-          {isAISetupIssue ? (
-            <Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.76), display: 'block', lineHeight: 1.4 }}>
-              {aiSetupGuidanceText}
+      {!fullscreen && (
+        <Box
+          sx={{
+            position: 'absolute',
+            right: { xs: 24, sm: 32 },
+            bottom: 16,
+            maxWidth: { xs: 'calc(100% - 48px)', sm: 380 },
+            px: 1.25,
+            py: 0.75,
+            borderRadius: 1,
+            bgcolor: alpha(theme.palette.grey[900], 0.76),
+            backdropFilter: 'blur(8px)',
+            border: 1,
+            borderColor: alpha(theme.palette.common.white, 0.12),
+            boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.22)}`,
+            zIndex: 5,
+            pointerEvents: 'none'
+          }}
+        >
+          <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+            {aiStateChips}
+            <Typography
+              variant="caption"
+              sx={{
+                color: aiCandidateMatchesEditor ? 'common.white' : isAISetupIssue ? alpha(theme.palette.common.white, 0.94) : aiStatusColor,
+                display: 'block',
+                lineHeight: 1.45,
+                textShadow: aiCandidateMatchesEditor ? `0 1px 2px ${alpha(theme.palette.common.black, 0.45)}` : 'none'
+              }}
+            >
+              {isAISetupIssue ? aiFriendlyGenerationError : aiStatusText}
             </Typography>
-          ) : null}
-          {aiUsageItems.length > 0 ? (
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-              {aiUsageItems.map((item) => (
-                <Chip
-                  key={item.key}
-                  size="small"
-                  variant="outlined"
-                  label={`${item.label} ${item.value}`}
-                  sx={{
-                    color: alpha(theme.palette.common.white, 0.92),
-                    borderColor: alpha(theme.palette.common.white, 0.18),
-                    bgcolor: alpha(theme.palette.common.white, 0.04),
-                    '& .MuiChip-label': {
-                      px: 1,
-                      fontWeight: 500
-                    }
-                  }}
-                />
-              ))}
-            </Stack>
-          ) : null}
-        </Stack>
-      </Box>
+            {isAISetupIssue ? (
+              <Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.76), display: 'block', lineHeight: 1.4 }}>
+                {aiSetupGuidanceText}
+              </Typography>
+            ) : null}
+            {aiUsageItems.length > 0 ? (
+              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                {aiUsageItems.map((item) => (
+                  <Chip
+                    key={item.key}
+                    size="small"
+                    variant="outlined"
+                    label={`${item.label} ${item.value}`}
+                    sx={{
+                      color: alpha(theme.palette.common.white, 0.92),
+                      borderColor: alpha(theme.palette.common.white, 0.18),
+                      bgcolor: alpha(theme.palette.common.white, 0.04),
+                      '& .MuiChip-label': {
+                        px: 1,
+                        fontWeight: 500
+                      }
+                    }}
+                  />
+                ))}
+              </Stack>
+            ) : null}
+          </Stack>
+        </Box>
+      )}
     </Box>
   );
 
@@ -1482,20 +1471,10 @@ export default function TemplateList() {
         >
           <Stack spacing={0.5}>
             <Typography variant="h4">{isEdit ? '编辑模板' : '添加模板'}</Typography>
-            {editorFullscreen && (
-              <Typography variant="body2" color="textSecondary">
-                全屏模式同样使用编辑 / 对比双模式，避免额外的 AI 侧边工作区。
-              </Typography>
-            )}
           </Stack>
           {editorFullscreen && (
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent="flex-end">
-              <Button size="small" onClick={handleCloseDialog}>
-                取消
-              </Button>
-              <Button variant="contained" size="small" disabled={templateEditorMode === 'diff'} onClick={handleSubmit}>
-                保存
-              </Button>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent="flex-end" alignItems="center">
+              {renderAIControlPanel({ compact: true })}
               <Button variant="outlined" size="small" startIcon={<FullscreenExitIcon />} onClick={() => setEditorFullscreen(false)}>
                 退出全屏
               </Button>
@@ -1529,204 +1508,7 @@ export default function TemplateList() {
                 : { mt: 0.5 }
             }
           >
-            {editorFullscreen ? (
-              <Stack spacing={1} sx={{ flexShrink: 0 }}>
-                <Box
-                  sx={{
-                    px: 1,
-                    py: 1.25,
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    bgcolor: 'background.paper'
-                  }}
-                >
-                  <Stack spacing={1.25}>
-                    <Stack direction="row" spacing={1.25} useFlexGap flexWrap="wrap" alignItems={{ xs: 'stretch', lg: 'flex-start' }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="文件名"
-                        value={formData.filename}
-                        onChange={(e) => setFormData({ ...formData, filename: e.target.value })}
-                        placeholder="例如: clash.yaml"
-                        InputLabelProps={{ shrink: true }}
-                        sx={{
-                          ...compactOutlinedFieldSx,
-                          flex: { xs: '1 1 100%', sm: '1 1 240px', lg: '0 1 220px' },
-                          minWidth: { xs: '100%', sm: 220, lg: 200 }
-                        }}
-                      />
-                      <FormControl
-                        size="small"
-                        sx={{
-                          minWidth: { xs: '100%', sm: 144, lg: 132 },
-                          flex: { xs: '1 1 100%', sm: '0 1 160px', lg: '0 0 132px' }
-                        }}
-                      >
-                        <InputLabel shrink sx={compactOutlinedFieldSx['& .MuiInputLabel-root']}>
-                          类别
-                        </InputLabel>
-                        <Select
-                          value={formData.category}
-                          label="类别"
-                          notched
-                          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        >
-                          <MenuItem value="clash">Clash</MenuItem>
-                          <MenuItem value="surge">Surge</MenuItem>
-                        </Select>
-                      </FormControl>
-                      <Autocomplete
-                        freeSolo
-                        options={aclPresets}
-                        sx={{
-                          flex: { xs: '1 1 100%', md: '999 1 320px' },
-                          minWidth: { xs: '100%', md: 280, lg: 320 }
-                        }}
-                        getOptionLabel={(option) => {
-                          if (typeof option === 'string') return option;
-                          return option.label || option.url || '';
-                        }}
-                        isOptionEqualToValue={(option, value) => {
-                          if (typeof value === 'string') {
-                            return option.url === value;
-                          }
-                          return option.url === value?.url;
-                        }}
-                        value={aclPresets.find((preset) => preset.url === formData.ruleSource) || formData.ruleSource}
-                        onChange={(_, newValue) => {
-                          if (typeof newValue === 'string') {
-                            setFormData({ ...formData, ruleSource: newValue });
-                          } else if (newValue && newValue.url) {
-                            setFormData({ ...formData, ruleSource: newValue.url });
-                          } else {
-                            setFormData({ ...formData, ruleSource: '' });
-                          }
-                        }}
-                        onInputChange={(_, newInputValue) => {
-                          setFormData({ ...formData, ruleSource: newInputValue });
-                        }}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            size="small"
-                            label="远程规则地址"
-                            placeholder="输入 URL 或选择 ACL4SSR 预设"
-                            InputLabelProps={{ ...params.InputLabelProps, shrink: true }}
-                            sx={compactOutlinedFieldSx}
-                          />
-                        )}
-                        renderOption={(props, option) => (
-                          <li {...props} key={option.name}>
-                            <Stack>
-                              <Typography variant="body2">{option.label}</Typography>
-                              <Typography variant="caption" color="textSecondary" sx={{ fontSize: '0.7rem' }}>
-                                {option.url}
-                              </Typography>
-                            </Stack>
-                          </li>
-                        )}
-                      />
-                    </Stack>
-                    <Stack spacing={0.75}>
-                      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-                        <FormControlLabel
-                          sx={{ mr: 0, flex: { xs: '1 1 100%', md: '0 1 auto' } }}
-                          control={
-                            <Switch
-                              size="small"
-                              checked={useProxy}
-                              onChange={(e) => {
-                                const checked = e.target.checked;
-                                setUseProxy(checked);
-                                if (checked) {
-                                  fetchProxyNodes();
-                                }
-                              }}
-                            />
-                          }
-                          label="使用代理下载远程规则"
-                        />
-                        <FormControlLabel
-                          sx={{ mr: 0, flex: { xs: '1 1 100%', md: '0 1 auto' } }}
-                          control={
-                            <Switch
-                              size="small"
-                              checked={formData.enableIncludeAll}
-                              onChange={(e) => setFormData({ ...formData, enableIncludeAll: e.target.checked })}
-                            />
-                          }
-                          label="使用 Include-All 模式"
-                        />
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={converting ? <CircularProgress size={16} /> : <TransformIcon />}
-                          disabled={!formData.ruleSource || converting}
-                          onClick={() => handleConvertTemplate(false)}
-                        >
-                          生成/转换
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={converting ? <CircularProgress size={16} /> : <UnfoldMoreIcon />}
-                          disabled={!formData.ruleSource || converting}
-                          onClick={() => handleConvertTemplate(true)}
-                        >
-                          转换并展开
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          color="error"
-                          disabled={!formData.text || converting}
-                          onClick={() => {
-                            openConfirm('清空内容', '确定要清空编辑器中的所有内容吗？', () => {
-                              setFormData({ ...formData, text: '' });
-                              showMessage('已清空内容');
-                            });
-                          }}
-                        >
-                          清空
-                        </Button>
-                      </Stack>
-                      <Typography variant="caption" color="text.secondary">
-                        全屏模式保留紧凑配置栏，并在同一编辑区内切换编辑模式与对比模式。
-                      </Typography>
-                    </Stack>
-                    {useProxy && (
-                      <SearchableNodeSelect
-                        nodes={proxyNodeOptions}
-                        loading={loadingProxyNodes}
-                        value={
-                          proxyNodeOptions.find((n) => n.Link === proxyLink) || (proxyLink ? { Link: proxyLink, Name: '', ID: 0 } : null)
-                        }
-                        onChange={(newValue) => setProxyLink(typeof newValue === 'string' ? newValue : newValue?.Link || '')}
-                        displayField="Name"
-                        valueField="Link"
-                        label="代理节点"
-                        placeholder="留空则自动选择最佳节点"
-                        helperText="可选择任意现有节点，也可手动输入外部代理链接；留空时系统会自动选择最佳节点。"
-                        freeSolo={true}
-                        limit={50}
-                      />
-                    )}
-                  </Stack>
-                </Box>
-
-                <Box
-                  sx={{
-                    ...aiWorkspacePanelSx,
-                    p: { xs: 1, md: 1.25 },
-                    flexShrink: 0
-                  }}
-                >
-                  {renderAIControlPanel({ compact: true })}
-                </Box>
-              </Stack>
-            ) : (
+            {!editorFullscreen && (
               <>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                   <TextField
@@ -1876,23 +1658,27 @@ export default function TemplateList() {
                     清空内容
                   </Button>
                 </Stack>
-                <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                <Box
+                  sx={{
+                    ...aiWorkspacePanelSx,
+                    p: { xs: 1, md: 1.25 },
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'stretch', sm: 'center' },
+                    justifyContent: 'flex-end',
+                    gap: 1.5
+                  }}
+                >
+                  {renderAIControlPanel({ minimal: true })}
                   <Button
                     variant="outlined"
                     size="small"
                     startIcon={editorFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
                     onClick={() => setEditorFullscreen((prev) => !prev)}
+                    sx={{ flexShrink: 0 }}
                   >
                     {editorFullscreen ? '退出全屏' : '全屏编辑'}
                   </Button>
-                </Stack>
-                <Box
-                  sx={{
-                    ...aiWorkspacePanelSx,
-                    p: { xs: 1, md: 1.25 }
-                  }}
-                >
-                  {renderAIControlPanel({ minimal: true })}
                 </Box>
               </>
             )}

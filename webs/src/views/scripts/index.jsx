@@ -228,17 +228,6 @@ export default function ScriptList() {
     setEditorFullscreen(false);
   };
 
-  const compactOutlinedFieldSx = {
-    '& .MuiInputLabel-root': {
-      px: 0.5,
-      backgroundColor: 'background.paper',
-      maxWidth: 'calc(100% - 24px)'
-    },
-    '& .MuiInputLabel-shrink': {
-      maxWidth: 'calc(133% - 32px)'
-    }
-  };
-
   return (
     <MainCard
       title="脚本管理"
@@ -402,20 +391,9 @@ export default function ScriptList() {
         >
           <Stack spacing={0.5}>
             <Typography variant="h4">{isEdit ? '编辑脚本' : '添加脚本'}</Typography>
-            {editorFullscreen && (
-              <Typography variant="body2" color="textSecondary">
-                全屏模式已切换为编辑器优先布局，脚本信息保留为紧凑工具栏。
-              </Typography>
-            )}
           </Stack>
           {editorFullscreen && (
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent="flex-end">
-              <Button size="small" onClick={handleCloseDialog}>
-                取消
-              </Button>
-              <Button variant="contained" size="small" onClick={handleSubmit}>
-                保存
-              </Button>
               <Button variant="outlined" size="small" startIcon={<FullscreenExitIcon />} onClick={() => setEditorFullscreen(false)}>
                 退出全屏
               </Button>
@@ -436,47 +414,7 @@ export default function ScriptList() {
           }
         >
           <Stack spacing={2} sx={editorFullscreen ? { flex: 1, minHeight: 0 } : { mt: 1 }}>
-            {editorFullscreen ? (
-              <Box
-                sx={{
-                  px: 0.5,
-                  py: 1,
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  bgcolor: 'background.paper'
-                }}
-              >
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ xs: 'stretch', md: 'flex-start' }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="脚本名称"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{
-                      ...compactOutlinedFieldSx,
-                      flex: 1,
-                      minWidth: 0
-                    }}
-                  />
-                  <TextField
-                    size="small"
-                    label="版本"
-                    value={formData.version}
-                    onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                    placeholder="0.0.0"
-                    InputLabelProps={{ shrink: true }}
-                    sx={{
-                      ...compactOutlinedFieldSx,
-                      width: { xs: '100%', md: 180 },
-                      flex: { md: '0 0 180px' }
-                    }}
-                  />
-                </Stack>
-              </Box>
-            ) : (
+            {!editorFullscreen && (
               <>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                   <TextField
@@ -494,13 +432,8 @@ export default function ScriptList() {
                   />
                 </Stack>
                 <Stack direction="row" justifyContent="flex-end">
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={editorFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-                    onClick={() => setEditorFullscreen((prev) => !prev)}
-                  >
-                    {editorFullscreen ? '退出全屏' : '全屏编辑'}
+                  <Button variant="outlined" size="small" startIcon={<FullscreenIcon />} onClick={() => setEditorFullscreen(true)}>
+                    全屏编辑
                   </Button>
                 </Stack>
               </>
