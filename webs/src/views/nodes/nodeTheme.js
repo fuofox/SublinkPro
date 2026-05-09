@@ -234,20 +234,3 @@ export function getNodeIconButtonSx(theme, tokens, accentColor = tokens.palette.
     }
   };
 }
-
-export function getNodeTableRowSx(theme, tokens, accentColor = tokens.palette.primary.main, selected = false) {
-  return {
-    cursor: 'pointer',
-    transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
-    '&:hover': {
-      backgroundColor: selected ? tokens.selectedHoverSurface : tokens.hoverSurface
-    },
-    '&.Mui-selected': {
-      backgroundColor: selected ? tokens.selectedSurface : undefined,
-      boxShadow: selected ? `inset 0 0 0 1px ${withAlpha(accentColor, tokens.isDark ? 0.24 : 0.12)}` : 'none'
-    },
-    '&.Mui-selected:hover': {
-      backgroundColor: selected ? tokens.selectedHoverSurface : undefined
-    }
-  };
-}

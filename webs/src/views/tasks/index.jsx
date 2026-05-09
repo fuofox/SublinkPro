@@ -56,6 +56,7 @@ import { useTaskProgress } from 'contexts/TaskProgressContext';
 import useResolvedColorScheme from 'hooks/useResolvedColorScheme';
 
 import { extractUnlockSummaryFromTaskResult, formatUnlockProviderLabel } from 'views/nodes/utils';
+
 import {
   getTaskCardSx,
   getTaskCenterTokens,
@@ -65,8 +66,7 @@ import {
   getTaskProgressSx,
   getTaskStatusMeta,
   getTaskTriggerMeta,
-  getTaskTypeMeta,
-  TASK_CLUSTER_ACCENT
+  getTaskTypeMeta
 } from 'components/taskCenterTheme';
 
 const TASK_STATUS_ICONS = {
@@ -514,6 +514,51 @@ export default function TaskList() {
   const { isDark } = useResolvedColorScheme();
   const tokens = getTaskCenterTokens(theme, isDark);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const tableContainerSx = {
+    bgcolor: tokens.floatingSurface,
+    backgroundImage: 'none',
+    border: '1px solid',
+    borderColor: tokens.softBorder,
+    boxShadow: tokens.isDark
+      ? `0 12px 24px ${alpha(theme.palette.common.black, 0.16)}, inset 0 1px 0 ${alpha(theme.palette.common.white, 0.03)}`
+      : `0 6px 18px ${alpha(theme.palette.common.black, 0.04)}`,
+    borderRadius: 2.5,
+    overflow: 'hidden'
+  };
+
+  const tableSx = {
+    minWidth: 820,
+    width: '100%',
+    '& .MuiTableCell-root': {
+      px: 1,
+      py: 1,
+      whiteSpace: 'nowrap',
+      verticalAlign: 'middle'
+    }
+  };
+
+  const tableHeadSx = {
+    bgcolor: tokens.floatingSurface,
+    '& .MuiTableCell-root': {
+      color: tokens.secondaryText,
+      fontSize: '0.75rem',
+      fontWeight: 600,
+      py: 1.1,
+      borderBottomColor: tokens.softBorder
+    }
+  };
+
+  const tableRowSx = {
+    cursor: 'pointer',
+    transition: 'background-color 0.2s ease',
+    '&:hover': {
+      bgcolor: tokens.rowHoverSurface
+    },
+    '& td, & .MuiTableCell-root': {
+      borderBottomColor: tokens.softBorder
+    }
+  };
 
   const [tasks, setTasks] = useState([]);
   const [stats, setStats] = useState({});
@@ -1017,183 +1062,170 @@ export default function TaskList() {
         </Box>
       ) : (
         /* Desktop Table View */
-        <TableContainer
-          component={Paper}
-          sx={{
-            ...getTaskCardSx(theme, tokens, TASK_CLUSTER_ACCENT, { interactive: false }),
-            borderRadius: 2.5,
-            overflow: 'hidden'
-          }}
-        >
-          <Table size="small">
-            <TableHead sx={{ bgcolor: tokens.tableHeaderSurface }}>
-              <TableRow>
-                <TableCell>任务名称</TableCell>
-                <TableCell>类型</TableCell>
-                <TableCell>触发方式</TableCell>
-                <TableCell>状态</TableCell>
-                <TableCell>进度</TableCell>
-                <TableCell>流量</TableCell>
-                <TableCell>创建时间</TableCell>
-                <TableCell>耗时</TableCell>
-                {hasStoppableTasks && <TableCell>操作</TableCell>}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {tasks.length === 0 ? (
+        <Paper sx={tableContainerSx}>
+          <TableContainer sx={{ width: '100%', overflowX: 'auto', overflowY: 'hidden' }}>
+            <Table size="small" sx={tableSx}>
+              <TableHead sx={tableHeadSx}>
                 <TableRow>
-                  <TableCell colSpan={hasStoppableTasks ? 9 : 8} align="center" sx={{ py: 4 }}>
-                    <Typography sx={{ color: tokens.secondaryText }}>暂无任务记录</Typography>
-                  </TableCell>
+                  <TableCell>任务名称</TableCell>
+                  <TableCell>类型</TableCell>
+                  <TableCell>触发方式</TableCell>
+                  <TableCell>状态</TableCell>
+                  <TableCell>进度</TableCell>
+                  <TableCell>流量</TableCell>
+                  <TableCell>创建时间</TableCell>
+                  <TableCell>耗时</TableCell>
+                  {hasStoppableTasks && <TableCell>操作</TableCell>}
                 </TableRow>
-              ) : (
-                tasks.map((task) => {
-                  const taskUnlockSummary = getTaskUnlockSummary(task);
+              </TableHead>
+              <TableBody>
+                {tasks.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={hasStoppableTasks ? 9 : 8} align="center" sx={{ py: 4 }}>
+                      <Typography sx={{ color: tokens.secondaryText }}>暂无任务记录</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  tasks.map((task) => {
+                    const taskUnlockSummary = getTaskUnlockSummary(task);
 
-                  return (
-                    <TableRow
-                      key={task.id}
-                      hover
-                      sx={{
-                        '&:hover': {
-                          bgcolor: tokens.rowHoverSurface
-                        }
-                      }}
-                    >
-                      <TableCell>
-                        <Typography variant="body2" sx={{ fontWeight: 500, color: tokens.primaryText }}>
-                          {task.name}
-                        </Typography>
-                        {task.message && (
-                          <Tooltip title={task.message} arrow placement="top-start">
-                            <Typography
-                              variant="caption"
-                              noWrap
-                              sx={{ maxWidth: 200, display: 'block', cursor: 'help', color: tokens.secondaryText }}
-                            >
-                              {task.message}
-                            </Typography>
-                          </Tooltip>
-                        )}
-                        {taskUnlockSummary && (
-                          <Tooltip title={renderUnlockDetails(taskUnlockSummary)} arrow placement="top-start">
-                            <Typography
-                              variant="caption"
-                              color="info.main"
-                              sx={{ mt: 0.5, display: 'block', fontWeight: 600, maxWidth: 220 }}
-                              noWrap
-                            >
-                              {taskUnlockSummary.text}
-                            </Typography>
-                          </Tooltip>
-                        )}
-                        {task.type === 'db_migration' && getMigrationWarnings(task).length > 0 && (
-                          <Button
-                            size="small"
-                            startIcon={<WarningAmberIcon sx={{ fontSize: 16 }} />}
-                            sx={migrationWarningButtonSx}
-                            onClick={() => handleOpenMigrationWarnings(task)}
-                          >
-                            查看 {getMigrationWarnings(task).length} 条迁移警告
-                          </Button>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <TypeChip type={task.type} theme={theme} tokens={tokens} />
-                      </TableCell>
-                      <TableCell>
-                        <TriggerChip trigger={task.trigger} theme={theme} tokens={tokens} />
-                      </TableCell>
-                      <TableCell>
-                        <StatusChip status={task.status} theme={theme} tokens={tokens} />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ color: tokens.primaryText }}>
-                          {task.progress}/{task.total}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {task.type === 'speed_test'
-                          ? (() => {
-                              try {
-                                const result = typeof task.result === 'string' ? JSON.parse(task.result) : task.result;
-                                const hasTraffic = result?.traffic?.totalFormatted;
-
-                                if (!hasTraffic) return '-';
-
-                                return (
-                                  <Box
-                                    sx={{
-                                      cursor: 'pointer',
-                                      display: 'inline-block',
-                                      color: theme.palette.primary.main,
-                                      '&:hover': { opacity: 0.82 }
-                                    }}
-                                    onClick={() => handleOpenTrafficStats(task)}
-                                  >
-                                    <Typography
-                                      variant="body2"
-                                      color="primary.main"
-                                      fontWeight={500}
-                                      sx={{ textDecoration: 'underline', textUnderlineOffset: 2 }}
-                                    >
-                                      {result.traffic.totalFormatted}
-                                    </Typography>
-                                  </Box>
-                                );
-                              } catch (e) {
-                                console.error(e);
-                                return '-';
-                              }
-                            })()
-                          : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Tooltip title={task.createdAt ? new Date(task.createdAt).toLocaleString('zh-CN') : ''}>
-                          <Typography variant="caption" sx={{ color: tokens.secondaryText }}>
-                            {formatDate(task.createdAt)}
-                          </Typography>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: task.status === 'running' ? 'primary.main' : 'text.secondary',
-                            fontWeight: task.status === 'running' ? 500 : 400
-                          }}
-                        >
-                          {formatDuration(task.startedAt, task.completedAt, task.status)}
-                        </Typography>
-                      </TableCell>
-                      {hasStoppableTasks && (
+                    return (
+                      <TableRow key={task.id} hover sx={tableRowSx}>
                         <TableCell>
-                          {task.status === 'running' && task.type === 'speed_test' && (
-                            <Tooltip title="停止">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleStopTask(task.id)}
-                                sx={{
-                                  bgcolor: alpha(theme.palette.error.main, tokens.isDark ? 0.14 : 0.06),
-                                  border: '1px solid',
-                                  borderColor: alpha(theme.palette.error.main, tokens.isDark ? 0.24 : 0.16),
-                                  '&:hover': {
-                                    bgcolor: alpha(theme.palette.error.main, tokens.isDark ? 0.2 : 0.1)
-                                  }
-                                }}
+                          <Typography variant="body2" sx={{ fontWeight: 500, color: tokens.primaryText }}>
+                            {task.name}
+                          </Typography>
+                          {task.message && (
+                            <Tooltip title={task.message} arrow placement="top-start">
+                              <Typography
+                                variant="caption"
+                                noWrap
+                                sx={{ maxWidth: 200, display: 'block', cursor: 'help', color: tokens.secondaryText }}
                               >
-                                <StopIcon fontSize="small" color="error" />
-                              </IconButton>
+                                {task.message}
+                              </Typography>
                             </Tooltip>
                           )}
+                          {taskUnlockSummary && (
+                            <Tooltip title={renderUnlockDetails(taskUnlockSummary)} arrow placement="top-start">
+                              <Typography
+                                variant="caption"
+                                color="info.main"
+                                sx={{ mt: 0.5, display: 'block', fontWeight: 600, maxWidth: 220 }}
+                                noWrap
+                              >
+                                {taskUnlockSummary.text}
+                              </Typography>
+                            </Tooltip>
+                          )}
+                          {task.type === 'db_migration' && getMigrationWarnings(task).length > 0 && (
+                            <Button
+                              size="small"
+                              startIcon={<WarningAmberIcon sx={{ fontSize: 16 }} />}
+                              sx={migrationWarningButtonSx}
+                              onClick={() => handleOpenMigrationWarnings(task)}
+                            >
+                              查看 {getMigrationWarnings(task).length} 条迁移警告
+                            </Button>
+                          )}
                         </TableCell>
-                      )}
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+                        <TableCell>
+                          <TypeChip type={task.type} theme={theme} tokens={tokens} />
+                        </TableCell>
+                        <TableCell>
+                          <TriggerChip trigger={task.trigger} theme={theme} tokens={tokens} />
+                        </TableCell>
+                        <TableCell>
+                          <StatusChip status={task.status} theme={theme} tokens={tokens} />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ color: tokens.primaryText }}>
+                            {task.progress}/{task.total}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          {task.type === 'speed_test'
+                            ? (() => {
+                                try {
+                                  const result = typeof task.result === 'string' ? JSON.parse(task.result) : task.result;
+                                  const hasTraffic = result?.traffic?.totalFormatted;
+
+                                  if (!hasTraffic) return '-';
+
+                                  return (
+                                    <Box
+                                      sx={{
+                                        cursor: 'pointer',
+                                        display: 'inline-block',
+                                        color: theme.palette.primary.main,
+                                        '&:hover': { opacity: 0.82 }
+                                      }}
+                                      onClick={() => handleOpenTrafficStats(task)}
+                                    >
+                                      <Typography
+                                        variant="body2"
+                                        color="primary.main"
+                                        fontWeight={500}
+                                        sx={{ textDecoration: 'underline', textUnderlineOffset: 2 }}
+                                      >
+                                        {result.traffic.totalFormatted}
+                                      </Typography>
+                                    </Box>
+                                  );
+                                } catch (e) {
+                                  console.error(e);
+                                  return '-';
+                                }
+                              })()
+                            : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Tooltip title={task.createdAt ? new Date(task.createdAt).toLocaleString('zh-CN') : ''}>
+                            <Typography variant="caption" sx={{ color: tokens.secondaryText }}>
+                              {formatDate(task.createdAt)}
+                            </Typography>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: task.status === 'running' ? 'primary.main' : 'text.secondary',
+                              fontWeight: task.status === 'running' ? 500 : 400
+                            }}
+                          >
+                            {formatDuration(task.startedAt, task.completedAt, task.status)}
+                          </Typography>
+                        </TableCell>
+                        {hasStoppableTasks && (
+                          <TableCell>
+                            {task.status === 'running' && task.type === 'speed_test' && (
+                              <Tooltip title="停止">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleStopTask(task.id)}
+                                  sx={{
+                                    bgcolor: alpha(theme.palette.error.main, tokens.isDark ? 0.14 : 0.06),
+                                    border: '1px solid',
+                                    borderColor: alpha(theme.palette.error.main, tokens.isDark ? 0.24 : 0.16),
+                                    '&:hover': {
+                                      bgcolor: alpha(theme.palette.error.main, tokens.isDark ? 0.2 : 0.1)
+                                    }
+                                  }}
+                                >
+                                  <StopIcon fontSize="small" color="error" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
           <TablePagination
             component="div"
             count={total}
@@ -1207,7 +1239,7 @@ export default function TaskList() {
             labelRowsPerPage="每页行数"
             rowsPerPageOptions={[10, 20, 50]}
           />
-        </TableContainer>
+        </Paper>
       )}
 
       {/* Clear History Dialog */}

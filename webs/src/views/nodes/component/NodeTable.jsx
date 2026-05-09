@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 
 // material-ui
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
@@ -18,7 +18,6 @@ import TableSortLabel from '@mui/material/TableSortLabel';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useResolvedColorScheme from 'hooks/useResolvedColorScheme';
-import { withAlpha } from 'utils/colorUtils';
 
 // icons
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -39,7 +38,7 @@ import {
   getResidentialDisplay,
   getSpeedDisplay
 } from '../utils';
-import { getNodeTableRowSx, getNodeTagChipSx, getNodeThemeTokens } from '../nodeTheme';
+import { getNodeTagChipSx, getNodeThemeTokens } from '../nodeTheme';
 
 /**
  * 桌面端节点表格（精简版）
@@ -63,33 +62,49 @@ export default function NodeTable({
   const { isDark } = useResolvedColorScheme();
   const tokens = getNodeThemeTokens(theme, isDark);
   const isSelected = (node) => selectedNodes.some((n) => n.ID === node.ID);
-  const denseCellSx = {
-    px: 0.75,
-    py: 0.75,
-    whiteSpace: 'nowrap',
-    verticalAlign: 'top'
-  };
+
+  const getTableRowSx = (selected = false) => ({
+    bgcolor: selected ? tokens.selectedSurface : 'transparent',
+    cursor: 'pointer',
+    transition: 'background-color 0.2s ease',
+    '&:hover': {
+      bgcolor: selected ? tokens.selectedHoverSurface : tokens.hoverSurface
+    },
+    '& td, & .MuiTableCell-root': {
+      borderBottomColor: tokens.softBorder
+    }
+  });
 
   return (
     <TableContainer
       component={Paper}
       sx={{
         bgcolor: tokens.cardSurface,
-        backgroundImage: `linear-gradient(180deg, ${
-          tokens.isDark ? withAlpha(tokens.palette.background.paper, 0.12) : withAlpha(tokens.palette.primary.main, 0.03)
-        } 0%, ${tokens.cardSurface} 100%)`,
+        backgroundImage: 'none',
         border: '1px solid',
         borderColor: tokens.softBorder,
         boxShadow: tokens.isDark
-          ? `0 12px 24px ${withAlpha(theme.palette.common.black, 0.16)}, inset 0 1px 0 ${withAlpha(theme.palette.common.white, 0.03)}`
-          : `0 6px 18px ${withAlpha(theme.palette.common.black, 0.06)}`
+          ? `0 12px 24px ${alpha(theme.palette.common.black, 0.16)}, inset 0 1px 0 ${alpha(theme.palette.common.white, 0.03)}`
+          : `0 6px 18px ${alpha(theme.palette.common.black, 0.06)}`,
+        borderRadius: 2.5,
+        width: '100%',
+        overflowX: 'auto',
+        overflowY: 'hidden'
       }}
     >
       <Table
         size="small"
         sx={{
-          '& .MuiTableCell-root': denseCellSx,
-          '& .MuiTableCell-paddingCheckbox': { px: 0.5, py: 0.5 },
+          minWidth: 820,
+          width: '100%',
+          '& .MuiTableCell-root': {
+            px: 0.75,
+            py: 0.75,
+            whiteSpace: 'nowrap',
+            verticalAlign: 'middle'
+          },
+          '& .MuiTableCell-paddingCheckbox': { px: 0.5, py: 0.5, verticalAlign: 'middle' },
+          '& .MuiTableCell-paddingCheckbox .MuiCheckbox-root': { p: 0.5, display: 'flex', alignItems: 'center' },
           '& .MuiChip-root': { height: 22 },
           '& .MuiChip-label': { px: 0.75 },
           '& .MuiIconButton-root': { p: 0.5 }
@@ -97,9 +112,11 @@ export default function NodeTable({
       >
         <TableHead
           sx={{
+            bgcolor: tokens.cardSurface,
             '& .MuiTableCell-root': {
-              bgcolor: tokens.toolbarSurface,
               color: tokens.primaryText,
+              fontWeight: 600,
+              fontSize: '0.75rem',
               borderBottomColor: tokens.softBorder
             }
           }}
@@ -141,7 +158,7 @@ export default function NodeTable({
               key={node.ID}
               hover
               selected={isSelected(node)}
-              sx={getNodeTableRowSx(theme, tokens, tokens.palette.primary.main, isSelected(node))}
+              sx={getTableRowSx(isSelected(node))}
               onClick={(e) => {
                 // 点击复选框或操作按钮时不触发详情
                 if (e.target.closest('button') || e.target.closest('input[type="checkbox"]')) return;

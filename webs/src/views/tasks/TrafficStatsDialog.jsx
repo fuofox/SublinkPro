@@ -32,8 +32,6 @@ import {
   getTaskCenterTokens,
   getTaskDialogPaperSx,
   getTaskProgressSx,
-  getTaskTableContainerSx,
-  getTaskTableRowSx,
   TASK_CLUSTER_ACCENT
 } from 'components/taskCenterTheme';
 
@@ -68,6 +66,48 @@ export default function TrafficStatsDialog({ open, onClose, task }) {
   const tokens = getTaskCenterTokens(theme, isDark);
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
   const [tabValue, setTabValue] = useState(0);
+
+  const tableContainerSx = {
+    bgcolor: tokens.floatingSurface,
+    backgroundImage: 'none',
+    border: '1px solid',
+    borderColor: tokens.softBorder,
+    boxShadow: tokens.isDark ? `inset 0 1px 0 ${alpha(theme.palette.common.white, 0.03)}` : 'none',
+    borderRadius: 2.5,
+    overflow: 'hidden'
+  };
+
+  const tableSx = {
+    width: '100%',
+    '& .MuiTableCell-root': {
+      px: 1,
+      py: 1,
+      whiteSpace: 'nowrap',
+      verticalAlign: 'middle'
+    }
+  };
+
+  const tableHeadSx = {
+    bgcolor: tokens.floatingSurface,
+    '& .MuiTableCell-root': {
+      color: tokens.secondaryText,
+      fontSize: '0.75rem',
+      fontWeight: 600,
+      py: 1.1,
+      borderBottomColor: tokens.softBorder
+    }
+  };
+
+  const tableRowSx = {
+    cursor: 'pointer',
+    transition: 'background-color 0.2s ease',
+    '&:hover': {
+      bgcolor: tokens.rowHoverSurface
+    },
+    '& td, & .MuiTableCell-root': {
+      borderBottomColor: tokens.softBorder
+    }
+  };
 
   // Drill-down state
   const [drillFilter, setDrillFilter] = useState(null);
@@ -234,9 +274,9 @@ export default function TrafficStatsDialog({ open, onClose, task }) {
             点击行可查看该{filterType === 'group' ? '分组' : '来源'}下的节点流量详情
           </Typography>
         )}
-        <TableContainer component={Paper} variant="outlined" sx={{ ...getTaskTableContainerSx(theme, tokens), overflowX: 'auto' }}>
-          <Table size="small" sx={{ minWidth: 560 }}>
-            <TableHead sx={{ bgcolor: tokens.tableHeaderSurface }}>
+        <TableContainer component={Paper} variant="outlined" sx={{ ...tableContainerSx, overflowX: 'auto' }}>
+          <Table size="small" sx={{ ...tableSx, minWidth: 560 }}>
+            <TableHead sx={tableHeadSx}>
               <TableRow>
                 <TableCell>{labelHeader}</TableCell>
                 <TableCell align="right">流量</TableCell>
@@ -249,12 +289,7 @@ export default function TrafficStatsDialog({ open, onClose, task }) {
               {entries.map(([name, data]) => {
                 const percent = calculatePercent(data.bytes);
                 return (
-                  <TableRow
-                    key={name}
-                    hover
-                    sx={getTaskTableRowSx(tokens, hasNodeData)}
-                    onClick={() => hasNodeData && handleDrillDown(filterType, name)}
-                  >
+                  <TableRow key={name} hover sx={tableRowSx} onClick={() => hasNodeData && handleDrillDown(filterType, name)}>
                     <TableCell component="th" scope="row">
                       <Stack direction="row" alignItems="center" spacing={1}>
                         <Typography variant="body2" fontWeight={500} sx={{ color: tokens.primaryText }}>
@@ -356,9 +391,9 @@ export default function TrafficStatsDialog({ open, onClose, task }) {
         </Box>
       ) : (
         <>
-          <TableContainer component={Paper} variant="outlined" sx={{ ...getTaskTableContainerSx(theme, tokens), overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: 760 }}>
-              <TableHead sx={{ bgcolor: tokens.tableHeaderSurface }}>
+          <TableContainer component={Paper} variant="outlined" sx={{ ...tableContainerSx, overflowX: 'auto' }}>
+            <Table size="small" sx={{ ...tableSx, minWidth: 760 }}>
+              <TableHead sx={tableHeadSx}>
                 <TableRow>
                   <TableCell>节点名称</TableCell>
                   <TableCell>原始名称</TableCell>
@@ -376,7 +411,7 @@ export default function TrafficStatsDialog({ open, onClose, task }) {
                   </TableRow>
                 ) : (
                   drillNodes.map((node) => (
-                    <TableRow key={node.nodeId} hover sx={getTaskTableRowSx(tokens, false)}>
+                    <TableRow key={node.nodeId} hover sx={tableRowSx}>
                       <TableCell>
                         <Typography variant="body2" fontWeight={500} noWrap sx={{ maxWidth: 150, color: tokens.primaryText }}>
                           {node.name}

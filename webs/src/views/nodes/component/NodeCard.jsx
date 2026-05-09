@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 
 // material-ui
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
@@ -46,6 +46,8 @@ export default function NodeCard({ node, isSelected, tagColorMap, onSelect, onVi
           interactive: true,
           selected: isSelected
         }),
+        backgroundImage: 'none',
+        bgcolor: isSelected ? alpha(theme.palette.primary.main, isDark ? 0.14 : 0.06) : tokens.cardSurface,
         cursor: 'pointer'
       }}
       onClick={(e) => {

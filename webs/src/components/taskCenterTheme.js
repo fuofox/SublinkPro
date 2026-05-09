@@ -202,24 +202,3 @@ export const getTaskActionButtonSx = (theme, tokens, accentColor, options = {}) 
     }
   };
 };
-
-export const getTaskTableContainerSx = (theme, tokens, accentColor = TASK_CLUSTER_ACCENT) => ({
-  ...getTaskCardSx(theme, tokens, accentColor, { interactive: false, compact: true }),
-  borderRadius: 2.5,
-  overflow: 'hidden'
-});
-
-export const getTaskTableRowSx = (tokens, interactive = true) => ({
-  ...(interactive
-    ? {
-        cursor: 'pointer',
-        '&:hover': {
-          bgcolor: tokens.rowHoverSurface
-        }
-      }
-    : {
-        '&:hover': {
-          bgcolor: tokens.rowHoverSurface
-        }
-      })
-});
