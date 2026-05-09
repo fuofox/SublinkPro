@@ -466,7 +466,7 @@ const NodeMap = ({ data = {}, loading = false }) => {
             py: 2,
             minWidth: 210,
             background: overlaySurface,
-            border: isDark ? '1px solid' : 'none',
+            border: '1px solid',
             borderColor: overlayBorderColor,
             boxShadow: overlayInsetHighlight,
             backdropFilter: `blur(${isDark ? 10 : 4}px)`
@@ -502,7 +502,7 @@ const NodeMap = ({ data = {}, loading = false }) => {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 1.25,
-                background: alpha(theme.palette.background.default, isDark ? 0.34 : 0.8),
+                background: isDark ? 'transparent' : alpha(theme.palette.background.default, 0.8),
                 border: '1px solid',
                 borderColor: overlayBorderColor,
                 borderTop: `2px solid ${unknownCount > 0 ? alpha(isDark ? '#63f2ff' : accentColor, isDark ? 0.72 : 0.6) : alpha(accentColor, 0.3)}`,
