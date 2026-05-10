@@ -23,6 +23,8 @@ import ScienceIcon from '@mui/icons-material/Science';
 
 import { getAISettings, listAIModels, testAISettings, updateAISettings } from 'api/settings';
 
+const DEFAULT_AI_MAX_TOKENS = 400000;
+
 const dedupeModelOptions = (models = [], currentModel = '') => {
   const seen = new Set();
   const options = [];
@@ -65,7 +67,7 @@ export default function AIAssistantSettings({ showMessage, loading, setLoading }
     configured: false,
     providerType: 'openai_compatible',
     temperature: 0.2,
-    maxTokens: 1200
+    maxTokens: DEFAULT_AI_MAX_TOKENS
   });
 
   const setAIField = (field, value) => {
@@ -75,26 +77,30 @@ export default function AIAssistantSettings({ showMessage, loading, setLoading }
     }
   };
 
+  const applyAISettingsData = useCallback((data = {}) => {
+    setAIForm((prev) => ({
+      ...prev,
+      enabled: Boolean(data.enabled),
+      baseUrl: data.baseUrl || '',
+      model: data.model || '',
+      apiKey: '',
+      maskedKey: data.maskedKey || '',
+      hasKey: Boolean(data.hasKey),
+      configured: Boolean(data.configured),
+      providerType: data.providerType || 'openai_compatible',
+      temperature: data.temperature ?? 0.2,
+      maxTokens: data.maxTokens ?? DEFAULT_AI_MAX_TOKENS
+    }));
+    setAIModelOptions((prev) => dedupeModelOptions(prev, data.model || ''));
+    setAIHeadersText(data.extraHeaders && Object.keys(data.extraHeaders).length > 0 ? JSON.stringify(data.extraHeaders, null, 2) : '{}');
+  }, []);
+
   const fetchAISettings = useCallback(async () => {
     setAISettingsLoading(true);
     try {
       const response = await getAISettings();
       const data = response.data || {};
-      setAIForm((prev) => ({
-        ...prev,
-        enabled: Boolean(data.enabled),
-        baseUrl: data.baseUrl || '',
-        model: data.model || '',
-        apiKey: '',
-        maskedKey: data.maskedKey || '',
-        hasKey: Boolean(data.hasKey),
-        configured: Boolean(data.configured),
-        providerType: data.providerType || 'openai_compatible',
-        temperature: data.temperature ?? 0.2,
-        maxTokens: data.maxTokens ?? 1200
-      }));
-      setAIModelOptions((prev) => dedupeModelOptions(prev, data.model || ''));
-      setAIHeadersText(data.extraHeaders && Object.keys(data.extraHeaders).length > 0 ? JSON.stringify(data.extraHeaders, null, 2) : '{}');
+      applyAISettingsData(data);
       setAITestResult(null);
       setAITestError('');
     } catch (error) {
@@ -103,7 +109,7 @@ export default function AIAssistantSettings({ showMessage, loading, setLoading }
     } finally {
       setAISettingsLoading(false);
     }
-  }, [showMessage]);
+  }, [applyAISettingsData, showMessage]);
 
   useEffect(() => {
     fetchAISettings();
@@ -244,9 +250,9 @@ export default function AIAssistantSettings({ showMessage, loading, setLoading }
     setAIAction('save');
     setLoading(true);
     try {
-      await updateAISettings(payload);
+      const response = await updateAISettings(payload);
+      applyAISettingsData(response.data || {});
       showMessage('AI 助手设置保存成功');
-      await fetchAISettings();
     } catch (error) {
       showMessage('保存 AI 设置失败: ' + (error.response?.data?.message || error.message), 'error');
     } finally {
@@ -329,6 +335,15 @@ export default function AIAssistantSettings({ showMessage, loading, setLoading }
                   helperText="需为可用的 Responses API 根地址，并且服务端必须支持 `/responses` endpoint。"
                 />
 
+                <TextField
+                  fullWidth
+                  type="password"
+                  label={aiForm.hasKey ? '替换 API Key（留空则保留已保存密钥）' : 'API Key'}
+                  value={aiForm.apiKey}
+                  onChange={(e) => setAIField('apiKey', e.target.value)}
+                  autoComplete="off"
+                />
+
                 <Grid container spacing={2} alignItems="flex-start">
                   <Grid item xs={12} md={8}>
                     <Autocomplete
@@ -371,38 +386,25 @@ export default function AIAssistantSettings({ showMessage, loading, setLoading }
                   </Grid>
                 </Grid>
 
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      type="number"
-                      label="Temperature"
-                      value={aiForm.temperature}
-                      onChange={(e) => setAIField('temperature', e.target.value)}
-                      slotProps={{ htmlInput: { min: 0, max: 2, step: 0.1 } }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      type="number"
-                      label="Max Tokens"
-                      value={aiForm.maxTokens}
-                      onChange={(e) => setAIField('maxTokens', e.target.value)}
-                      slotProps={{ htmlInput: { min: 0, step: 100 } }}
-                      helperText="填 0 使用服务端默认值。"
-                    />
-                  </Grid>
-                </Grid>
-
-                <TextField
-                  fullWidth
-                  type="password"
-                  label={aiForm.hasKey ? '替换 API Key（留空则保留已保存密钥）' : 'API Key'}
-                  value={aiForm.apiKey}
-                  onChange={(e) => setAIField('apiKey', e.target.value)}
-                  autoComplete="off"
-                />
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start" flexWrap="wrap" useFlexGap>
+                  <TextField
+                    type="number"
+                    label="Temperature"
+                    value={aiForm.temperature}
+                    onChange={(e) => setAIField('temperature', e.target.value)}
+                    slotProps={{ htmlInput: { min: 0, max: 2, step: 0.1 } }}
+                    sx={{ width: { xs: '100%', sm: 180 } }}
+                  />
+                  <TextField
+                    type="number"
+                    label="Max Tokens"
+                    value={aiForm.maxTokens}
+                    onChange={(e) => setAIField('maxTokens', e.target.value)}
+                    slotProps={{ htmlInput: { min: 0, step: 100 } }}
+                    helperText="填 0 使用服务端默认值（400000）。"
+                    sx={{ width: { xs: '100%', sm: 280 } }}
+                  />
+                </Stack>
 
                 <TextField
                   fullWidth

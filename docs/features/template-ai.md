@@ -46,6 +46,8 @@ AI 模板编辑特别适合下面这些任务：
 - **模型名称**
 - **API Key**
 
+可选的 **Max Tokens** 默认值为 `400000`；如果在设置页填写 `0`，系统会使用该服务端默认值。
+
 > [!IMPORTANT]
 > 当前 AI 助手**仅支持提供 `/responses` endpoint 的服务**。如果某个服务只支持 `/chat/completions` 或其他兼容层，而不支持 `/responses`，则无法用于本项目的 AI 模板编辑与连接测试。
 

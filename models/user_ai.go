@@ -15,6 +15,7 @@ import (
 )
 
 const userAISecretVersion = "v1"
+const defaultSystemAIMaxTokens = 400000
 
 type UserAISettings struct {
 	Enabled         bool              `json:"enabled"`
@@ -159,11 +160,11 @@ func GetSystemAISettings() (UserAISettings, error) {
 		Model:        getSystemSettingValue(systemAIModelKey),
 		HasKey:       encryptedKey != "",
 		Temperature:  parseSystemAIFloat(systemAITemperatureKey, 0.2),
-		MaxTokens:    parseSystemAIInt(systemAIMaxTokensKey, 1200),
+		MaxTokens:    parseSystemAIInt(systemAIMaxTokensKey, defaultSystemAIMaxTokens),
 		ProviderType: "openai_compatible",
 	}
 	if settings.MaxTokens <= 0 {
-		settings.MaxTokens = 1200
+		settings.MaxTokens = defaultSystemAIMaxTokens
 	}
 	if settings.HasKey {
 		key, err := DecryptUserAISecret(encryptedKey)
