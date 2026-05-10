@@ -32,6 +32,34 @@ body:
         - macOS
     validations:
       required: true
+  - type: dropdown
+    id: database
+    attributes:
+      label: 数据库类型 (Database Type)
+      description: |
+        您当前使用的是哪种数据库？
+        Which database are you using?
+      options:
+        - SQLite
+        - MySQL
+        - PostgreSQL
+        - 其他，需要在问题描述中补充说明 (Other, describe in the issue)
+    validations:
+      required: true
+  - type: dropdown
+    id: network_environment
+    attributes:
+      label: 网络环境 (Network Environment)
+      description: |
+        请说明运行实例所处的网络环境。
+        Please describe the network environment where the instance runs.
+      options:
+        - NAS
+        - VPS（用户同地区）
+        - VPS（非用户相同国家地区）
+        - 其他，需要在问题描述中补充说明 (Other, describe in the issue)
+    validations:
+      required: true
   - type: textarea
     id: description
     attributes:
