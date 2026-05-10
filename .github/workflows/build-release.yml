@@ -47,6 +47,11 @@ jobs:
           cd webs
           yarn install --immutable
 
+      - name: Lint frontend
+        run: |
+          cd webs
+          yarn run lint
+
       - name: Build frontend
         run: |
           cd webs
@@ -59,9 +64,40 @@ jobs:
           path: webs/dist/
           retention-days: 1
 
+  backend-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.26.1'
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Download Go modules
+        run: go mod download
+
+      - name: Check Go formatting
+        run: |
+          UNFORMATTED="$(gofmt -l $(git ls-files '*.go'))"
+          if [ -n "$UNFORMATTED" ]; then
+            echo "Go files are not gofmt-formatted:"
+            printf '%s\n' "$UNFORMATTED"
+            exit 1
+          fi
+
+      - name: Lint Go with go vet
+        run: go vet ./...
+
+      - name: Run Go tests
+        run: go test ./...
+
   # 使用矩阵策略并发构建不同架构的二进制文件
   build-go-binaries:
-    needs: build-frontend
+    needs: [build-frontend, backend-quality]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false  # 允许其他架构继续构建，即使某个失败

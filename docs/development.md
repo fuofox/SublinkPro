@@ -99,10 +99,24 @@ yarn run lint:fix
 yarn run prettier
 ```
 
+前端开发完成后必须至少运行 `yarn run lint`；涉及构建产物、资源路径、路由、base-path 或生产集成时，还必须运行 `yarn run build`。
+
 > [!NOTE]
 > 当前仓库**没有权威的前端 `test` 或 `typecheck` 脚本**。不要在文档或自动化里发明不存在的校验流程。
 
-### 5. 普通后端构建
+### 5. 后端校验
+
+后端开发完成后，Go 文件必须通过 `gofmt` 格式化，并运行基础 lint / 静态检查与相关测试：
+
+```bash
+gofmt -w <changed-go-files>
+go vet ./...
+go test ./...
+```
+
+新增或修改关键业务逻辑、接口契约、权限判断、配置语义、迁移、调度任务、mihomo 集成、协议解析或数据转换时，应同步补充或更新对应 Go 测试。GitHub 发布构建会在构建二进制前运行 `gofmt` 检查、`go vet ./...` 和全仓 `go test ./...`。
+
+### 6. 普通后端构建
 
 ```bash
 go build -o sublinkpro main.go
@@ -110,20 +124,27 @@ go build -o sublinkpro main.go
 
 这适合开发环境或快速本地编译，不代表生产嵌入构建。
 
-### 6. 生产构建（实际流程）
+### 7. 生产构建（实际流程）
 
-生产构建是两阶段：
+生产构建是两阶段；本地执行生产风格构建前，应先完成前端 lint / build 和后端格式、lint、测试校验：
 
 ```bash
-# 1) 构建前端
-cd webs && yarn run build
+# 1) 前端 lint 与构建
+cd webs
+yarn run lint
+yarn run build
 
-# 2) 准备生产静态资源
+# 2) 后端格式、lint 与测试
 cd ..
+gofmt -w <changed-go-files>
+go vet ./...
+go test ./...
+
+# 3) 准备生产静态资源
 rm -rf static && mkdir -p static
 cp -R webs/dist/. static/
 
-# 3) 构建生产后端（嵌入前端资源）
+# 4) 构建生产后端（嵌入前端资源）
 CGO_ENABLED=0 go build -tags=prod -ldflags="-s -w" -o sublinkPro
 ```
 

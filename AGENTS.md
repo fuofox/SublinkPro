@@ -300,11 +300,28 @@ yarn run start
 Run from `webs/`:
 
 ```bash
-yarn run build
 yarn run lint
+yarn run build
 yarn run lint:fix
 yarn run prettier
 ```
+
+前端改动完成后必须至少运行 `yarn run lint`；涉及构建、路由、资源或生产集成时还必须运行 `yarn run build`。
+After frontend changes, run at least `yarn run lint`; also run `yarn run build` when build output, routing, assets, or production integration are affected.
+
+### 后端校验 / Backend validation
+
+在仓库根目录执行：
+Run from the repo root:
+
+```bash
+gofmt -w <changed-go-files>
+go vet ./...
+go test ./...
+```
+
+后端开发完成后必须保持 Go 文件通过 `gofmt` 格式化，并运行 `go vet ./...` 和相关 Go 测试；发布前的 GitHub 工作流会运行全仓 `go test ./...`。
+After backend changes, keep Go files formatted with `gofmt`, and run `go vet ./...` plus relevant Go tests; the GitHub release workflow runs repository-wide `go test ./...` before publishing.
 
 ### 后端构建 / Backend build
 
@@ -343,7 +360,13 @@ Observed CI flow in `.github/workflows/build-release.yml`:
   Node 22
 - `corepack enable`
 - `cd webs && yarn install --immutable`
+- `cd webs && yarn run lint`
 - `cd webs && yarn run build`
+- Go 1.26.1
+- `gofmt` 格式检查
+  `gofmt` formatting check
+- `go vet ./...`
+- `go test ./...`
 - 下载前端产物到 `static/`  
   download frontend artifacts into `static/`
 - `go build -tags=prod ...`
@@ -671,33 +694,35 @@ Clear, maintainable tests and predictable test file organization are basic requi
 对于前端改动：  
 For frontend changes:
 
-- 至少运行与改动相关的 `yarn` 命令。  
-  At minimum, run relevant `yarn` commands in `webs/`.
-- 通常应运行 `yarn run lint` 和 `yarn run build`。  
-  Usually run `yarn run lint` and `yarn run build`.
+- 必须运行 `yarn run lint`。
+  Run `yarn run lint`.
+- 涉及构建产物、资源路径、路由、base-path 或生产集成时，必须同时运行 `yarn run build`。
+  Also run `yarn run build` when build output, asset paths, routing, base-path, or production integration are affected.
 
 对于后端改动：  
 For backend changes:
 
+- Go 文件必须通过 `gofmt` 格式化；本地开发可对改动文件运行 `gofmt -w <changed-go-files>`。
+  Go files must be formatted with `gofmt`; locally, run `gofmt -w <changed-go-files>` for changed Go files.
+- 必须运行 `go vet ./...` 做基础 Go lint / 静态检查。
+  Run `go vet ./...` for baseline Go lint/static checks.
+- 新增或修改后端逻辑时必须运行相关 `go test`；发布前 GitHub 工作流运行全仓 `go test ./...`。
+  Run relevant `go test` for backend logic changes; the GitHub release workflow runs repository-wide `go test ./...` before publishing.
 - 至少保证相关包可以成功构建。  
   At minimum, ensure the touched package builds cleanly.
-- 如果改动包内已有测试，优先运行相关 `go test`。  
-  Use targeted `go test` where tests already exist for touched packages.
 - 如果改了启动、构建或配置行为，要跑真实构建命令验证。  
   If you modify startup, build, or config behavior, verify with an actual build command.
 
 注意：  
 Notes:
 
-- 仓库里有 Go 测试文件，但 docs / CI 中没有发现单一权威的根级测试命令。  
-  The repo contains Go test files, but no single authoritative root test command was found in docs or CI.
-- 没有发现权威的全仓 Go lint 命令。  
-  No authoritative repo-wide Go lint command was found.
+- GitHub 发布构建会在构建二进制前运行 `gofmt` 检查、`go vet ./...` 和 `go test ./...`。
+  The GitHub release build runs a `gofmt` check, `go vet ./...`, and `go test ./...` before building binaries.
 - `webs/package.json` 中没有权威的前端 `test` 或 `typecheck` 脚本。  
   No authoritative frontend `test` or `typecheck` script was found in `webs/package.json`.
 
-因此，写文档或自动化时不要发明不存在的校验流程。  
-So when documenting or automating verification, avoid inventing nonexistent commands.
+因此，写文档或自动化时不要发明不存在的前端测试 / typecheck 流程。
+So when documenting or automating verification, avoid inventing nonexistent frontend test/typecheck workflows.
 
 ## 13. 改行为前优先查看的区域 / High-value areas to inspect before changing behavior
 
