@@ -14,3 +14,8 @@ export function getGroupSortDetail(group) {
 export function saveGroupAirportSort(data) {
   return request({ url: '/v1/group-sort/save', method: 'post', data });
 }
+
+// 重置分组内机场排序，清空该分组的自定义排序配置
+export function resetGroupAirportSort(groupName) {
+  return saveGroupAirportSort({ groupName, airportSorts: [] });
+}

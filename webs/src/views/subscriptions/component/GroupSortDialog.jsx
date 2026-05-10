@@ -28,6 +28,7 @@ import DialogActions from '@mui/material/DialogActions';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import SaveIcon from '@mui/icons-material/Save';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
@@ -35,7 +36,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 // project imports
-import { getGroupSortGroups, getGroupSortDetail, saveGroupAirportSort } from 'api/groupSort';
+import { getGroupSortGroups, getGroupSortDetail, saveGroupAirportSort, resetGroupAirportSort } from 'api/groupSort';
 import useResolvedColorScheme from 'hooks/useResolvedColorScheme';
 import { getReadableTextTokens, getSurfaceTokens } from 'themes/surfaceTokens';
 import { withAlpha } from 'utils/colorUtils';
@@ -59,6 +60,7 @@ export default function GroupSortDialog({ open, onClose, showMessage }) {
   const [airports, setAirports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
@@ -145,8 +147,25 @@ export default function GroupSortDialog({ open, onClose, showMessage }) {
     }
   };
 
+  // 重置当前分组排序
+  const handleReset = async () => {
+    if (!selectedGroup) return;
+    setResetting(true);
+    try {
+      await resetGroupAirportSort(selectedGroup);
+      await loadGroupDetail(selectedGroup);
+      await loadGroups();
+      handleSnackbar('已重置为默认排序', 'success');
+    } catch {
+      handleSnackbar('重置排序失败', 'error');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   // 过滤分组列表
   const filteredGroups = groups.filter((g) => !searchText || g.groupName.toLowerCase().includes(searchText.toLowerCase()));
+  const isSortActionDisabled = loading || saving || resetting || airports.length === 0;
 
   const listItemHoverSurface = withAlpha(palette.primary.main, isDark ? 0.12 : 0.06);
   const listItemSelectedSurface = withAlpha(palette.primary.main, isDark ? 0.18 : 0.1);
@@ -238,20 +257,26 @@ export default function GroupSortDialog({ open, onClose, showMessage }) {
         }}
       >
         <DialogTitle sx={sectionHeaderSx}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
             <Typography variant="h6" sx={{ color: primaryText, fontWeight: 700 }}>
               分组排序
             </Typography>
             {selectedGroup && (
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<SaveIcon />}
-                onClick={handleSave}
-                disabled={saving || airports.length === 0}
-              >
-                {saving ? '保存中...' : '保存排序'}
-              </Button>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<RestartAltIcon />}
+                  onClick={handleReset}
+                  disabled={isSortActionDisabled}
+                  sx={{ borderColor: panelBorder, color: secondaryText }}
+                >
+                  {resetting ? '重置中...' : '重置排序'}
+                </Button>
+                <Button variant="contained" size="small" startIcon={<SaveIcon />} onClick={handleSave} disabled={isSortActionDisabled}>
+                  {saving ? '保存中...' : '保存排序'}
+                </Button>
+              </Stack>
             )}
           </Stack>
         </DialogTitle>
