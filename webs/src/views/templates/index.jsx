@@ -33,7 +33,6 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Autocomplete from '@mui/material/Autocomplete';
 import Switch from '@mui/material/Switch';
-import InputAdornment from '@mui/material/InputAdornment';
 
 // icons
 import AddIcon from '@mui/icons-material/Add';
@@ -276,6 +275,7 @@ export default function TemplateList() {
   const [aiGenerationError, setAIGenerationError] = useState('');
   const [aiLocalAcceptSnapshot, setAILocalAcceptSnapshot] = useState(null);
   const [isAIEnabled, setIsAIEnabled] = useState(false);
+  const [aiCommandOpen, setAICommandOpen] = useState(false);
   const [aiDisabledPromptOpen, setAIDisabledPromptOpen] = useState(false);
   const [errorDialog, setErrorDialog] = useState({ open: false, title: '', message: '' });
   const [usageDialog, setUsageDialog] = useState({ open: false, title: '', message: '', subscriptions: [], action: null });
@@ -324,6 +324,7 @@ export default function TemplateList() {
     abortAIGeneration();
     setTemplateEditorMode('edit');
     setAIPrompt('');
+    setAICommandOpen(false);
     setAIAssistant(createEmptyTemplateAIAssistant());
     setAIGenerationError('');
     setAIGenerating(false);
@@ -971,10 +972,7 @@ export default function TemplateList() {
           top: fullscreen ? 18 : 12,
           left: '50%',
           transform: 'translateX(-50%)',
-          width: {
-            xs: 'calc(100% - 32px)',
-            sm: fullscreen ? 'min(560px, calc(100% - 84px))' : 'min(500px, calc(100% - 64px))'
-          },
+          width: '100%',
           maxWidth: '100%',
           zIndex: 6,
           display: 'flex',
@@ -982,154 +980,224 @@ export default function TemplateList() {
         }}
       >
         <Box
+          role={aiCommandOpen ? undefined : 'button'}
+          tabIndex={aiCommandOpen ? undefined : 0}
+          aria-label={aiCommandOpen ? undefined : '展开 AI 指令工具条'}
+          onClick={aiCommandOpen ? undefined : () => setAICommandOpen(true)}
+          onKeyDown={
+            aiCommandOpen
+              ? undefined
+              : (event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setAICommandOpen(true);
+                  }
+                }
+          }
           sx={{
-            width: '100%',
+            width: aiCommandOpen
+              ? {
+                  xs: 'calc(100% - 32px)',
+                  sm: fullscreen ? 'min(560px, calc(100% - 84px))' : 'min(500px, calc(100% - 64px))'
+                }
+              : 38,
+            minHeight: 38,
             display: 'flex',
             alignItems: 'center',
             gap: 0.75,
-            px: 0.75,
-            py: 0.5,
-            borderRadius: 1,
+            px: aiCommandOpen ? 0.75 : 0,
+            py: aiCommandOpen ? 0.5 : 0,
+            justifyContent: aiCommandOpen ? 'flex-start' : 'center',
+            borderRadius: 999,
             border: 1,
-            borderColor: alpha(theme.palette.common.white, 0.12),
-            bgcolor: alpha(theme.palette.grey[900], 0.82),
-            boxShadow: `0 10px 26px ${alpha(theme.palette.common.black, 0.24)}`,
-            backdropFilter: 'blur(10px)'
+            borderColor: alpha(aiPromptPrimaryLight, aiCommandOpen ? 0.34 : 0.42),
+            bgcolor: alpha(aiCommandOpen ? aiPromptSurface : aiPromptCollapsedSurface, aiCommandOpen ? 0.82 : 0.72),
+            boxShadow: `0 ${aiCommandOpen ? 10 : 8}px ${aiCommandOpen ? 26 : 20}px ${alpha(theme.palette.common.black, aiCommandOpen ? 0.24 : 0.18)}`,
+            backdropFilter: 'blur(10px)',
+            overflow: 'hidden',
+            cursor: aiCommandOpen ? 'default' : 'pointer',
+            transition: theme.transitions.create(
+              ['width', 'min-height', 'padding', 'border-radius', 'background-color', 'border-color', 'box-shadow'],
+              {
+                duration: theme.transitions.duration.shorter,
+                easing: theme.transitions.easing.easeOut
+              }
+            ),
+            '&:hover': aiCommandOpen
+              ? undefined
+              : {
+                  borderColor: alpha(aiPromptPrimaryMain, 0.62),
+                  bgcolor: alpha(aiPromptSurface, 0.9),
+                  boxShadow: `0 12px 28px ${alpha(aiPromptPrimaryMain, 0.18)}`
+                },
+            '&:focus-visible': {
+              outline: `2px solid ${alpha(aiPromptPrimaryLight, 0.68)}`,
+              outlineOffset: 3
+            }
           }}
         >
-          <TextField
-            fullWidth
-            size="small"
-            value={aiPrompt}
-            onChange={(e) => setAIPrompt(e.target.value)}
-            disabled={aiGenerating}
-            placeholder="告诉 AI 要如何调整当前模板…"
-            inputProps={{ 'aria-label': 'AI 指令' }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <AutoAwesomeIcon fontSize="small" sx={{ color: alpha(theme.palette.common.white, 0.92) }} />
-                </InputAdornment>
-              )
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                bgcolor: 'transparent',
-                color: alpha(theme.palette.common.white, 0.96),
-                height: 34,
-                pr: 0.25,
-                '&.Mui-disabled': {
-                  color: alpha(theme.palette.common.white, 0.72),
-                  WebkitTextFillColor: alpha(theme.palette.common.white, 0.72)
-                },
-                '& fieldset': {
-                  borderColor: 'transparent'
-                },
-                '&:hover fieldset': {
-                  borderColor: 'transparent'
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: alpha(theme.palette.primary.main, 0.6)
-                }
-              },
-              '& .MuiInputBase-input': {
-                color: alpha(theme.palette.common.white, 0.96),
-                paddingLeft: 2
-              },
-              '& .MuiInputBase-input.Mui-disabled': {
-                WebkitTextFillColor: alpha(theme.palette.common.white, 0.72)
-              },
-              '& .MuiInputBase-input::placeholder': {
-                color: alpha(theme.palette.common.white, 0.64),
-                opacity: 1
-              },
-              '& .MuiInputAdornment-root': {
-                mr: 0.75,
-                color: alpha(theme.palette.common.white, 0.88)
-              }
-            }}
-          />
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={aiGenerating ? <CircularProgress size={16} sx={{ color: 'common.white' }} /> : <AutoAwesomeIcon />}
-            disabled={aiGenerating}
-            onClick={handleGenerateWithAI}
-            sx={{
-              flexShrink: 0,
-              minWidth: 92,
-              color: 'common.white',
-              boxShadow: 'none',
-              '&.Mui-disabled': {
-                color: 'common.white',
-                bgcolor: alpha(theme.palette.primary.main, 0.5)
-              }
-            }}
-          >
-            {aiGenerating ? '生成中' : '生成'}
-          </Button>
           <IconButton
+            component={aiCommandOpen ? 'button' : 'div'}
             size="small"
-            disabled={!canAcceptAICandidateLocally || aiGenerating}
-            onClick={handleAcceptAICandidateLocally}
+            aria-label={aiCommandOpen ? '收起 AI 指令工具条' : undefined}
+            onClick={
+              aiCommandOpen
+                ? (e) => {
+                    e.stopPropagation();
+                    setAICommandOpen(false);
+                  }
+                : undefined
+            }
+            disabled={aiCommandOpen && aiGenerating}
+            disableRipple={!aiCommandOpen}
             sx={{
+              width: aiCommandOpen ? 32 : 36,
+              height: aiCommandOpen ? 32 : 36,
               flexShrink: 0,
-              borderRadius: 1,
-              bgcolor: alpha(theme.palette.common.white, 0.06),
-              color:
-                canAcceptAICandidateLocally && !aiGenerating
-                  ? alpha(theme.palette.common.white, 0.96)
-                  : alpha(theme.palette.common.white, 0.42),
+              color: aiCommandOpen ? alpha(theme.palette.common.white, aiGenerating ? 0.48 : 0.94) : alpha(aiPromptPrimaryLight, 0.95),
+              transition: theme.transitions.create(['width', 'height', 'color', 'background-color']),
+              '&:hover': aiCommandOpen
+                ? {
+                    bgcolor: alpha(theme.palette.common.white, 0.08)
+                  }
+                : {
+                    bgcolor: 'transparent'
+                  },
               '&.Mui-disabled': {
-                bgcolor: alpha(theme.palette.common.white, 0.04),
-                color: alpha(theme.palette.common.white, 0.34)
+                color: alpha(theme.palette.common.white, 0.42)
               }
             }}
           >
-            <CheckIcon fontSize="small" />
+            <AutoAwesomeIcon fontSize="small" />
           </IconButton>
-          {isEditMode ? (
-            <IconButton
-              size="small"
-              disabled={!canRevertLocalAIAccept || aiGenerating}
-              onClick={handleRevertLastLocalAIAccept}
-              sx={{
-                flexShrink: 0,
-                borderRadius: 1,
-                bgcolor: alpha(theme.palette.common.white, 0.06),
-                color:
-                  canRevertLocalAIAccept && !aiGenerating
-                    ? alpha(theme.palette.common.white, 0.92)
-                    : alpha(theme.palette.common.white, 0.4),
-                '&.Mui-disabled': {
-                  bgcolor: alpha(theme.palette.common.white, 0.04),
-                  color: alpha(theme.palette.common.white, 0.32)
-                }
-              }}
-            >
-              <UndoIcon fontSize="small" />
-            </IconButton>
-          ) : null}
-          {isAISetupIssue ? (
-            <Button
-              size="small"
-              variant="text"
-              disabled={aiGenerating}
-              onClick={() => navigate('/settings?tab=ai')}
-              sx={{
-                flexShrink: 0,
-                minWidth: 'auto',
-                px: 0.75,
-                color: alpha(theme.palette.common.white, 0.92),
-                textDecoration: 'underline',
-                textUnderlineOffset: '2px',
-                '&.Mui-disabled': {
-                  color: alpha(theme.palette.common.white, 0.5)
-                }
-              }}
-            >
-              前往设置
-            </Button>
+          {aiCommandOpen ? (
+            <>
+              <TextField
+                fullWidth
+                size="small"
+                value={aiPrompt}
+                onChange={(e) => setAIPrompt(e.target.value)}
+                disabled={aiGenerating}
+                placeholder="告诉 AI 要如何调整当前模板…"
+                inputProps={{ 'aria-label': 'AI 指令' }}
+                sx={{
+                  minWidth: 0,
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'transparent',
+                    color: alpha(theme.palette.common.white, 0.96),
+                    height: 34,
+                    pr: 0.25,
+                    borderRadius: 999,
+                    '&.Mui-disabled': {
+                      color: alpha(theme.palette.common.white, 0.72),
+                      WebkitTextFillColor: alpha(theme.palette.common.white, 0.72)
+                    },
+                    '& fieldset': {
+                      borderColor: 'transparent'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'transparent'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: alpha(theme.palette.primary.main, 0.6)
+                    }
+                  },
+                  '& .MuiInputBase-input': {
+                    color: alpha(theme.palette.common.white, 0.96)
+                  },
+                  '& .MuiInputBase-input.Mui-disabled': {
+                    WebkitTextFillColor: alpha(theme.palette.common.white, 0.72)
+                  },
+                  '& .MuiInputBase-input::placeholder': {
+                    color: alpha(theme.palette.common.white, 0.64),
+                    opacity: 1
+                  }
+                }}
+              />
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={aiGenerating ? <CircularProgress size={16} sx={{ color: 'common.white' }} /> : <AutoAwesomeIcon />}
+                disabled={aiGenerating}
+                onClick={handleGenerateWithAI}
+                sx={{
+                  flexShrink: 0,
+                  minWidth: 92,
+                  borderRadius: 999,
+                  color: 'common.white',
+                  boxShadow: 'none',
+                  '&.Mui-disabled': {
+                    color: 'common.white',
+                    bgcolor: alpha(theme.palette.primary.main, 0.5)
+                  }
+                }}
+              >
+                {aiGenerating ? '生成中' : '生成'}
+              </Button>
+              <IconButton
+                size="small"
+                disabled={!canAcceptAICandidateLocally || aiGenerating}
+                onClick={handleAcceptAICandidateLocally}
+                sx={{
+                  flexShrink: 0,
+                  borderRadius: 1,
+                  bgcolor: alpha(theme.palette.common.white, 0.06),
+                  color:
+                    canAcceptAICandidateLocally && !aiGenerating
+                      ? alpha(theme.palette.common.white, 0.96)
+                      : alpha(theme.palette.common.white, 0.42),
+                  '&.Mui-disabled': {
+                    bgcolor: alpha(theme.palette.common.white, 0.04),
+                    color: alpha(theme.palette.common.white, 0.34)
+                  }
+                }}
+              >
+                <CheckIcon fontSize="small" />
+              </IconButton>
+              {isEditMode ? (
+                <IconButton
+                  size="small"
+                  disabled={!canRevertLocalAIAccept || aiGenerating}
+                  onClick={handleRevertLastLocalAIAccept}
+                  sx={{
+                    flexShrink: 0,
+                    borderRadius: 1,
+                    bgcolor: alpha(theme.palette.common.white, 0.06),
+                    color:
+                      canRevertLocalAIAccept && !aiGenerating
+                        ? alpha(theme.palette.common.white, 0.92)
+                        : alpha(theme.palette.common.white, 0.4),
+                    '&.Mui-disabled': {
+                      bgcolor: alpha(theme.palette.common.white, 0.04),
+                      color: alpha(theme.palette.common.white, 0.32)
+                    }
+                  }}
+                >
+                  <UndoIcon fontSize="small" />
+                </IconButton>
+              ) : null}
+              {isAISetupIssue ? (
+                <Button
+                  size="small"
+                  variant="text"
+                  disabled={aiGenerating}
+                  onClick={() => navigate('/settings?tab=ai')}
+                  sx={{
+                    flexShrink: 0,
+                    minWidth: 'auto',
+                    px: 0.75,
+                    color: alpha(theme.palette.common.white, 0.92),
+                    textDecoration: 'underline',
+                    textUnderlineOffset: '2px',
+                    '&.Mui-disabled': {
+                      color: alpha(theme.palette.common.white, 0.5)
+                    }
+                  }}
+                >
+                  前往设置
+                </Button>
+              ) : null}
+            </>
           ) : null}
         </Box>
       </Box>
@@ -1232,7 +1300,7 @@ export default function TemplateList() {
           }}
         />
       )}
-      {isAIEnabled ? (
+      {isAIEnabled && aiCommandOpen ? (
         <Box
           sx={{
             position: 'absolute',
@@ -1292,7 +1360,7 @@ export default function TemplateList() {
             ) : null}
           </Stack>
         </Box>
-      ) : (
+      ) : !isAIEnabled ? (
         <Box
           sx={{
             position: 'absolute',
@@ -1312,7 +1380,7 @@ export default function TemplateList() {
             onClick={() => setAIDisabledPromptOpen((open) => !open)}
             sx={{
               width: aiDisabledPromptOpen ? { xs: 248, sm: 292 } : 38,
-              minHeight: 38,
+              minHeight: aiCommandOpen ? 44 : 38,
               p: 0,
               border: 1,
               borderColor: alpha(aiPromptPrimaryLight, aiDisabledPromptOpen ? 0.46 : 0.34),
@@ -1386,7 +1454,7 @@ export default function TemplateList() {
             </Stack>
           </Box>
         </Box>
-      )}
+      ) : null}
     </Box>
   );
 
