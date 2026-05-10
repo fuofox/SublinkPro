@@ -336,6 +336,8 @@ After backend changes, keep Go files formatted with `gofmt`, and run `go vet ./.
   Frontend checks: `yarn run lint` and `yarn run build`.
 - 每个检查 job 会写入 GitHub Step Summary，方便快速看到哪些检查已通过、哪些检查失败。
   Each check job writes a GitHub Step Summary so reviewers can quickly see which checks passed or failed.
+- 检查完成后，workflow 会在 PR 下评论检查报告。
+  After checks finish, the workflow comments on the PR with a check report.
 
 ### 后端构建 / Backend build
 
