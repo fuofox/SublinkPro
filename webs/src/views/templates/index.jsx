@@ -63,7 +63,7 @@ import {
   convertRules,
   generateTemplateAICandidateStream
 } from 'api/templates';
-import { getBaseTemplates, updateBaseTemplate } from 'api/settings';
+import { getAISettings, getBaseTemplates, updateBaseTemplate } from 'api/settings';
 import { getNodes } from 'api/nodes';
 import { withAlpha } from 'utils/colorUtils';
 
@@ -250,6 +250,10 @@ export default function TemplateList() {
   const theme = useTheme();
   const palette = theme.vars?.palette || theme.palette;
   const isDark = theme.palette.mode === 'dark';
+  const aiPromptPrimaryLight = theme.palette.primary.light;
+  const aiPromptPrimaryMain = theme.palette.primary.main;
+  const aiPromptSurface = theme.palette.grey[900];
+  const aiPromptCollapsedSurface = theme.palette.grey[800];
   const navigate = useNavigate();
   const matchDownMd = useMediaQuery(theme.breakpoints.down('md'));
   const aiGenerationAbortRef = useRef(null);
@@ -271,6 +275,8 @@ export default function TemplateList() {
   const [aiAssistant, setAIAssistant] = useState(createEmptyTemplateAIAssistant);
   const [aiGenerationError, setAIGenerationError] = useState('');
   const [aiLocalAcceptSnapshot, setAILocalAcceptSnapshot] = useState(null);
+  const [isAIEnabled, setIsAIEnabled] = useState(false);
+  const [aiDisabledPromptOpen, setAIDisabledPromptOpen] = useState(false);
   const [errorDialog, setErrorDialog] = useState({ open: false, title: '', message: '' });
   const [usageDialog, setUsageDialog] = useState({ open: false, title: '', message: '', subscriptions: [], action: null });
   const [page, setPage] = useState(0);
@@ -362,6 +368,11 @@ export default function TemplateList() {
 
   useEffect(() => {
     fetchTemplates(0, rowsPerPage);
+    getAISettings()
+      .then((res) => {
+        setIsAIEnabled(Boolean(res.data?.enabled));
+      })
+      .catch((err) => console.log('获取 AI 助手设置失败:', err));
     // 获取 ACL4SSR 预设列表
     getACL4SSRPresets()
       .then((res) => {
@@ -547,8 +558,8 @@ export default function TemplateList() {
 
       const errorMessage = error.response?.data?.message || error.message || 'AI 生成失败';
       const friendlyErrorMessage =
-        errorMessage.includes('当前用户未启用 AI 助手') || errorMessage.includes('AI 设置不完整，请先配置 Base URL、模型和 API Key')
-          ? 'AI 助手当前不可用，请前往 /settings，在 个人设置 -> AI 助手 中完成配置。'
+        errorMessage.includes('AI 助手未启用') || errorMessage.includes('AI 设置不完整，请先配置 Base URL、模型和 API Key')
+          ? 'AI 助手当前不可用，请前往 /settings 的 AI 助手页签完成配置。'
           : errorMessage;
       setAIGenerationError(errorMessage);
       showMessage(friendlyErrorMessage, 'error');
@@ -579,10 +590,10 @@ export default function TemplateList() {
   const canSwitchToDiffMode = canReviewAICandidate;
 
   useEffect(() => {
-    if (templateEditorMode === 'diff' && !canSwitchToDiffMode) {
+    if (templateEditorMode === 'diff' && (!canSwitchToDiffMode || !isAIEnabled)) {
       setTemplateEditorMode('edit');
     }
-  }, [templateEditorMode, canSwitchToDiffMode]);
+  }, [templateEditorMode, canSwitchToDiffMode, isAIEnabled]);
 
   const handleAcceptAICandidateLocally = () => {
     if (!aiAssistant.candidateText) {
@@ -795,8 +806,8 @@ export default function TemplateList() {
           ? 'success.main'
           : alpha(theme.palette.common.white, 0.88);
   const isAISetupIssue =
-    aiGenerationError.includes('当前用户未启用 AI 助手') || aiGenerationError.includes('AI 设置不完整，请先配置 Base URL、模型和 API Key');
-  const aiSetupGuidanceText = isAISetupIssue ? '请前往 /settings，在 个人设置 -> AI 助手 中启用并完成配置。' : '';
+    aiGenerationError.includes('AI 助手未启用') || aiGenerationError.includes('AI 设置不完整，请先配置 Base URL、模型和 API Key');
+  const aiSetupGuidanceText = isAISetupIssue ? '请前往 /settings 的 AI 助手页签启用并完成配置。' : '';
   const aiFriendlyGenerationError = isAISetupIssue ? 'AI 助手当前不可用。' : aiGenerationError;
   const aiUsageItems = buildTemplateAIUsageItems(aiAssistant.usage);
 
@@ -880,6 +891,7 @@ export default function TemplateList() {
   );
 
   const renderAIControlPanel = ({ compact = false, minimal = false } = {}) => {
+    if (!isAIEnabled) return null;
     const dense = compact || minimal;
 
     return (
@@ -950,174 +962,179 @@ export default function TemplateList() {
     );
   };
 
-  const renderAIFloatingCommandBar = ({ fullscreen = false } = {}) => (
-    <Box
-      sx={{
-        position: 'absolute',
-        top: fullscreen ? 18 : 12,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: {
-          xs: 'calc(100% - 32px)',
-          sm: fullscreen ? 'min(560px, calc(100% - 84px))' : 'min(500px, calc(100% - 64px))'
-        },
-        maxWidth: '100%',
-        zIndex: 6,
-        display: 'flex',
-        justifyContent: 'center'
-      }}
-    >
+  const renderAIFloatingCommandBar = ({ fullscreen = false } = {}) => {
+    if (!isAIEnabled) return null;
+    return (
       <Box
         sx={{
-          width: '100%',
+          position: 'absolute',
+          top: fullscreen ? 18 : 12,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: {
+            xs: 'calc(100% - 32px)',
+            sm: fullscreen ? 'min(560px, calc(100% - 84px))' : 'min(500px, calc(100% - 64px))'
+          },
+          maxWidth: '100%',
+          zIndex: 6,
           display: 'flex',
-          alignItems: 'center',
-          gap: 0.75,
-          px: 0.75,
-          py: 0.5,
-          borderRadius: 1,
-          border: 1,
-          borderColor: alpha(theme.palette.common.white, 0.12),
-          bgcolor: alpha(theme.palette.grey[900], 0.82),
-          boxShadow: `0 10px 26px ${alpha(theme.palette.common.black, 0.24)}`,
-          backdropFilter: 'blur(10px)'
+          justifyContent: 'center'
         }}
       >
-        <TextField
-          fullWidth
-          size="small"
-          value={aiPrompt}
-          onChange={(e) => setAIPrompt(e.target.value)}
-          disabled={aiGenerating}
-          placeholder="告诉 AI 要如何调整当前模板…"
-          inputProps={{ 'aria-label': 'AI 指令' }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <AutoAwesomeIcon fontSize="small" sx={{ color: alpha(theme.palette.common.white, 0.92) }} />
-              </InputAdornment>
-            )
-          }}
+        <Box
           sx={{
-            '& .MuiOutlinedInput-root': {
-              bgcolor: 'transparent',
-              color: alpha(theme.palette.common.white, 0.96),
-              height: 34,
-              pr: 0.25,
-              '&.Mui-disabled': {
-                color: alpha(theme.palette.common.white, 0.72),
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.75,
+            px: 0.75,
+            py: 0.5,
+            borderRadius: 1,
+            border: 1,
+            borderColor: alpha(theme.palette.common.white, 0.12),
+            bgcolor: alpha(theme.palette.grey[900], 0.82),
+            boxShadow: `0 10px 26px ${alpha(theme.palette.common.black, 0.24)}`,
+            backdropFilter: 'blur(10px)'
+          }}
+        >
+          <TextField
+            fullWidth
+            size="small"
+            value={aiPrompt}
+            onChange={(e) => setAIPrompt(e.target.value)}
+            disabled={aiGenerating}
+            placeholder="告诉 AI 要如何调整当前模板…"
+            inputProps={{ 'aria-label': 'AI 指令' }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <AutoAwesomeIcon fontSize="small" sx={{ color: alpha(theme.palette.common.white, 0.92) }} />
+                </InputAdornment>
+              )
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                bgcolor: 'transparent',
+                color: alpha(theme.palette.common.white, 0.96),
+                height: 34,
+                pr: 0.25,
+                '&.Mui-disabled': {
+                  color: alpha(theme.palette.common.white, 0.72),
+                  WebkitTextFillColor: alpha(theme.palette.common.white, 0.72)
+                },
+                '& fieldset': {
+                  borderColor: 'transparent'
+                },
+                '&:hover fieldset': {
+                  borderColor: 'transparent'
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: alpha(theme.palette.primary.main, 0.6)
+                }
+              },
+              '& .MuiInputBase-input': {
+                color: alpha(theme.palette.common.white, 0.96),
+                paddingLeft: 2
+              },
+              '& .MuiInputBase-input.Mui-disabled': {
                 WebkitTextFillColor: alpha(theme.palette.common.white, 0.72)
               },
-              '& fieldset': {
-                borderColor: 'transparent'
+              '& .MuiInputBase-input::placeholder': {
+                color: alpha(theme.palette.common.white, 0.64),
+                opacity: 1
               },
-              '&:hover fieldset': {
-                borderColor: 'transparent'
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: alpha(theme.palette.primary.main, 0.6)
+              '& .MuiInputAdornment-root': {
+                mr: 0.75,
+                color: alpha(theme.palette.common.white, 0.88)
               }
-            },
-            '& .MuiInputBase-input': {
-              color: alpha(theme.palette.common.white, 0.96),
-              paddingLeft: 2
-            },
-            '& .MuiInputBase-input.Mui-disabled': {
-              WebkitTextFillColor: alpha(theme.palette.common.white, 0.72)
-            },
-            '& .MuiInputBase-input::placeholder': {
-              color: alpha(theme.palette.common.white, 0.64),
-              opacity: 1
-            },
-            '& .MuiInputAdornment-root': {
-              mr: 0.75,
-              color: alpha(theme.palette.common.white, 0.88)
-            }
-          }}
-        />
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={aiGenerating ? <CircularProgress size={16} sx={{ color: 'common.white' }} /> : <AutoAwesomeIcon />}
-          disabled={aiGenerating}
-          onClick={handleGenerateWithAI}
-          sx={{
-            flexShrink: 0,
-            minWidth: 92,
-            color: 'common.white',
-            boxShadow: 'none',
-            '&.Mui-disabled': {
+            }}
+          />
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={aiGenerating ? <CircularProgress size={16} sx={{ color: 'common.white' }} /> : <AutoAwesomeIcon />}
+            disabled={aiGenerating}
+            onClick={handleGenerateWithAI}
+            sx={{
+              flexShrink: 0,
+              minWidth: 92,
               color: 'common.white',
-              bgcolor: alpha(theme.palette.primary.main, 0.5)
-            }
-          }}
-        >
-          {aiGenerating ? '生成中' : '生成'}
-        </Button>
-        <IconButton
-          size="small"
-          disabled={!canAcceptAICandidateLocally || aiGenerating}
-          onClick={handleAcceptAICandidateLocally}
-          sx={{
-            flexShrink: 0,
-            borderRadius: 1,
-            bgcolor: alpha(theme.palette.common.white, 0.06),
-            color:
-              canAcceptAICandidateLocally && !aiGenerating
-                ? alpha(theme.palette.common.white, 0.96)
-                : alpha(theme.palette.common.white, 0.42),
-            '&.Mui-disabled': {
-              bgcolor: alpha(theme.palette.common.white, 0.04),
-              color: alpha(theme.palette.common.white, 0.34)
-            }
-          }}
-        >
-          <CheckIcon fontSize="small" />
-        </IconButton>
-        {isEditMode ? (
+              boxShadow: 'none',
+              '&.Mui-disabled': {
+                color: 'common.white',
+                bgcolor: alpha(theme.palette.primary.main, 0.5)
+              }
+            }}
+          >
+            {aiGenerating ? '生成中' : '生成'}
+          </Button>
           <IconButton
             size="small"
-            disabled={!canRevertLocalAIAccept || aiGenerating}
-            onClick={handleRevertLastLocalAIAccept}
+            disabled={!canAcceptAICandidateLocally || aiGenerating}
+            onClick={handleAcceptAICandidateLocally}
             sx={{
               flexShrink: 0,
               borderRadius: 1,
               bgcolor: alpha(theme.palette.common.white, 0.06),
               color:
-                canRevertLocalAIAccept && !aiGenerating ? alpha(theme.palette.common.white, 0.92) : alpha(theme.palette.common.white, 0.4),
+                canAcceptAICandidateLocally && !aiGenerating
+                  ? alpha(theme.palette.common.white, 0.96)
+                  : alpha(theme.palette.common.white, 0.42),
               '&.Mui-disabled': {
                 bgcolor: alpha(theme.palette.common.white, 0.04),
-                color: alpha(theme.palette.common.white, 0.32)
+                color: alpha(theme.palette.common.white, 0.34)
               }
             }}
           >
-            <UndoIcon fontSize="small" />
+            <CheckIcon fontSize="small" />
           </IconButton>
-        ) : null}
-        {isAISetupIssue ? (
-          <Button
-            size="small"
-            variant="text"
-            disabled={aiGenerating}
-            onClick={() => navigate('/settings')}
-            sx={{
-              flexShrink: 0,
-              minWidth: 'auto',
-              px: 0.75,
-              color: alpha(theme.palette.common.white, 0.92),
-              textDecoration: 'underline',
-              textUnderlineOffset: '2px',
-              '&.Mui-disabled': {
-                color: alpha(theme.palette.common.white, 0.5)
-              }
-            }}
-          >
-            前往设置
-          </Button>
-        ) : null}
+          {isEditMode ? (
+            <IconButton
+              size="small"
+              disabled={!canRevertLocalAIAccept || aiGenerating}
+              onClick={handleRevertLastLocalAIAccept}
+              sx={{
+                flexShrink: 0,
+                borderRadius: 1,
+                bgcolor: alpha(theme.palette.common.white, 0.06),
+                color:
+                  canRevertLocalAIAccept && !aiGenerating
+                    ? alpha(theme.palette.common.white, 0.92)
+                    : alpha(theme.palette.common.white, 0.4),
+                '&.Mui-disabled': {
+                  bgcolor: alpha(theme.palette.common.white, 0.04),
+                  color: alpha(theme.palette.common.white, 0.32)
+                }
+              }}
+            >
+              <UndoIcon fontSize="small" />
+            </IconButton>
+          ) : null}
+          {isAISetupIssue ? (
+            <Button
+              size="small"
+              variant="text"
+              disabled={aiGenerating}
+              onClick={() => navigate('/settings?tab=ai')}
+              sx={{
+                flexShrink: 0,
+                minWidth: 'auto',
+                px: 0.75,
+                color: alpha(theme.palette.common.white, 0.92),
+                textDecoration: 'underline',
+                textUnderlineOffset: '2px',
+                '&.Mui-disabled': {
+                  color: alpha(theme.palette.common.white, 0.5)
+                }
+              }}
+            >
+              前往设置
+            </Button>
+          ) : null}
+        </Box>
       </Box>
-    </Box>
-  );
+    );
+  };
 
   const renderTemplateEditor = ({ fullscreen = false } = {}) => (
     <Box
@@ -1215,65 +1232,161 @@ export default function TemplateList() {
           }}
         />
       )}
-      <Box
-        sx={{
-          position: 'absolute',
-          right: { xs: 24, sm: 32 },
-          bottom: 16,
-          maxWidth: { xs: 'calc(100% - 48px)', sm: 380 },
-          px: 1.25,
-          py: 0.75,
-          borderRadius: 1,
-          bgcolor: alpha(theme.palette.grey[900], 0.76),
-          backdropFilter: 'blur(8px)',
-          border: 1,
-          borderColor: alpha(theme.palette.common.white, 0.12),
-          boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.22)}`,
-          zIndex: 5,
-          pointerEvents: 'none'
-        }}
-      >
-        <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-          {aiStateChips}
-          <Typography
-            variant="caption"
+      {isAIEnabled ? (
+        <Box
+          sx={{
+            position: 'absolute',
+            right: { xs: 24, sm: 32 },
+            bottom: 16,
+            maxWidth: { xs: 'calc(100% - 48px)', sm: 380 },
+            px: 1.25,
+            py: 0.75,
+            borderRadius: 1,
+            bgcolor: alpha(theme.palette.grey[900], 0.76),
+            backdropFilter: 'blur(8px)',
+            border: 1,
+            borderColor: alpha(theme.palette.common.white, 0.12),
+            boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.22)}`,
+            zIndex: 5,
+            pointerEvents: 'none'
+          }}
+        >
+          <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+            {aiStateChips}
+            <Typography
+              variant="caption"
+              sx={{
+                color: aiCandidateMatchesEditor ? 'common.white' : isAISetupIssue ? alpha(theme.palette.common.white, 0.94) : aiStatusColor,
+                display: 'block',
+                lineHeight: 1.45,
+                textShadow: aiCandidateMatchesEditor ? `0 1px 2px ${alpha(theme.palette.common.black, 0.45)}` : 'none'
+              }}
+            >
+              {isAISetupIssue ? aiFriendlyGenerationError : aiStatusText}
+            </Typography>
+            {isAISetupIssue ? (
+              <Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.76), display: 'block', lineHeight: 1.4 }}>
+                {aiSetupGuidanceText}
+              </Typography>
+            ) : null}
+            {aiUsageItems.length > 0 ? (
+              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                {aiUsageItems.map((item) => (
+                  <Chip
+                    key={item.key}
+                    size="small"
+                    variant="outlined"
+                    label={`${item.label} ${item.value}`}
+                    sx={{
+                      color: alpha(theme.palette.common.white, 0.92),
+                      borderColor: alpha(theme.palette.common.white, 0.18),
+                      bgcolor: alpha(theme.palette.common.white, 0.04),
+                      '& .MuiChip-label': {
+                        px: 1,
+                        fontWeight: 500
+                      }
+                    }}
+                  />
+                ))}
+              </Stack>
+            ) : null}
+          </Stack>
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            position: 'absolute',
+            right: { xs: 14, sm: 18 },
+            bottom: 16,
+            zIndex: 5,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            maxWidth: { xs: 'calc(100% - 28px)', sm: 320 },
+            pointerEvents: 'auto'
+          }}
+        >
+          <Box
+            component="button"
+            type="button"
+            aria-label={aiDisabledPromptOpen ? '收起 AI 助手启用提示' : '查看 AI 助手启用提示'}
+            onClick={() => setAIDisabledPromptOpen((open) => !open)}
             sx={{
-              color: aiCandidateMatchesEditor ? 'common.white' : isAISetupIssue ? alpha(theme.palette.common.white, 0.94) : aiStatusColor,
-              display: 'block',
-              lineHeight: 1.45,
-              textShadow: aiCandidateMatchesEditor ? `0 1px 2px ${alpha(theme.palette.common.black, 0.45)}` : 'none'
+              width: aiDisabledPromptOpen ? { xs: 248, sm: 292 } : 38,
+              minHeight: 38,
+              p: 0,
+              border: 1,
+              borderColor: alpha(aiPromptPrimaryLight, aiDisabledPromptOpen ? 0.46 : 0.34),
+              borderRadius: 999,
+              bgcolor: aiDisabledPromptOpen ? alpha(aiPromptSurface, 0.86) : alpha(aiPromptCollapsedSurface, 0.68),
+              color: alpha(theme.palette.common.white, 0.92),
+              backdropFilter: 'blur(10px)',
+              boxShadow: `0 10px 24px ${alpha(theme.palette.common.black, aiDisabledPromptOpen ? 0.28 : 0.18)}`,
+              cursor: 'pointer',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: aiDisabledPromptOpen ? 'flex-start' : 'center',
+              transition: theme.transitions.create(['width', 'background-color', 'border-color', 'box-shadow', 'transform'], {
+                duration: theme.transitions.duration.shorter,
+                easing: theme.transitions.easing.easeOut
+              }),
+              animation: aiDisabledPromptOpen ? 'none' : 'template-ai-disabled-pulse 2.8s ease-in-out infinite',
+              '@keyframes template-ai-disabled-pulse': {
+                '0%, 100%': { transform: 'scale(1)' },
+                '50%': { transform: 'scale(1.06)' }
+              },
+              '&:hover': {
+                borderColor: alpha(aiPromptPrimaryMain, 0.58),
+                bgcolor: alpha(aiPromptSurface, 0.9),
+                boxShadow: `0 12px 28px ${alpha(aiPromptPrimaryMain, 0.18)}`
+              }
             }}
           >
-            {isAISetupIssue ? aiFriendlyGenerationError : aiStatusText}
-          </Typography>
-          {isAISetupIssue ? (
-            <Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.76), display: 'block', lineHeight: 1.4 }}>
-              {aiSetupGuidanceText}
-            </Typography>
-          ) : null}
-          {aiUsageItems.length > 0 ? (
-            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-              {aiUsageItems.map((item) => (
-                <Chip
-                  key={item.key}
-                  size="small"
-                  variant="outlined"
-                  label={`${item.label} ${item.value}`}
-                  sx={{
-                    color: alpha(theme.palette.common.white, 0.92),
-                    borderColor: alpha(theme.palette.common.white, 0.18),
-                    bgcolor: alpha(theme.palette.common.white, 0.04),
-                    '& .MuiChip-label': {
-                      px: 1,
-                      fontWeight: 500
-                    }
-                  }}
-                />
-              ))}
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                color: alpha(aiPromptPrimaryLight, 0.95)
+              }}
+            >
+              <AutoAwesomeIcon fontSize="small" />
+            </Box>
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              sx={{
+                minWidth: 0,
+                pr: 1.25,
+                opacity: aiDisabledPromptOpen ? 1 : 0,
+                transform: aiDisabledPromptOpen ? 'translateX(0)' : 'translateX(8px)',
+                transition: theme.transitions.create(['opacity', 'transform'], { duration: theme.transitions.duration.shorter }),
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.82) }}>
+                AI 助手未启用
+              </Typography>
+              <Typography
+                component="span"
+                variant="caption"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  navigate('/settings?tab=ai');
+                }}
+                sx={{ color: aiPromptPrimaryLight, fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: 3 }}
+              >
+                去设置
+              </Typography>
             </Stack>
-          ) : null}
-        </Stack>
-      </Box>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 

@@ -22,6 +22,53 @@ func md5Hash(src string) string {
 	return hex.EncodeToString(m.Sum(nil))
 }
 
+func legacyUserAISettingsShouldMigrate() bool {
+	enabled, _ := GetSetting(systemAIEnabledKey)
+	baseURL, _ := GetSetting(systemAIBaseURLKey)
+	model, _ := GetSetting(systemAIModelKey)
+	apiKey, _ := GetSetting(systemAIAPIKeyKey)
+
+	return strings.TrimSpace(enabled) == "" &&
+		strings.TrimSpace(baseURL) == "" &&
+		strings.TrimSpace(model) == "" &&
+		strings.TrimSpace(apiKey) == ""
+}
+
+func migrateLegacyUserAISettingsToSystemSettings() error {
+	if database.DB == nil || !legacyUserAISettingsShouldMigrate() {
+		return nil
+	}
+
+	var user User
+	if err := database.DB.Where("ai_enabled = ? OR ai_base_url <> '' OR ai_model <> '' OR ai_api_key_encrypted <> ''", true).
+		Order("ai_enabled DESC, id ASC").
+		First(&user).Error; err != nil {
+		return nil
+	}
+	if err := SetSetting(systemAIEnabledKey, strconv.FormatBool(user.AIEnabled)); err != nil {
+		return err
+	}
+	if err := SetSetting(systemAIBaseURLKey, strings.TrimSpace(user.AIBaseURL)); err != nil {
+		return err
+	}
+	if err := SetSetting(systemAIModelKey, strings.TrimSpace(user.AIModel)); err != nil {
+		return err
+	}
+	if err := SetSetting(systemAIAPIKeyKey, strings.TrimSpace(user.AIAPIKeyEncrypted)); err != nil {
+		return err
+	}
+	if err := SetSetting(systemAITemperatureKey, strconv.FormatFloat(user.AITemperature, 'f', -1, 64)); err != nil {
+		return err
+	}
+	if err := SetSetting(systemAIMaxTokensKey, strconv.Itoa(user.AIMaxTokens)); err != nil {
+		return err
+	}
+	if err := SetSetting(systemAIExtraHeadersKey, strings.TrimSpace(user.AIExtraHeaders)); err != nil {
+		return err
+	}
+	return nil
+}
+
 // RunMigrations 执行所有数据库迁移
 // 此函数必须在 database.Init() 之后调用
 func RunMigrations() error {
@@ -113,6 +160,12 @@ func RunMigrations() error {
 		return db.AutoMigrate(&User{})
 	}); err != nil {
 		utils.Error("执行迁移 0029_add_user_ai_settings_columns 失败: %v", err)
+	}
+
+	if err := database.RunCustomMigration("0031_migrate_user_ai_settings_to_system_settings", func() error {
+		return migrateLegacyUserAISettingsToSystemSettings()
+	}); err != nil {
+		utils.Error("执行迁移 0031_migrate_user_ai_settings_to_system_settings 失败: %v", err)
 	}
 
 	if err := database.RunCustomMigration("0030_add_unlock_check_columns", func() error {

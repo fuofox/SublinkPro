@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 // material-ui
 import Box from '@mui/material/Box';
@@ -13,6 +14,7 @@ import LanguageIcon from '@mui/icons-material/Language';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import TuneIcon from '@mui/icons-material/Tune';
 import StorageIcon from '@mui/icons-material/Storage';
+import PsychologyIcon from '@mui/icons-material/Psychology';
 
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
@@ -21,6 +23,7 @@ import SubscriptionAddressSettings from './components/SubscriptionAddressSetting
 import TelegramSettings from './components/TelegramSettings';
 import NodeDedupSettings from './components/NodeDedupSettings';
 import DatabaseMigrationSettings from './components/DatabaseMigrationSettings';
+import AIAssistantSettings from './components/AIAssistantSettings';
 
 // ==============================|| Tab Panel ||============================== //
 
@@ -42,11 +45,12 @@ function a11yProps(index) {
 // ==============================|| 用户中心 ||============================== //
 
 export default function UserSettings() {
-  const [tabValue, setTabValue] = useState(0);
+  const [searchParams] = useSearchParams();
+  const [tabValue, setTabValue] = useState(() => (searchParams.get('tab') === 'ai' ? 4 : 0));
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = (_event, newValue) => {
     setTabValue(newValue);
   };
 
@@ -82,7 +86,8 @@ export default function UserSettings() {
             {...a11yProps(2)}
           />
           <Tab icon={<TuneIcon sx={{ mr: 1 }} />} iconPosition="start" label="节点去重" {...a11yProps(3)} />
-          <Tab icon={<StorageIcon sx={{ mr: 1 }} />} iconPosition="start" label="数据迁移" {...a11yProps(4)} />
+          <Tab icon={<PsychologyIcon sx={{ mr: 1 }} />} iconPosition="start" label="AI 助手" {...a11yProps(4)} />
+          <Tab icon={<StorageIcon sx={{ mr: 1 }} />} iconPosition="start" label="数据迁移" {...a11yProps(5)} />
         </Tabs>
       </Box>
 
@@ -103,6 +108,10 @@ export default function UserSettings() {
       </TabPanel>
 
       <TabPanel value={tabValue} index={4}>
+        <AIAssistantSettings showMessage={showMessage} loading={loading} setLoading={setLoading} />
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={5}>
         <DatabaseMigrationSettings showMessage={showMessage} />
       </TabPanel>
 

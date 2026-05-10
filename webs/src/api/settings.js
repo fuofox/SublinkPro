@@ -88,6 +88,37 @@ export function updateNodeDedupConfig(data) {
   });
 }
 
+export function getAISettings() {
+  return request({
+    url: '/v1/settings/ai-assistant',
+    method: 'get'
+  });
+}
+
+export function listAIModels(data) {
+  return request({
+    url: '/v1/settings/ai-assistant/models',
+    method: 'post',
+    data
+  });
+}
+
+export function updateAISettings(data) {
+  return request({
+    url: '/v1/settings/ai-assistant',
+    method: 'post',
+    data
+  });
+}
+
+export function testAISettings(data) {
+  return request({
+    url: '/v1/settings/ai-assistant/test',
+    method: 'post',
+    data
+  });
+}
+
 // 导入 SQLite 备份/数据库
 export function importDatabaseMigration(formData) {
   return request({

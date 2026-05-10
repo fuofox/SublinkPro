@@ -90,7 +90,7 @@ func GenerateCandidateStream(ctx context.Context, user *models.User, req Generat
 		return nil, err
 	}
 	if !settings.Enabled {
-		return nil, fmt.Errorf("当前用户未启用 AI 助手")
+		return nil, fmt.Errorf("AI 助手未启用")
 	}
 	if settings.BaseURL == "" || settings.Model == "" || settings.RawAPIKey == "" {
 		return nil, fmt.Errorf("AI 设置不完整，请先配置 Base URL、模型和 API Key")

@@ -25,7 +25,7 @@ func setupUserAPITestDB(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open test db: %v", err)
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.MFALoginChallenge{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.MFALoginChallenge{}, &models.SystemSetting{}); err != nil {
 		t.Fatalf("auto migrate users: %v", err)
 	}
 	database.DB = db
@@ -38,6 +38,9 @@ func setupUserAPITestDB(t *testing.T) {
 	if err := models.InitUserCache(); err != nil {
 		t.Fatalf("init user cache: %v", err)
 	}
+	if err := models.InitSettingCache(); err != nil {
+		t.Fatalf("init setting cache: %v", err)
+	}
 	t.Cleanup(func() {
 		database.DB = oldDB
 		database.Dialect = oldDialect
@@ -45,6 +48,7 @@ func setupUserAPITestDB(t *testing.T) {
 		config.UpdateConfig(func(cfg *config.AppConfig) { *cfg = oldCfg })
 		if oldDB != nil {
 			_ = models.InitUserCache()
+			_ = models.InitSettingCache()
 		}
 		testutil.CloseDB(t, db)
 	})

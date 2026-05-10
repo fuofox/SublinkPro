@@ -9,9 +9,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"sublink/config"
-	"sublink/database"
 )
 
 const userAISecretVersion = "v1"
@@ -30,6 +30,16 @@ type UserAISettings struct {
 	RawAPIKey       string            `json:"-"`
 	ExtraHeadersRaw string            `json:"-"`
 }
+
+const (
+	systemAIEnabledKey      = "ai_enabled"
+	systemAIBaseURLKey      = "ai_base_url"
+	systemAIModelKey        = "ai_model"
+	systemAIAPIKeyKey       = "ai_api_key_encrypted"
+	systemAITemperatureKey  = "ai_temperature"
+	systemAIMaxTokensKey    = "ai_max_tokens"
+	systemAIExtraHeadersKey = "ai_extra_headers"
+)
 
 func userAIEncryptionKey() ([]byte, error) {
 	keyMaterial := strings.TrimSpace(config.GetAPIEncryptionKey())
@@ -112,31 +122,58 @@ func MaskSecret(secret string) string {
 	return trimmed[:4] + strings.Repeat("*", len(trimmed)-8) + trimmed[len(trimmed)-4:]
 }
 
-func (user *User) GetAISettings() (UserAISettings, error) {
+func getSystemSettingValue(key string) string {
+	value, _ := GetSetting(key)
+	return strings.TrimSpace(value)
+}
+
+func parseSystemAIFloat(key string, fallback float64) float64 {
+	value := getSystemSettingValue(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func parseSystemAIInt(key string, fallback int) int {
+	value := getSystemSettingValue(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func GetSystemAISettings() (UserAISettings, error) {
+	encryptedKey := getSystemSettingValue(systemAIAPIKeyKey)
 	settings := UserAISettings{
-		Enabled:      user.AIEnabled,
-		BaseURL:      strings.TrimSpace(user.AIBaseURL),
-		Model:        strings.TrimSpace(user.AIModel),
-		HasKey:       strings.TrimSpace(user.AIAPIKeyEncrypted) != "",
-		Temperature:  user.AITemperature,
-		MaxTokens:    user.AIMaxTokens,
+		Enabled:      getSystemSettingValue(systemAIEnabledKey) == "true",
+		BaseURL:      getSystemSettingValue(systemAIBaseURLKey),
+		Model:        getSystemSettingValue(systemAIModelKey),
+		HasKey:       encryptedKey != "",
+		Temperature:  parseSystemAIFloat(systemAITemperatureKey, 0.2),
+		MaxTokens:    parseSystemAIInt(systemAIMaxTokensKey, 1200),
 		ProviderType: "openai_compatible",
 	}
 	if settings.MaxTokens <= 0 {
 		settings.MaxTokens = 1200
 	}
-	if settings.Temperature == 0 {
-		settings.Temperature = 0.2
-	}
 	if settings.HasKey {
-		key, err := DecryptUserAISecret(user.AIAPIKeyEncrypted)
+		key, err := DecryptUserAISecret(encryptedKey)
 		if err != nil {
 			return UserAISettings{}, err
 		}
 		settings.RawAPIKey = key
 		settings.MaskedKey = MaskSecret(key)
 	}
-	settings.ExtraHeadersRaw = strings.TrimSpace(user.AIExtraHeaders)
+	settings.ExtraHeadersRaw = getSystemSettingValue(systemAIExtraHeadersKey)
 	if settings.ExtraHeadersRaw != "" {
 		var headers map[string]string
 		if err := json.Unmarshal([]byte(settings.ExtraHeadersRaw), &headers); err != nil {
@@ -148,29 +185,39 @@ func (user *User) GetAISettings() (UserAISettings, error) {
 	return settings, nil
 }
 
-func (user *User) UpdateAISettings(input UserAISettings) error {
-	updates := map[string]interface{}{
-		"ai_enabled":       input.Enabled,
-		"ai_base_url":      strings.TrimSpace(input.BaseURL),
-		"ai_model":         strings.TrimSpace(input.Model),
-		"ai_temperature":   input.Temperature,
-		"ai_max_tokens":    input.MaxTokens,
-		"ai_extra_headers": strings.TrimSpace(input.ExtraHeadersRaw),
-	}
-	if input.RawAPIKey != "" {
-		encrypted, err := EncryptUserAISecret(strings.TrimSpace(input.RawAPIKey))
-		if err != nil {
-			return err
-		}
-		updates["ai_api_key_encrypted"] = encrypted
-	}
-	if err := database.DB.Model(&User{}).Where("id = ?", user.ID).Updates(updates).Error; err != nil {
+func UpdateSystemAISettings(input UserAISettings) error {
+	if err := SetSetting(systemAIEnabledKey, strconv.FormatBool(input.Enabled)); err != nil {
 		return err
 	}
-	var updated User
-	if err := database.DB.First(&updated, user.ID).Error; err == nil {
-		*user = updated
-		userCache.Set(user.ID, *user)
+	if err := SetSetting(systemAIBaseURLKey, strings.TrimSpace(input.BaseURL)); err != nil {
+		return err
 	}
-	return nil
+	if err := SetSetting(systemAIModelKey, strings.TrimSpace(input.Model)); err != nil {
+		return err
+	}
+	if err := SetSetting(systemAITemperatureKey, strconv.FormatFloat(input.Temperature, 'f', -1, 64)); err != nil {
+		return err
+	}
+	if err := SetSetting(systemAIMaxTokensKey, strconv.Itoa(input.MaxTokens)); err != nil {
+		return err
+	}
+	if err := SetSetting(systemAIExtraHeadersKey, strings.TrimSpace(input.ExtraHeadersRaw)); err != nil {
+		return err
+	}
+	if strings.TrimSpace(input.RawAPIKey) == "" {
+		return nil
+	}
+	encrypted, err := EncryptUserAISecret(strings.TrimSpace(input.RawAPIKey))
+	if err != nil {
+		return err
+	}
+	return SetSetting(systemAIAPIKeyKey, encrypted)
+}
+
+func (user *User) GetAISettings() (UserAISettings, error) {
+	return GetSystemAISettings()
+}
+
+func (user *User) UpdateAISettings(input UserAISettings) error {
+	return UpdateSystemAISettings(input)
 }

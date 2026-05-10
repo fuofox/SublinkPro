@@ -34,6 +34,12 @@ func Settings(r *gin.Engine) {
 		SettingsGroup.GET("/node-dedup", api.GetNodeDedupConfig)
 		SettingsGroup.POST("/node-dedup", middlewares.DemoModeRestrict, api.UpdateNodeDedupConfig)
 
+		// AI 助手设置
+		SettingsGroup.GET("/ai-assistant", api.UserGetAISettings)
+		SettingsGroup.POST("/ai-assistant/models", middlewares.DemoModeRestrict, api.UserListAIModels)
+		SettingsGroup.POST("/ai-assistant", middlewares.DemoModeRestrict, api.UserUpdateAISettings)
+		SettingsGroup.POST("/ai-assistant/test", middlewares.DemoModeRestrict, api.UserTestAISettings)
+
 		// 数据库迁移
 		SettingsGroup.POST("/database-migration/import", middlewares.DemoModeRestrict, api.ImportDatabaseMigration)
 	}
