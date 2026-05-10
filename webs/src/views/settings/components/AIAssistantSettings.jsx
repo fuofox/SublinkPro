@@ -262,8 +262,13 @@ export default function AIAssistantSettings({ showMessage, loading, setLoading }
     const restorePosition = () => window.scrollTo({ ...position, behavior: 'auto' });
 
     requestAnimationFrame(restorePosition);
-    await action();
-    requestAnimationFrame(restorePosition);
+    try {
+      await action();
+    } finally {
+      requestAnimationFrame(restorePosition);
+      window.setTimeout(restorePosition, 0);
+      window.setTimeout(restorePosition, 120);
+    }
   };
 
   const aiUsageText = formatAIUsage(aiTestResult?.usage);
@@ -374,7 +379,7 @@ export default function AIAssistantSettings({ showMessage, loading, setLoading }
                       label="Temperature"
                       value={aiForm.temperature}
                       onChange={(e) => setAIField('temperature', e.target.value)}
-                      inputProps={{ min: 0, max: 2, step: 0.1 }}
+                      slotProps={{ htmlInput: { min: 0, max: 2, step: 0.1 } }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -384,7 +389,7 @@ export default function AIAssistantSettings({ showMessage, loading, setLoading }
                       label="Max Tokens"
                       value={aiForm.maxTokens}
                       onChange={(e) => setAIField('maxTokens', e.target.value)}
-                      inputProps={{ min: 0, step: 100 }}
+                      slotProps={{ htmlInput: { min: 0, step: 100 } }}
                       helperText="填 0 使用服务端默认值。"
                     />
                   </Grid>

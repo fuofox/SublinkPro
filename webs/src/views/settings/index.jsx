@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 // material-ui
@@ -54,9 +54,13 @@ export default function UserSettings() {
     setTabValue(newValue);
   };
 
-  const showMessage = (message, severity = 'success') => {
+  const showMessage = useCallback((message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
-  };
+  }, []);
+
+  const handleSnackbarClose = useCallback(() => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  }, []);
 
   return (
     <MainCard title="用户中心">
@@ -119,7 +123,7 @@ export default function UserSettings() {
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
