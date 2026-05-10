@@ -49,7 +49,7 @@ import { withAlpha } from 'utils/colorUtils';
 import { SPEED_TEST_TCP_OPTIONS, SPEED_TEST_MIHOMO_OPTIONS, LATENCY_TEST_URL_OPTIONS, LANDING_IP_URL_OPTIONS } from '../utils';
 
 // hooks
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * 配置区块组件 - 可折叠的设置分组
@@ -254,6 +254,31 @@ export default function SpeedTestDialog({
     },
     listbox: {
       sx: { py: 0.5 }
+    }
+  };
+
+  useEffect(() => {
+    if (open && groupOptions && speedTestForm.groups?.length > 0) {
+      const validGroups = speedTestForm.groups.filter((g) => groupOptions.includes(g));
+      if (validGroups.length !== speedTestForm.groups.length) {
+        setSpeedTestForm((prev) => ({ ...prev, groups: validGroups }));
+      }
+    }
+  }, [groupOptions, open, speedTestForm.groups, setSpeedTestForm]);
+
+  const autocompleteChipSx = {
+    '& .MuiAutocomplete-tag': {
+      bgcolor: isDark ? withAlpha(palette.primary.main, 0.16) : undefined,
+      color: isDark ? primaryText : undefined,
+      border: isDark ? '1px solid' : undefined,
+      borderColor: isDark ? withAlpha(palette.primary.main, 0.3) : undefined,
+      '& .MuiChip-deleteIcon': {
+        color: isDark ? withAlpha(palette.primary.main, 0.7) : undefined,
+        transition: 'color 0.2s',
+        '&:hover': {
+          color: isDark ? palette.primary.main : undefined
+        }
+      }
     }
   };
 
@@ -691,12 +716,12 @@ export default function SpeedTestDialog({
           <Stack spacing={2}>
             <Autocomplete
               multiple
-              freeSolo
               size="small"
               options={groupOptions}
               value={speedTestForm.groups || []}
               onChange={(e, newValue) => setSpeedTestForm({ ...speedTestForm, groups: newValue })}
               slotProps={autocompleteSlotProps}
+              sx={autocompleteChipSx}
               renderInput={(params) => <TextField {...params} label="测速分组" placeholder="留空则测试全部分组" />}
             />
             <Autocomplete

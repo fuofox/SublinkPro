@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -237,6 +237,15 @@ export default function SubscriptionFormDialog({
     updateCountryFilterField(field, [...normalizeCountryCodeList(formData[field]), normalizedInput]);
     setInputValue('');
   };
+
+  useEffect(() => {
+    if (open && groupOptions && formData.selectedGroups?.length > 0) {
+      const validGroups = formData.selectedGroups.filter((g) => groupOptions.includes(g));
+      if (validGroups.length !== formData.selectedGroups.length) {
+        setFormData((prev) => ({ ...prev, selectedGroups: validGroups }));
+      }
+    }
+  }, [groupOptions, open, formData.selectedGroups, setFormData]);
 
   const normalizedSelectorNodes = useMemo(() => selectorNodes || [], [selectorNodes]);
   const selectorLoadingText = selectorNodesLoading ? '节点列表加载中...' : '';

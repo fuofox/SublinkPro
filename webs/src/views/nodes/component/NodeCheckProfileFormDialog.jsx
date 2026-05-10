@@ -155,6 +155,22 @@ export default function NodeCheckProfileFormDialog({ open, onClose, profile, gro
     boxShadow: isDark ? `inset 0 1px 0 ${withAlpha(palette.common.white, 0.04)}` : 'none'
   });
 
+  const autocompleteChipSx = {
+    '& .MuiAutocomplete-tag': {
+      bgcolor: isDark ? withAlpha(palette.primary.main, 0.16) : undefined,
+      color: isDark ? themeTokens.primaryText : undefined,
+      border: isDark ? '1px solid' : undefined,
+      borderColor: isDark ? withAlpha(palette.primary.main, 0.3) : undefined,
+      '& .MuiChip-deleteIcon': {
+        color: isDark ? withAlpha(palette.primary.main, 0.7) : undefined,
+        transition: 'color 0.2s',
+        '&:hover': {
+          color: isDark ? palette.primary.main : undefined
+        }
+      }
+    }
+  };
+
   // 表单状态
   const [form, setForm] = useState(() => createNodeCheckProfileFormState());
 
@@ -186,6 +202,15 @@ export default function NodeCheckProfileFormDialog({ open, onClose, profile, gro
 
     loadUnlockMeta();
   }, [open]);
+
+  useEffect(() => {
+    if (open && groupOptions && form.groups?.length > 0) {
+      const validGroups = form.groups.filter((g) => groupOptions.includes(g));
+      if (validGroups.length !== form.groups.length) {
+        setForm((prev) => ({ ...prev, groups: validGroups }));
+      }
+    }
+  }, [groupOptions, open, form.groups, setForm]);
 
   // 更新表单字段
   const updateForm = (field, value) => {
@@ -702,11 +727,11 @@ export default function NodeCheckProfileFormDialog({ open, onClose, profile, gro
           <Stack spacing={2}>
             <Autocomplete
               multiple
-              freeSolo
               size="small"
               options={groupOptions}
               value={form.groups}
               onChange={(_, newValue) => updateForm('groups', newValue)}
+              sx={autocompleteChipSx}
               renderInput={(params) => <TextField {...params} label="测速分组" placeholder="留空则测试全部分组" />}
             />
             <Autocomplete
