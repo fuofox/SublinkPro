@@ -384,6 +384,7 @@ export default function ProfileSettings({ showMessage, loading, setLoading }) {
                       label={totpStatus.enabled ? '双重验证已启用' : '双重验证未启用'}
                       color={totpStatus.enabled ? 'success' : 'default'}
                       size="small"
+                      variant="outlined"
                     />
                   </Stack>
                 </Stack>
@@ -557,7 +558,7 @@ export default function ProfileSettings({ showMessage, loading, setLoading }) {
                           label={totpStatus.enabled ? '已启用' : '未启用'}
                           color={totpStatus.enabled ? 'success' : 'default'}
                           size="small"
-                          variant={totpStatus.enabled ? 'filled' : 'outlined'}
+                          variant="outlined"
                         />
                       }
                     />
