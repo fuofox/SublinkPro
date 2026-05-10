@@ -43,29 +43,26 @@ Related to #
 
 
 
-## Testing / 测试
-
-<!-- Please describe the tests you ran to verify your changes. -->
-<!-- 请描述您为验证更改而运行的测试。 -->
-
-- [ ] I have tested this change locally / 我已在本地测试此更改
-- [ ] I have added/updated tests for this change / 我已为此更改添加/更新测试
-- [ ] All existing tests pass / 所有现有测试通过
-
 ## Checklist / 检查清单
 
 <!-- Please check the following items before submitting your PR. -->
 <!-- 请在提交 PR 前检查以下项目。 -->
 
 - [ ] My code follows the project's coding style / 我的代码遵循项目的代码风格
-- [ ] I have commented my code where necessary / 我已在必要处添加注释
-- [ ] I have updated the documentation accordingly / 我已相应更新文档
+- [ ] Backend changes: ran `gofmt`, `go vet ./...`, and `go test ./...` / 后端改动：已运行 `gofmt`、`go vet ./...` 和 `go test ./...`
+- [ ] Frontend changes: ran `yarn run lint` / 前端改动：已运行 `yarn run lint`
+- [ ] UI changes: checked affected light/dark and responsive states / UI 改动：已检查受影响的 light/dark 和响应式状态
+- [ ] I added/updated backend tests, comments, and docs where needed / 我已按需补充或更新后端测试、注释和文档
+- [ ] I checked related frontend/backend/docs sync when behavior or contracts changed / 行为或契约变化时，我已检查前端、后端和文档同步
 - [ ] My changes do not introduce any security vulnerabilities / 我的更改不会引入任何安全漏洞
-- [ ] I have considered the performance impact of my changes / 我已考虑更改的性能影响
+
+Commands/checks run / 已运行命令或检查：
+
+```text
+
+```
 
 ## Additional Notes / 其他说明
 
 <!-- Any additional information you want to provide. -->
 <!-- 您想提供的任何其他信息。 -->
-
-

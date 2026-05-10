@@ -1,8 +1,8 @@
 package protocol
 
 import (
-	"testing"
 	"sublink/utils"
+	"testing"
 )
 
 func TestProtocolDemoEncodeDecodeRoundTrip(t *testing.T) {
