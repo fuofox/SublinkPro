@@ -116,7 +116,16 @@ go test ./...
 
 新增或修改关键业务逻辑、接口契约、权限判断、配置语义、迁移、调度任务、mihomo 集成、协议解析或数据转换时，应同步补充或更新对应 Go 测试。GitHub 发布构建会在构建二进制前运行 `gofmt` 检查、`go vet ./...` 和全仓 `go test ./...`。
 
-### 6. 普通后端构建
+### 6. PR 自动检查
+
+`.github/workflows/pr-checks.yml` 会在 PR 打开、重新打开或标记 ready for review 时自动运行，用于快速判断 PR 是否满足基础质量要求。后续修复提交不会自动重复消耗 Actions；PR 作者本人或仓库管理员确认修复完成后，可在 PR 评论 `/recheck` 手动触发新一轮检查。
+
+- 后端：`gofmt` 格式检查、`go vet ./...`、`go test ./...`
+- 前端：`yarn run lint`、`yarn run build`
+
+每个检查 job 会写入 GitHub Step Summary，展示对应检查项是通过还是失败，方便作者和 reviewer 快速判断哪些工作已经完成、哪些还需要修复。
+
+### 7. 普通后端构建
 
 ```bash
 go build -o sublinkpro main.go
@@ -124,7 +133,7 @@ go build -o sublinkpro main.go
 
 这适合开发环境或快速本地编译，不代表生产嵌入构建。
 
-### 7. 生产构建（实际流程）
+### 8. 生产构建（实际流程）
 
 生产构建是两阶段；本地执行生产风格构建前，应先完成前端 lint / build 和后端格式、lint、测试校验：
 

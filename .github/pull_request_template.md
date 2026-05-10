@@ -1,68 +1,114 @@
-## Description / 描述
+## 描述
 
-<!-- Please provide a brief description of the changes in this PR. -->
+Description
+
 <!-- 请简要描述此 PR 中的更改。 -->
+<!-- Briefly describe the changes in this PR. -->
 
 
 
-## Related Issue / 关联 Issue
+## 关联 Issue
 
-<!-- If this PR is related to any issue, please link it here. -->
+Related Issue
+
 <!-- 如果此 PR 与任何 Issue 相关，请在此处链接。 -->
+<!-- Link related issues here if applicable. -->
 
 Fixes #
 Related to #
 
-## Type of Change / 更改类型
+## 更改类型
 
-<!-- Please check the options that apply to this PR. -->
+Type of Change
+
 <!-- 请勾选适用于此 PR 的选项。 -->
+<!-- Check all options that apply. -->
 
-- [ ] 🐛 Bug fix / 修复 Bug
-- [ ] ✨ New feature / 新功能
-- [ ] 📝 Documentation update / 文档更新
-- [ ] 🎨 Style/UI improvement / 样式/界面改进
-- [ ] ♻️ Code refactoring / 代码重构
-- [ ] ⚡ Performance improvement / 性能优化
-- [ ] 🔧 Configuration change / 配置更改
-- [ ] 🧪 Test update / 测试更新
+- [ ] 🐛 修复 Bug
+      Bug fix
+- [ ] ✨ 新功能
+      New feature
+- [ ] 📝 文档更新
+      Documentation update
+- [ ] 🎨 样式或界面改进
+      Style/UI improvement
+- [ ] ♻️ 代码重构
+      Code refactoring
+- [ ] ⚡ 性能优化
+      Performance improvement
+- [ ] 🔧 配置更改
+      Configuration change
+- [ ] 🧪 测试更新
+      Test update
 
-## Changes Made / 更改内容
+## 更改内容
 
-<!-- Please list the main changes made in this PR. -->
+Changes Made
+
 <!-- 请列出此 PR 中的主要更改。 -->
+<!-- List the main changes in this PR. -->
 
 - 
 - 
 - 
 
-## Screenshots / 截图
+## 截图
 
-<!-- If applicable, add screenshots to help explain your changes. -->
+Screenshots
+
 <!-- 如果适用，请添加截图以帮助说明您的更改。 -->
+<!-- Add screenshots if helpful. -->
 
 
 
-## Checklist / 检查清单
+## 检查清单
 
-<!-- Please check the following items before submitting your PR. -->
+Checklist
+
 <!-- 请在提交 PR 前检查以下项目。 -->
+<!-- Check these items before submitting. -->
 
-- [ ] My code follows the project's coding style / 我的代码遵循项目的代码风格
-- [ ] Backend changes: ran `gofmt`, `go vet ./...`, and `go test ./...` / 后端改动：已运行 `gofmt`、`go vet ./...` 和 `go test ./...`
-- [ ] Frontend changes: ran `yarn run lint` / 前端改动：已运行 `yarn run lint`
-- [ ] UI changes: checked affected light/dark and responsive states / UI 改动：已检查受影响的 light/dark 和响应式状态
-- [ ] I added/updated backend tests, comments, and docs where needed / 我已按需补充或更新后端测试、注释和文档
-- [ ] I checked related frontend/backend/docs sync when behavior or contracts changed / 行为或契约变化时，我已检查前端、后端和文档同步
-- [ ] My changes do not introduce any security vulnerabilities / 我的更改不会引入任何安全漏洞
+- [ ] 我的代码遵循项目代码风格
+  > My code follows the project's coding style.
 
-Commands/checks run / 已运行命令或检查：
+- [ ] 后端检查已通过
+  > Backend checks passed.
+
+  ```text
+  gofmt
+  go vet ./...
+  go test ./...
+  ```
+
+- [ ] 前端改动已运行 `yarn run lint`
+  > Frontend changes passed `yarn run lint`.
+
+- [ ] UI 改动已检查 light/dark 和响应式状态
+  > UI changes were checked in light/dark and responsive states.
+
+- [ ] 已按需补充或更新后端测试、注释和文档
+  > Backend tests, comments, and docs were updated where needed.
+
+- [ ] 行为或契约变化时，已检查跨层同步
+  > Frontend, backend, and docs sync was checked when needed.
+
+- [ ] 本次更改不会引入安全漏洞
+  > My changes do not introduce security vulnerabilities.
+
+已运行命令或检查：
+
+Commands/checks run:
 
 ```text
 
 ```
 
-## Additional Notes / 其他说明
+检查失败修复完成后，评论 `/recheck` 可重新触发 PR 检查。
+Only the PR author or a repository admin can use `/recheck`.
+
+## 其他说明
+
+Additional Notes
 
 <!-- Any additional information you want to provide. -->
 <!-- 您想提供的任何其他信息。 -->

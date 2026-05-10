@@ -53,9 +53,11 @@ When instructions conflict, trust these files first:
    `docs/development.md`: local development workflow and project structure.
 3. `docs/configuration.md`：配置优先级、环境变量与运行语义。  
    `docs/configuration.md`: config precedence, environment variables, and runtime behavior.
-4. `.github/workflows/build-release.yml`：CI / release 构建预期。  
+4. `.github/workflows/pr-checks.yml`：PR 自动检查预期。
+   `.github/workflows/pr-checks.yml`: PR automated check expectations.
+5. `.github/workflows/build-release.yml`：CI / release 构建预期。
    `.github/workflows/build-release.yml`: CI and release build expectations.
-5. `Dockerfile`：生产构建路径的权威实现。  
+6. `Dockerfile`：生产构建路径的权威实现。
    `Dockerfile`: canonical production build sequence.
 
 对于前端命令、输出目录和工具链，请优先依赖上面的仓库文件，不要套用通用模板或旧脚手架默认值。  
@@ -322,6 +324,18 @@ go test ./...
 
 后端开发完成后必须保持 Go 文件通过 `gofmt` 格式化，并运行 `go vet ./...` 和相关 Go 测试；发布前的 GitHub 工作流会运行全仓 `go test ./...`。
 After backend changes, keep Go files formatted with `gofmt`, and run `go vet ./...` plus relevant Go tests; the GitHub release workflow runs repository-wide `go test ./...` before publishing.
+
+### PR 自动检查 / PR automated checks
+
+`.github/workflows/pr-checks.yml` 会在 PR 打开、重新打开或标记 ready for review 时自动运行；后续修复提交不会自动重复消耗 Actions，PR 作者本人或仓库管理员可在 PR 评论 `/recheck` 手动触发新一轮检查。
+`.github/workflows/pr-checks.yml` runs automatically when a PR is opened, reopened, or marked ready for review; later fix commits do not auto-consume Actions, and the PR author or repository admin can comment `/recheck` on the PR to trigger another run.
+
+- 后端检查：`gofmt` 格式检查、`go vet ./...`、`go test ./...`。
+  Backend checks: `gofmt` formatting check, `go vet ./...`, and `go test ./...`.
+- 前端检查：`yarn run lint` 和 `yarn run build`。
+  Frontend checks: `yarn run lint` and `yarn run build`.
+- 每个检查 job 会写入 GitHub Step Summary，方便快速看到哪些检查已通过、哪些检查失败。
+  Each check job writes a GitHub Step Summary so reviewers can quickly see which checks passed or failed.
 
 ### 后端构建 / Backend build
 
