@@ -374,7 +374,7 @@ Observed CI flow in `.github/workflows/build-release.yml`:
 - `cd webs && yarn install --immutable`
 - `cd webs && yarn run lint`
 - `cd webs && yarn run build`
-- Go 1.26.1
+- Go 1.26.3
 - `golangci-lint`
 - `go test ./...`
 - 下载前端产物到 `static/`  
