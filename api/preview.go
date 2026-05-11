@@ -119,7 +119,7 @@ func previewSavedSubscription(subID int) (*models.PreviewResult, error) {
 		processedLinkName := utils.PreprocessNodeName(sub.NodeNamePreprocess, node.LinkName)
 
 		// 计算预览名称
-		previewName := node.LinkName
+		previewName := node.EffectiveName()
 		previewLink := node.Link
 
 		if sub.NodeNameRule != "" {
@@ -332,17 +332,18 @@ func buildNodesWithMixedSort(req PreviewRequest) []models.Node {
 			// 添加分组中的所有节点
 			if nodes, exists := groupNodeMap[item.Group]; exists {
 				for _, node := range nodes {
-					if !nodeMap[node.Name] {
+					nameKey := node.EffectiveName()
+					if !nodeMap[nameKey] {
 						result = append(result, node)
-						nodeMap[node.Name] = true
+						nodeMap[nameKey] = true
 					}
 				}
 			}
 		} else {
 			// 添加单个节点
-			if item.Node != nil && !nodeMap[item.Node.Name] {
+			if item.Node != nil && !nodeMap[item.Node.EffectiveName()] {
 				result = append(result, *item.Node)
-				nodeMap[item.Node.Name] = true
+				nodeMap[item.Node.EffectiveName()] = true
 			}
 		}
 	}

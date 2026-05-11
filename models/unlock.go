@@ -491,7 +491,7 @@ func BuildNodeRenameInfo(node Node, processedLinkName string, protocol string, i
 	}
 
 	return utils.NodeInfo{
-		Name:          node.Name,
+		Name:          node.EffectiveName(),
 		LinkName:      processedLinkName,
 		LinkCountry:   node.LinkCountry,
 		Speed:         node.Speed,

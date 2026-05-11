@@ -26,7 +26,8 @@ var (
 
 func GetNodeConditionFields() []NodeConditionFieldMeta {
 	fields := []NodeConditionFieldMeta{
-		newTextConditionField("name", "节点名称", "按节点备注做文本匹配"),
+		newTextConditionField("name", "节点名称", "按节点实际出站名称做文本匹配"),
+		newTextConditionField("effective_name", "实际名称", "按节点名称模式计算后的实际出站名称匹配"),
 		newTextConditionField("link_name", "原始名称", "按节点原始名称做文本匹配"),
 		newTextConditionField("link_country", "国家/地区", "按节点国家/地区代码匹配"),
 		newTextConditionField("protocol", "协议类型", "按节点协议类型匹配"),

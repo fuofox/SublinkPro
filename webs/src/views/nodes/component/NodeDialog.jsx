@@ -12,6 +12,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import useResolvedColorScheme from 'hooks/useResolvedColorScheme';
 
 // project imports
@@ -64,13 +65,34 @@ export default function NodeDialog({
             sx={fieldControlSx}
           />
           {isEdit && (
-            <TextField
-              fullWidth
-              label="备注"
-              value={nodeForm.name}
-              onChange={(e) => setNodeForm({ ...nodeForm, name: e.target.value })}
-              sx={fieldControlSx}
-            />
+            <Stack spacing={1.5}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <TextField
+                  fullWidth
+                  label="备注名称"
+                  value={nodeForm.name}
+                  onChange={(e) => setNodeForm({ ...nodeForm, name: e.target.value })}
+                  helperText="自定义备注会保存在 Name 字段，不会被机场更新覆盖。"
+                  sx={fieldControlSx}
+                />
+                <TextField
+                  select
+                  fullWidth
+                  label="实际使用名称"
+                  value={nodeForm.nameMode || 'link'}
+                  onChange={(e) => setNodeForm({ ...nodeForm, nameMode: e.target.value })}
+                  SelectProps={{ native: true }}
+                  helperText="控制订阅输出、重命名规则、脚本和链式代理使用哪个名称。"
+                  sx={fieldControlSx}
+                >
+                  <option value="link">使用原始名称</option>
+                  <option value="remark">使用备注名称</option>
+                </TextField>
+              </Stack>
+              <Typography variant="caption" sx={{ color: tokens.secondaryText }}>
+                需要恢复机场原始名称时，切换为“使用原始名称”即可；备注内容仍会保留，之后可随时再切回。
+              </Typography>
+            </Stack>
           )}
           <SearchableNodeSelect
             nodes={proxyNodeOptions}
@@ -159,6 +181,7 @@ NodeDialog.propTypes = {
   isEdit: PropTypes.bool.isRequired,
   nodeForm: PropTypes.shape({
     name: PropTypes.string,
+    nameMode: PropTypes.string,
     link: PropTypes.string,
     dialerProxyName: PropTypes.string,
     group: PropTypes.string,

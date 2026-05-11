@@ -35,6 +35,9 @@ export default function NodeCard({ node, isSelected, tagColorMap, onSelect, onVi
   const { isDark } = useResolvedColorScheme();
   const tokens = getNodeThemeTokens(theme, isDark);
   const unlockDisplay = getNodeUnlockSummaryDisplay(node, { limit: 2 });
+  const effectiveName = node.EffectiveName || node.Name || node.LinkName;
+  const secondaryName = node.NameMode === 'remark' ? node.LinkName : node.Name;
+  const showSecondaryName = secondaryName && secondaryName !== effectiveName;
 
   return (
     <MainCard
@@ -75,21 +78,28 @@ export default function NodeCard({ node, isSelected, tagColorMap, onSelect, onVi
               }}
               sx={{ p: 0.5, flexShrink: 0 }}
             />
-            <Tooltip title={node.Name} placement="top">
-              <Typography
-                variant="subtitle1"
-                fontWeight="bold"
-                sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  pr: 1
-                }}
-              >
-                {node.Name}
-              </Typography>
+            <Tooltip title={effectiveName} placement="top">
+              <Box sx={{ flex: 1, minWidth: 0, pr: 1 }}>
+                <Typography
+                  variant="subtitle1"
+                  fontWeight="bold"
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {effectiveName}
+                </Typography>
+                {showSecondaryName && (
+                  <Typography
+                    variant="caption"
+                    sx={{ color: tokens.secondaryText, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                  >
+                    {node.NameMode === 'remark' ? `原始：${secondaryName}` : `备注：${secondaryName}`}
+                  </Typography>
+                )}
+              </Box>
             </Tooltip>
           </Stack>
         </Box>

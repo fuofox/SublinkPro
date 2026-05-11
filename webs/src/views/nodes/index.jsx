@@ -146,6 +146,7 @@ export default function NodeList() {
   const [currentNode, setCurrentNode] = useState(null);
   const [nodeForm, setNodeForm] = useState({
     name: '',
+    nameMode: 'link',
     link: '',
     dialerProxyName: '',
     group: '',
@@ -603,7 +604,7 @@ export default function NodeList() {
   const handleAddNode = () => {
     setIsEditNode(false);
     setCurrentNode(null);
-    setNodeForm({ name: '', link: '', dialerProxyName: '', group: '', mergeMode: '2', tags: [] });
+    setNodeForm({ name: '', nameMode: 'link', link: '', dialerProxyName: '', group: '', mergeMode: '2', tags: [] });
     setNodeDialogOpen(true);
   };
 
@@ -623,6 +624,7 @@ export default function NodeList() {
     }
     setNodeForm({
       name: node.Name,
+      nameMode: node.NameMode || 'link',
       link: node.Link?.split(',').join('\n') || '',
       dialerProxyName: node.DialerProxyName || '',
       group: node.Group || '',
@@ -633,7 +635,8 @@ export default function NodeList() {
   };
 
   const handleDeleteNode = async (node) => {
-    openConfirm('删除节点', `确定要删除节点 "${node.Name}" 吗？`, async () => {
+    const displayName = node.EffectiveName || node.Name || node.LinkName;
+    openConfirm('删除节点', `确定要删除节点 "${displayName}" 吗？`, async () => {
       try {
         await deleteNode({ id: node.ID });
         showMessage('删除成功');
@@ -860,6 +863,7 @@ export default function NodeList() {
           oldlink: currentNode.Link,
           link: processedLink,
           name: nodeForm.name.trim(),
+          nameMode: nodeForm.nameMode || 'link',
           dialerProxyName: nodeForm.dialerProxyName.trim(),
           group: nodeForm.group.trim(),
           tags: tagNames

@@ -458,12 +458,13 @@ func (sub *Subcription) ApplyFilters(nodes []Node) []Node {
 	if hasWhitelistRules || hasBlacklistRules {
 		var filteredNodes []Node
 		for _, node := range result {
+			filterName := node.EffectiveName()
 			// 黑名单优先
-			if hasBlacklistRules && utils.MatchesNodeNameFilter(sub.NodeNameBlacklist, node.LinkName) {
+			if hasBlacklistRules && utils.MatchesNodeNameFilter(sub.NodeNameBlacklist, filterName) {
 				continue
 			}
 			// 白名单
-			if hasWhitelistRules && !utils.MatchesNodeNameFilter(sub.NodeNameWhitelist, node.LinkName) {
+			if hasWhitelistRules && !utils.MatchesNodeNameFilter(sub.NodeNameWhitelist, filterName) {
 				continue
 			}
 			filteredNodes = append(filteredNodes, node)
@@ -666,17 +667,18 @@ func (sub *Subcription) GetSub(clientType string) error {
 			// 添加分组中的所有节点
 			if nodes, exists := groupNodeMap[item.Group]; exists {
 				for _, node := range nodes {
-					if !nodeMap[node.Name] {
+					nameKey := node.EffectiveName()
+					if !nodeMap[nameKey] {
 						sub.Nodes = append(sub.Nodes, node)
-						nodeMap[node.Name] = true
+						nodeMap[nameKey] = true
 					}
 				}
 			}
 		} else {
 			// 添加单个节点
-			if item.Node != nil && !nodeMap[item.Node.Name] {
+			if item.Node != nil && !nodeMap[item.Node.EffectiveName()] {
 				sub.Nodes = append(sub.Nodes, *item.Node)
-				nodeMap[item.Node.Name] = true
+				nodeMap[item.Node.EffectiveName()] = true
 			}
 		}
 	}
@@ -1110,7 +1112,7 @@ func (sub *Subcription) BatchSort(sortBy, sortOrder string) error {
 		case "source":
 			less = subNodes[i].Node.Source < subNodes[j].Node.Source
 		case "name":
-			less = subNodes[i].Node.Name < subNodes[j].Node.Name
+			less = subNodes[i].Node.EffectiveName() < subNodes[j].Node.EffectiveName()
 		case "protocol":
 			less = subNodes[i].Node.Protocol < subNodes[j].Node.Protocol
 		case "delay":
@@ -1217,7 +1219,7 @@ func (sub *Subcription) PreviewSub() (*PreviewResult, error) {
 		processedLinkName := utils.PreprocessNodeName(sub.NodeNamePreprocess, node.LinkName)
 
 		// 计算预览名称
-		previewName := node.Name
+		previewName := node.EffectiveName()
 		previewLink := node.Link
 
 		if sub.NodeNameRule != "" {
@@ -1301,7 +1303,7 @@ func (sub *Subcription) ApplyNodeFilterScripts(nodes []Node, scripts []ScriptWit
 	}
 
 	result := nodes
-	nodesJSON, err := json.Marshal(result)
+	nodesJSON, err := json.Marshal(nodesForFilterScript(result))
 	if err != nil {
 		utils.Error("序列化节点失败: %v", err)
 		return nodes
@@ -1326,6 +1328,18 @@ func (sub *Subcription) ApplyNodeFilterScripts(nodes []Node, scripts []ScriptWit
 		nodesJSON = resJSON
 	}
 
+	return result
+}
+
+func nodesForFilterScript(nodes []Node) []Node {
+	result := make([]Node, 0, len(nodes))
+	for _, node := range nodes {
+		node.Name = node.EffectiveName()
+		// 脚本收到的是运行时副本，Name 已切换为实际出站名称；设为 remark 避免后续渲染再次回退到 LinkName。
+		node.NameMode = NodeNameModeRemark
+		node.EffectiveNameValue = node.Name
+		result = append(result, node)
+	}
 	return result
 }
 

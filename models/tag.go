@@ -394,9 +394,13 @@ func evaluateCondition(node Node, cond TagCondition) bool {
 func getNodeFieldValue(node Node, field string) any {
 	switch field {
 	case "name":
-		return node.Name
+		return node.EffectiveName()
+	case "effective_name":
+		return node.EffectiveName()
 	case "link_name":
 		return node.LinkName
+	case "name_mode":
+		return NormalizeNodeNameMode(node.NameMode)
 	case "link_address":
 		return node.LinkAddress
 	case "link_host":

@@ -224,13 +224,17 @@ func GetChainOptions(c *gin.Context) {
 	// 构建节点简要信息列表
 	nodeOptions := make([]map[string]any, 0, len(sub.Nodes))
 	for _, node := range sub.Nodes {
+		effectiveName := node.EffectiveName()
 		nodeOptions = append(nodeOptions, map[string]any{
-			"id":          node.ID,
-			"name":        node.Name,
-			"linkName":    node.LinkName,
-			"linkCountry": node.LinkCountry,
-			"protocol":    node.Protocol,
-			"group":       node.Group,
+			"id":            node.ID,
+			"name":          effectiveName,
+			"remarkName":    node.Name,
+			"linkName":      node.LinkName,
+			"nameMode":      models.NormalizeNodeNameMode(node.NameMode),
+			"effectiveName": effectiveName,
+			"linkCountry":   node.LinkCountry,
+			"protocol":      node.Protocol,
+			"group":         node.Group,
 		})
 	}
 
@@ -452,6 +456,17 @@ type NodeMatchSummary struct {
 	Unmatched     bool   `json:"unmatched"`  // 是否未匹配任何规则
 }
 
+func buildChainLinkPreviewNode(node models.Node) ChainLinkPreviewNode {
+	return ChainLinkPreviewNode{
+		Name:        node.EffectiveName(),
+		Protocol:    node.Protocol,
+		LinkCountry: node.LinkCountry,
+		DelayTime:   node.DelayTime,
+		Speed:       node.Speed,
+		Group:       node.Group,
+	}
+}
+
 // PreviewChainLinks 预览订阅的整体链式代理配置
 func PreviewChainLinks(c *gin.Context) {
 	subIDStr := c.Param("id")
@@ -478,7 +493,7 @@ func PreviewChainLinks(c *gin.Context) {
 	nodeNameMap := make(map[int]string)
 	nodeInfoMap := make(map[int]models.Node)
 	for _, node := range sub.Nodes {
-		nodeNameMap[node.ID] = node.Name
+		nodeNameMap[node.ID] = node.EffectiveName()
 		nodeInfoMap[node.ID] = node
 	}
 
@@ -510,7 +525,7 @@ func PreviewChainLinks(c *gin.Context) {
 				// 从 nodeInfoMap 查找节点 ID
 				var nodeID int
 				for id, node := range nodeInfoMap {
-					if node.Name == targetNode.Name {
+					if node.EffectiveName() == targetNode.Name {
 						nodeID = id
 						break
 					}
@@ -587,14 +602,7 @@ func buildRulePreviewData(rule models.SubscriptionChainRule, nodes []models.Node
 			if item.NodeConditions != nil {
 				for _, node := range nodes {
 					if item.NodeConditions.EvaluateNode(node) {
-						previewItem.Nodes = append(previewItem.Nodes, ChainLinkPreviewNode{
-							Name:        node.Name,
-							Protocol:    node.Protocol,
-							LinkCountry: node.LinkCountry,
-							DelayTime:   node.DelayTime,
-							Speed:       node.Speed,
-							Group:       node.Group,
-						})
+						previewItem.Nodes = append(previewItem.Nodes, buildChainLinkPreviewNode(node))
 					}
 				}
 			}
@@ -604,14 +612,7 @@ func buildRulePreviewData(rule models.SubscriptionChainRule, nodes []models.Node
 			if item.NodeConditions != nil {
 				for _, node := range nodes {
 					if item.NodeConditions.EvaluateNode(node) {
-						matchedNodes = append(matchedNodes, ChainLinkPreviewNode{
-							Name:        node.Name,
-							Protocol:    node.Protocol,
-							LinkCountry: node.LinkCountry,
-							DelayTime:   node.DelayTime,
-							Speed:       node.Speed,
-							Group:       node.Group,
-						})
+						matchedNodes = append(matchedNodes, buildChainLinkPreviewNode(node))
 					}
 				}
 			}
@@ -626,14 +627,7 @@ func buildRulePreviewData(rule models.SubscriptionChainRule, nodes []models.Node
 			if name, ok := nodeNameMap[item.NodeID]; ok {
 				previewItem.Name = name
 				if node, exists := nodeInfoMap[item.NodeID]; exists {
-					previewItem.Nodes = []ChainLinkPreviewNode{{
-						Name:        node.Name,
-						Protocol:    node.Protocol,
-						LinkCountry: node.LinkCountry,
-						DelayTime:   node.DelayTime,
-						Speed:       node.Speed,
-						Group:       node.Group,
-					}}
+					previewItem.Nodes = []ChainLinkPreviewNode{buildChainLinkPreviewNode(node)}
 				}
 			} else {
 				previewItem.Name = "(节点不存在)"
@@ -654,28 +648,14 @@ func buildRulePreviewData(rule models.SubscriptionChainRule, nodes []models.Node
 		case "all":
 			data.TargetInfo = "所有节点"
 			for _, node := range nodes {
-				data.TargetNodes = append(data.TargetNodes, ChainLinkPreviewNode{
-					Name:        node.Name,
-					Protocol:    node.Protocol,
-					LinkCountry: node.LinkCountry,
-					DelayTime:   node.DelayTime,
-					Speed:       node.Speed,
-					Group:       node.Group,
-				})
+				data.TargetNodes = append(data.TargetNodes, buildChainLinkPreviewNode(node))
 			}
 		case "conditions":
 			data.TargetInfo = "符合条件的节点"
 			if targetConfig.Conditions != nil {
 				for _, node := range nodes {
 					if targetConfig.Conditions.EvaluateNode(node) {
-						data.TargetNodes = append(data.TargetNodes, ChainLinkPreviewNode{
-							Name:        node.Name,
-							Protocol:    node.Protocol,
-							LinkCountry: node.LinkCountry,
-							DelayTime:   node.DelayTime,
-							Speed:       node.Speed,
-							Group:       node.Group,
-						})
+						data.TargetNodes = append(data.TargetNodes, buildChainLinkPreviewNode(node))
 					}
 				}
 			}
@@ -683,14 +663,7 @@ func buildRulePreviewData(rule models.SubscriptionChainRule, nodes []models.Node
 			if name, ok := nodeNameMap[targetConfig.NodeID]; ok {
 				data.TargetInfo = name
 				if node, exists := nodeInfoMap[targetConfig.NodeID]; exists {
-					data.TargetNodes = []ChainLinkPreviewNode{{
-						Name:        node.Name,
-						Protocol:    node.Protocol,
-						LinkCountry: node.LinkCountry,
-						DelayTime:   node.DelayTime,
-						Speed:       node.Speed,
-						Group:       node.Group,
-					}}
+					data.TargetNodes = []ChainLinkPreviewNode{buildChainLinkPreviewNode(node)}
 				}
 			} else {
 				data.TargetInfo = "(节点不存在)"
@@ -708,7 +681,7 @@ func buildNodeMatchSummary(nodes []models.Node, rules []models.SubscriptionChain
 	for _, node := range nodes {
 		ms := NodeMatchSummary{
 			NodeID:      node.ID,
-			NodeName:    node.Name,
+			NodeName:    node.EffectiveName(),
 			LinkCountry: node.LinkCountry,
 			Unmatched:   true,
 		}
@@ -731,7 +704,7 @@ func buildNodeMatchSummary(nodes []models.Node, rules []models.SubscriptionChain
 						if firstItem.NodeConditions != nil {
 							for _, n := range nodes {
 								if firstItem.NodeConditions.EvaluateNode(n) {
-									ms.EntryProxy = n.Name + " (动态)"
+									ms.EntryProxy = n.EffectiveName() + " (动态)"
 									break
 								}
 							}

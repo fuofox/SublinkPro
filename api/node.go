@@ -203,10 +203,14 @@ func NodeUpdadte(c *gin.Context) {
 	oldname := c.PostForm("oldname")
 	oldlink := c.PostForm("oldlink")
 	link := c.PostForm("link")
+	nameMode, hasNameMode := c.GetPostForm("nameMode")
+	if !hasNameMode {
+		nameMode, hasNameMode = c.GetPostForm("NameMode")
+	}
 	dialerProxyName := c.PostForm("dialerProxyName")
 	group := c.PostForm("group")
-	if name == "" || link == "" {
-		utils.FailWithMsg(c, "节点名称 or 备注不能为空")
+	if link == "" {
+		utils.FailWithMsg(c, "节点链接不能为空")
 		return
 	}
 	// 查找旧节点
@@ -218,7 +222,11 @@ func NodeUpdadte(c *gin.Context) {
 		return
 	}
 	oldContentHash := Node.ContentHash
-	Node.Name = name
+	if hasNameMode {
+		Node.NameMode = models.NormalizeNodeNameMode(nameMode)
+	} else {
+		Node.NameMode = models.NormalizeNodeNameMode(Node.NameMode)
+	}
 
 	//更新构造节点元数据
 	// 检测是否为 WireGuard 配置文件格式，如果是则转换为 URL 格式
@@ -236,7 +244,8 @@ func NodeUpdadte(c *gin.Context) {
 		utils.Error("解析节点链接失败: %v", err)
 		return
 	}
-	if Node.Name == "" {
+	Node.Name = name
+	if strings.TrimSpace(Node.Name) == "" {
 		Node.Name = identity.Name
 	}
 	Node.LinkName = identity.Name
@@ -421,6 +430,11 @@ func NodeAdd(c *gin.Context) {
 	var Node models.Node
 	link := c.PostForm("link")
 	name := c.PostForm("name")
+	nameModeInput := c.PostForm("nameMode")
+	if nameModeInput == "" {
+		nameModeInput = c.PostForm("NameMode")
+	}
+	nameMode := models.NormalizeNodeNameMode(nameModeInput)
 	dialerProxyName := c.PostForm("dialerProxyName")
 	group := c.PostForm("group")
 	if link == "" {
@@ -457,6 +471,7 @@ func NodeAdd(c *gin.Context) {
 				// 创建节点并添加
 				var n models.Node
 				n.Name = proxy.Name
+				n.NameMode = models.NodeNameModeLink
 				n.Link = proxyLink
 				n.LinkName = proxy.Name
 				n.LinkHost = proxy.Server
@@ -503,12 +518,13 @@ func NodeAdd(c *gin.Context) {
 		return
 	}
 	Node.Name = name
+	Node.NameMode = nameMode
 	identity, err := protocol.ExtractLinkIdentity(link)
 	if err != nil {
 		utils.Error("解析节点链接失败: %v", err)
 		return
 	}
-	if name == "" {
+	if strings.TrimSpace(Node.Name) == "" {
 		Node.Name = identity.Name
 	}
 	Node.LinkName = identity.Name

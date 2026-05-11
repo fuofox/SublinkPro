@@ -153,202 +153,231 @@ export default function NodeTable({
           </TableRow>
         </TableHead>
         <TableBody>
-          {nodes.map((node) => (
-            <TableRow
-              key={node.ID}
-              hover
-              selected={isSelected(node)}
-              sx={getTableRowSx(isSelected(node))}
-              onClick={(e) => {
-                // 点击复选框或操作按钮时不触发详情
-                if (e.target.closest('button') || e.target.closest('input[type="checkbox"]')) return;
-                onViewDetails(node);
-              }}
-            >
-              <TableCell padding="checkbox">
-                <Checkbox checked={isSelected(node)} onChange={() => onSelect(node)} />
-              </TableCell>
-              <TableCell>
-                <Tooltip title={node.Name}>
-                  <Typography
-                    variant="body2"
-                    fontWeight="medium"
-                    sx={{
-                      maxWidth: '180px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {node.Name}
-                  </Typography>
-                </Tooltip>
-              </TableCell>
-              <TableCell>
-                {node.Group ? (
-                  <Tooltip title={node.Group}>
-                    <Chip
-                      label={node.Group}
-                      color="warning"
-                      variant="outlined"
-                      size="small"
-                      sx={{ maxWidth: '104px', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
-                    />
-                  </Tooltip>
-                ) : (
-                  <Typography variant="caption" color="text.secondary">
-                    未分组
-                  </Typography>
-                )}
-              </TableCell>
-              <TableCell>
-                {node.Source ? (
-                  <Tooltip title={node.Source === 'manual' ? '手动添加' : node.Source}>
-                    <Chip
-                      label={node.Source === 'manual' ? '手动添加' : node.Source}
-                      color="info"
-                      variant="outlined"
-                      size="small"
-                      sx={{ maxWidth: '104px', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
-                    />
-                  </Tooltip>
-                ) : (
-                  <Typography variant="caption" color="text.secondary">
-                    手动添加
-                  </Typography>
-                )}
-              </TableCell>
-              <TableCell>
-                {node.Tags ? (
-                  <Box sx={{ display: 'flex', gap: 0.375, flexWrap: 'wrap', maxWidth: 180 }}>
-                    {node.Tags.split(',')
-                      .filter((t) => t.trim())
-                      .map((tag, idx) => {
-                        const tagName = tag.trim();
-                        const tagColor = tagColorMap?.[tagName] || tokens.palette.primary.main;
-                        return (
-                          <Chip
-                            key={idx}
-                            label={tagName}
-                            size="small"
-                            sx={{ fontSize: '10px', height: 18, ...getNodeTagChipSx(theme, tokens, tagColor) }}
-                          />
-                        );
-                      })}
-                  </Box>
-                ) : (
-                  <Typography variant="caption" color="text.secondary">
-                    -
-                  </Typography>
-                )}
-              </TableCell>
-              <TableCell>
-                {node.LinkCountry ? (
-                  <Chip label={formatCountry(node.LinkCountry)} color="secondary" variant="outlined" size="small" />
-                ) : (
-                  '-'
-                )}
-              </TableCell>
-              <TableCell>
-                <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-                  <Stack direction="row" spacing={0.75} alignItems="flex-start" flexWrap="wrap" useFlexGap>
-                    <Box>
-                      {(() => {
-                        const d = getDelayDisplay(node.DelayTime, node.DelayStatus);
-                        return <Chip label={d.label} color={d.color} variant={d.variant} size="small" />;
-                      })()}
-                      {node.LatencyCheckAt && (
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ display: 'block', fontSize: '10px', mt: 0.25, lineHeight: 1.2 }}
-                        >
-                          {formatDateTime(node.LatencyCheckAt)}
-                        </Typography>
-                      )}
-                    </Box>
-                    <Box>
-                      {(() => {
-                        const s = getSpeedDisplay(node.Speed, node.SpeedStatus);
-                        return <Chip label={s.label} color={s.color} variant={s.variant} size="small" />;
-                      })()}
-                      {node.SpeedCheckAt && node.Speed > 0 && (
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ display: 'block', fontSize: '10px', mt: 0.25, lineHeight: 1.2 }}
-                        >
-                          {formatDateTime(node.SpeedCheckAt)}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Stack>
-                </Stack>
-              </TableCell>
-              <TableCell>
-                {(() => {
-                  const ipTypeDisplay = getIpTypeDisplay(node.IsBroadcast, node.QualityStatus, node.QualityFamily);
-                  const residentialDisplay = getResidentialDisplay(node.IsResidential, node.QualityStatus, node.QualityFamily);
-                  const fraudScoreDisplay = getFraudScoreDisplay(node.FraudScore, node.QualityStatus, node.QualityFamily);
-                  const qualityStatusDisplay = getQualityStatusDisplay(node.QualityStatus, node.QualityFamily);
-                  const unlockDisplay = getNodeUnlockSummaryDisplay(node, { limit: 2 });
-                  const isUntested =
-                    ipTypeDisplay.label === '未检测' && residentialDisplay.label === '未检测' && fraudScoreDisplay.label === '未检测';
-                  const shouldMergeQualityTags =
-                    node.QualityStatus !== 'success' &&
-                    ipTypeDisplay.label === residentialDisplay.label &&
-                    residentialDisplay.label === fraudScoreDisplay.label;
+          {nodes.map((node) => {
+            const effectiveName = node.EffectiveName || node.Name || node.LinkName;
+            const secondaryName = node.NameMode === 'remark' ? node.LinkName : node.Name;
+            const showSecondaryName = secondaryName && secondaryName !== effectiveName;
 
-                  return (
-                    <Box sx={{ display: 'flex', gap: 0.375, flexWrap: 'wrap', minWidth: 0, maxWidth: 160 }}>
-                      {isUntested ? (
-                        <Chip label="未检测" color="default" variant="outlined" size="small" />
-                      ) : shouldMergeQualityTags ? (
-                        qualityStatusDisplay.tooltip ? (
-                          <Tooltip title={qualityStatusDisplay.tooltip}>
+            return (
+              <TableRow
+                key={node.ID}
+                hover
+                selected={isSelected(node)}
+                sx={getTableRowSx(isSelected(node))}
+                onClick={(e) => {
+                  // 点击复选框或操作按钮时不触发详情
+                  if (e.target.closest('button') || e.target.closest('input[type="checkbox"]')) return;
+                  onViewDetails(node);
+                }}
+              >
+                <TableCell padding="checkbox">
+                  <Checkbox checked={isSelected(node)} onChange={() => onSelect(node)} />
+                </TableCell>
+                <TableCell>
+                  <Tooltip title={effectiveName}>
+                    <Stack spacing={0.25} sx={{ maxWidth: '180px' }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight="medium"
+                        sx={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {effectiveName}
+                      </Typography>
+                      {showSecondaryName && (
+                        <Typography variant="caption" sx={{ color: tokens.secondaryText, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {node.NameMode === 'remark' ? `原始：${secondaryName}` : `备注：${secondaryName}`}
+                        </Typography>
+                      )}
+                    </Stack>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>
+                  {node.Group ? (
+                    <Tooltip title={node.Group}>
+                      <Chip
+                        label={node.Group}
+                        color="warning"
+                        variant="outlined"
+                        size="small"
+                        sx={{ maxWidth: '104px', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
+                      />
+                    </Tooltip>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      未分组
+                    </Typography>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {node.Source ? (
+                    <Tooltip title={node.Source === 'manual' ? '手动添加' : node.Source}>
+                      <Chip
+                        label={node.Source === 'manual' ? '手动添加' : node.Source}
+                        color="info"
+                        variant="outlined"
+                        size="small"
+                        sx={{ maxWidth: '104px', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
+                      />
+                    </Tooltip>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      手动添加
+                    </Typography>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {node.Tags ? (
+                    <Box sx={{ display: 'flex', gap: 0.375, flexWrap: 'wrap', maxWidth: 180 }}>
+                      {node.Tags.split(',')
+                        .filter((t) => t.trim())
+                        .map((tag, idx) => {
+                          const tagName = tag.trim();
+                          const tagColor = tagColorMap?.[tagName] || tokens.palette.primary.main;
+                          return (
+                            <Chip
+                              key={idx}
+                              label={tagName}
+                              size="small"
+                              sx={{ fontSize: '10px', height: 18, ...getNodeTagChipSx(theme, tokens, tagColor) }}
+                            />
+                          );
+                        })}
+                    </Box>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      -
+                    </Typography>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {node.LinkCountry ? (
+                    <Chip label={formatCountry(node.LinkCountry)} color="secondary" variant="outlined" size="small" />
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+                    <Stack direction="row" spacing={0.75} alignItems="flex-start" flexWrap="wrap" useFlexGap>
+                      <Box>
+                        {(() => {
+                          const d = getDelayDisplay(node.DelayTime, node.DelayStatus);
+                          return <Chip label={d.label} color={d.color} variant={d.variant} size="small" />;
+                        })()}
+                        {node.LatencyCheckAt && (
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ display: 'block', fontSize: '10px', mt: 0.25, lineHeight: 1.2 }}
+                          >
+                            {formatDateTime(node.LatencyCheckAt)}
+                          </Typography>
+                        )}
+                      </Box>
+                      <Box>
+                        {(() => {
+                          const s = getSpeedDisplay(node.Speed, node.SpeedStatus);
+                          return <Chip label={s.label} color={s.color} variant={s.variant} size="small" />;
+                        })()}
+                        {node.SpeedCheckAt && node.Speed > 0 && (
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ display: 'block', fontSize: '10px', mt: 0.25, lineHeight: 1.2 }}
+                          >
+                            {formatDateTime(node.SpeedCheckAt)}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Stack>
+                  </Stack>
+                </TableCell>
+                <TableCell>
+                  {(() => {
+                    const ipTypeDisplay = getIpTypeDisplay(node.IsBroadcast, node.QualityStatus, node.QualityFamily);
+                    const residentialDisplay = getResidentialDisplay(node.IsResidential, node.QualityStatus, node.QualityFamily);
+                    const fraudScoreDisplay = getFraudScoreDisplay(node.FraudScore, node.QualityStatus, node.QualityFamily);
+                    const qualityStatusDisplay = getQualityStatusDisplay(node.QualityStatus, node.QualityFamily);
+                    const unlockDisplay = getNodeUnlockSummaryDisplay(node, { limit: 2 });
+                    const isUntested =
+                      ipTypeDisplay.label === '未检测' && residentialDisplay.label === '未检测' && fraudScoreDisplay.label === '未检测';
+                    const shouldMergeQualityTags =
+                      node.QualityStatus !== 'success' &&
+                      ipTypeDisplay.label === residentialDisplay.label &&
+                      residentialDisplay.label === fraudScoreDisplay.label;
+
+                    return (
+                      <Box sx={{ display: 'flex', gap: 0.375, flexWrap: 'wrap', minWidth: 0, maxWidth: 160 }}>
+                        {isUntested ? (
+                          <Chip label="未检测" color="default" variant="outlined" size="small" />
+                        ) : shouldMergeQualityTags ? (
+                          qualityStatusDisplay.tooltip ? (
+                            <Tooltip title={qualityStatusDisplay.tooltip}>
+                              <Chip
+                                label={qualityStatusDisplay.label}
+                                color={qualityStatusDisplay.color}
+                                variant={qualityStatusDisplay.variant}
+                                size="small"
+                              />
+                            </Tooltip>
+                          ) : (
                             <Chip
                               label={qualityStatusDisplay.label}
                               color={qualityStatusDisplay.color}
                               variant={qualityStatusDisplay.variant}
                               size="small"
                             />
-                          </Tooltip>
+                          )
                         ) : (
-                          <Chip
-                            label={qualityStatusDisplay.label}
-                            color={qualityStatusDisplay.color}
-                            variant={qualityStatusDisplay.variant}
-                            size="small"
-                          />
-                        )
-                      ) : (
-                        <>
-                          {ipTypeDisplay.tooltip ? (
-                            <Tooltip title={ipTypeDisplay.tooltip}>
+                          <>
+                            {ipTypeDisplay.tooltip ? (
+                              <Tooltip title={ipTypeDisplay.tooltip}>
+                                <Chip
+                                  label={ipTypeDisplay.label}
+                                  color={ipTypeDisplay.color}
+                                  variant={ipTypeDisplay.variant}
+                                  size="small"
+                                />
+                              </Tooltip>
+                            ) : (
                               <Chip label={ipTypeDisplay.label} color={ipTypeDisplay.color} variant={ipTypeDisplay.variant} size="small" />
-                            </Tooltip>
-                          ) : (
-                            <Chip label={ipTypeDisplay.label} color={ipTypeDisplay.color} variant={ipTypeDisplay.variant} size="small" />
-                          )}
-                          {residentialDisplay.tooltip ? (
-                            <Tooltip title={residentialDisplay.tooltip}>
+                            )}
+                            {residentialDisplay.tooltip ? (
+                              <Tooltip title={residentialDisplay.tooltip}>
+                                <Chip
+                                  label={residentialDisplay.label}
+                                  color={residentialDisplay.color}
+                                  variant={residentialDisplay.variant}
+                                  size="small"
+                                />
+                              </Tooltip>
+                            ) : (
                               <Chip
                                 label={residentialDisplay.label}
                                 color={residentialDisplay.color}
                                 variant={residentialDisplay.variant}
                                 size="small"
                               />
-                            </Tooltip>
-                          ) : (
-                            <Chip
-                              label={residentialDisplay.label}
-                              color={residentialDisplay.color}
-                              variant={residentialDisplay.variant}
-                              size="small"
-                            />
-                          )}
-                          {fraudScoreDisplay.tooltip ? (
-                            <Tooltip title={fraudScoreDisplay.tooltip}>
+                            )}
+                            {fraudScoreDisplay.tooltip ? (
+                              <Tooltip title={fraudScoreDisplay.tooltip}>
+                                <Chip
+                                  label={
+                                    node.QualityStatus === 'success'
+                                      ? fraudScoreDisplay.label
+                                      : fraudScoreDisplay.detailLabel || fraudScoreDisplay.label
+                                  }
+                                  color={fraudScoreDisplay.color}
+                                  variant={fraudScoreDisplay.variant}
+                                  size="small"
+                                  sx={fraudScoreDisplay.sx}
+                                />
+                              </Tooltip>
+                            ) : (
                               <Chip
                                 label={
                                   node.QualityStatus === 'success'
@@ -360,72 +389,60 @@ export default function NodeTable({
                                 size="small"
                                 sx={fraudScoreDisplay.sx}
                               />
+                            )}
+                          </>
+                        )}
+                        {unlockDisplay?.compactItems.map((item) => {
+                          const chip = (
+                            <Chip
+                              key={`unlock-${item.provider}`}
+                              icon={<LockOpenIcon sx={{ fontSize: '12px !important' }} />}
+                              label={item.compactLabel}
+                              color={item.color}
+                              variant={item.variant}
+                              size="small"
+                            />
+                          );
+                          return item.tooltip ? (
+                            <Tooltip key={`unlock-tip-${item.provider}`} title={item.tooltip}>
+                              {chip}
                             </Tooltip>
                           ) : (
-                            <Chip
-                              label={
-                                node.QualityStatus === 'success'
-                                  ? fraudScoreDisplay.label
-                                  : fraudScoreDisplay.detailLabel || fraudScoreDisplay.label
-                              }
-                              color={fraudScoreDisplay.color}
-                              variant={fraudScoreDisplay.variant}
-                              size="small"
-                              sx={fraudScoreDisplay.sx}
-                            />
-                          )}
-                        </>
-                      )}
-                      {unlockDisplay?.compactItems.map((item) => {
-                        const chip = (
-                          <Chip
-                            key={`unlock-${item.provider}`}
-                            icon={<LockOpenIcon sx={{ fontSize: '12px !important' }} />}
-                            label={item.compactLabel}
-                            color={item.color}
-                            variant={item.variant}
-                            size="small"
-                          />
-                        );
-                        return item.tooltip ? (
-                          <Tooltip key={`unlock-tip-${item.provider}`} title={item.tooltip}>
-                            {chip}
-                          </Tooltip>
-                        ) : (
-                          chip
-                        );
-                      })}
-                      {unlockDisplay?.extraCount > 0 && (
-                        <Chip label={`+${unlockDisplay.extraCount}`} color="default" variant="outlined" size="small" />
-                      )}
-                    </Box>
-                  );
-                })()}
-              </TableCell>
-              <TableCell align="right" sx={{ pr: 0.5 }}>
-                <Tooltip title="检测">
-                  <IconButton size="small" onClick={() => onSpeedTest(node)}>
-                    <SpeedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="复制链接">
-                  <IconButton size="small" onClick={() => onCopy(node.Link)}>
-                    <ContentCopyIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="编辑">
-                  <IconButton size="small" onClick={() => onEdit(node)}>
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="删除">
-                  <IconButton size="small" color="error" onClick={() => onDelete(node)}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
-            </TableRow>
-          ))}
+                            chip
+                          );
+                        })}
+                        {unlockDisplay?.extraCount > 0 && (
+                          <Chip label={`+${unlockDisplay.extraCount}`} color="default" variant="outlined" size="small" />
+                        )}
+                      </Box>
+                    );
+                  })()}
+                </TableCell>
+                <TableCell align="right" sx={{ pr: 0.5 }}>
+                  <Tooltip title="检测">
+                    <IconButton size="small" onClick={() => onSpeedTest(node)}>
+                      <SpeedIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="复制链接">
+                    <IconButton size="small" onClick={() => onCopy(node.Link)}>
+                      <ContentCopyIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="编辑">
+                    <IconButton size="small" onClick={() => onEdit(node)}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="删除">
+                    <IconButton size="small" color="error" onClick={() => onDelete(node)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </TableContainer>

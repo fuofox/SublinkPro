@@ -192,6 +192,10 @@ export default function NodeDetailsPanel({
   const fraudScoreDisplay = getFraudScoreDisplay(node.FraudScore, node.QualityStatus, node.QualityFamily);
   const qualityStatusDisplay = getQualityStatusDisplay(node.QualityStatus, node.QualityFamily);
   const unlockDisplay = getNodeUnlockSummaryDisplay(node, { limit: 99 });
+  const effectiveName = node.EffectiveName || node.Name || node.LinkName;
+  const usesRemarkName = (node.NameMode || 'link') === 'remark';
+  const nameModeHint = usesRemarkName && node.LinkName ? ` · 原始：${node.LinkName}` : '';
+  const remarkHint = !usesRemarkName && node.Name && node.Name !== effectiveName ? ` · 备注：${node.Name}` : '';
 
   const delayStyles = getNodeStatusMetricSx(tokens, delayDisplay.color);
   const speedStyles = getNodeStatusMetricSx(tokens, speedDisplay.color);
@@ -292,7 +296,12 @@ export default function NodeDetailsPanel({
           </Box>
 
           <Typography variant="h5" fontWeight="800" sx={{ mt: 2, mb: 0.5, lineHeight: 1.3, wordBreak: 'break-word' }}>
-            {node.Name}
+            {effectiveName}
+          </Typography>
+
+          <Typography variant="caption" sx={{ color: tokens.secondaryText, display: 'block', mb: 0.75 }}>
+            {usesRemarkName ? '当前使用备注名称' : '当前使用原始名称'}
+            {nameModeHint || remarkHint}
           </Typography>
 
           {node.Group && (
@@ -395,16 +404,19 @@ export default function NodeDetailsPanel({
               </Box>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
-                  原始名称
+                  名称设置
                 </Typography>
-                <Typography variant="body2" sx={{ wordBreak: 'break-word', fontWeight: 500 }}>
-                  {node.LinkName || '-'}
-                </Typography>
-                {node.LinkName === node.Name && (
-                  <Typography variant="caption" color="text.secondary" display="block" mt={0.3} sx={{ fontSize: 11 }}>
-                    名称与订阅一致
+                <Stack spacing={0.4}>
+                  <Typography variant="body2" sx={{ wordBreak: 'break-word', fontWeight: 600 }}>
+                    实际名称：{effectiveName || '-'}
                   </Typography>
-                )}
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: 11, wordBreak: 'break-word' }}>
+                    原始名称：{node.LinkName || '-'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: 11, wordBreak: 'break-word' }}>
+                    备注名称：{node.Name || '-'}
+                  </Typography>
+                </Stack>
               </Box>
             </Stack>
           </ListItem>

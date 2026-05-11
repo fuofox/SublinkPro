@@ -284,7 +284,7 @@ export default function SubscriptionList() {
       nodes.forEach((node) => {
         next[node.ID] = {
           ID: node.ID,
-          Name: node.Name,
+          Name: node.EffectiveName || node.Name || node.LinkName,
           Group: node.Group,
           Source: node.Source,
           LinkCountry: node.LinkCountry,
@@ -828,7 +828,7 @@ export default function SubscriptionList() {
     (sub.Nodes || []).forEach((node, idx) => {
       sortData.push({
         ID: node.ID,
-        Name: node.Name,
+        Name: node.EffectiveName || node.Name || node.LinkName,
         Sort: node.Sort !== undefined ? node.Sort : idx,
         IsGroup: false
       });

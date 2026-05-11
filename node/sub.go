@@ -445,14 +445,17 @@ func scheduleClashToNodeLinks(id int, proxys []protocol.Proxy, subName string, r
 		currentNamesByHash[ch][name] = true
 	}
 
-	// 统计数据库中本机场已有节点的 hash→名称集合
+	// 统计数据库中本机场已有节点的 hash→原始名称集合
 	// 解决“历史上是信息节点，但本次拉取只剩一个名称”时无法识别的问题（否则会导致残留无法清理/误更新）。
 	existingNamesByHash := make(map[string]map[string]bool)
 	for _, node := range existingNodes {
 		if node.ContentHash == "" {
 			continue
 		}
-		name := strings.TrimSpace(node.Name)
+		name := strings.TrimSpace(node.LinkName)
+		if name == "" {
+			name = strings.TrimSpace(node.Name)
+		}
 		if existingNamesByHash[node.ContentHash] == nil {
 			existingNamesByHash[node.ContentHash] = make(map[string]bool)
 		}
@@ -477,7 +480,7 @@ func scheduleClashToNodeLinks(id int, proxys []protocol.Proxy, subName string, r
 
 	// 创建现有节点的映射表（以 ContentHash 为键，用于同机场去重判断与更新）
 	existingNodeByContentHash := make(map[string]models.Node)
-	// 对信息节点 hash，记录本机场已有的所有名称（用于重新拉取时精确匹配）
+	// 对信息节点 hash，按原始名称记录本机场已有节点（用户备注不会影响重新拉取匹配）
 	existingInfoNodeNames := make(map[string]map[string]models.Node)
 	for _, node := range existingNodes {
 		if node.ContentHash != "" {
@@ -487,7 +490,11 @@ func scheduleClashToNodeLinks(id int, proxys []protocol.Proxy, subName string, r
 				if existingInfoNodeNames[node.ContentHash] == nil {
 					existingInfoNodeNames[node.ContentHash] = make(map[string]models.Node)
 				}
-				existingInfoNodeNames[node.ContentHash][strings.TrimSpace(node.Name)] = node
+				name := strings.TrimSpace(node.LinkName)
+				if name == "" {
+					name = strings.TrimSpace(node.Name)
+				}
+				existingInfoNodeNames[node.ContentHash][name] = node
 			}
 		}
 	}
@@ -543,6 +550,7 @@ func scheduleClashToNodeLinks(id int, proxys []protocol.Proxy, subName string, r
 		Node.Link = link
 		Node.Name = proxy.Name
 		Node.LinkName = proxy.Name
+		Node.NameMode = models.NodeNameModeLink
 		Node.LinkAddress = proxy.Server + ":" + strconv.Itoa(int(proxy.Port))
 		Node.LinkHost = proxy.Server
 		Node.LinkPort = strconv.Itoa(int(proxy.Port))
@@ -570,14 +578,8 @@ func scheduleClashToNodeLinks(id int, proxys []protocol.Proxy, subName string, r
 					// 信息节点：用名称精确匹配（同 hash 对应多个已有节点）
 					if existingByName, nameExists := existingInfoNodeNames[contentHash][proxy.Name]; nameExists {
 						// 该名称的信息节点已存在，检查链接或顺序是否变化
-						if existingByName.Link != link || existingByName.SourceSort != Node.SourceSort {
-							nodesToUpdate = append(nodesToUpdate, models.NodeInfoUpdate{
-								ID:         existingByName.ID,
-								Name:       proxy.Name,
-								LinkName:   proxy.Name,
-								Link:       link,
-								SourceSort: Node.SourceSort,
-							})
+						if existingByName.LinkName != proxy.Name || existingByName.Link != link || existingByName.SourceSort != Node.SourceSort {
+							nodesToUpdate = append(nodesToUpdate, models.BuildNodeInfoUpdate(existingByName, proxy.Name, link, Node.SourceSort))
 							updateCount++
 							nodeStatus = "updated"
 							utils.Info("✏️ 信息节点【%s】链接/顺序已变更，将更新", proxy.Name)
@@ -595,17 +597,11 @@ func scheduleClashToNodeLinks(id int, proxys []protocol.Proxy, subName string, r
 				} else {
 					// 普通节点：用 hash 匹配，检查名称或链接是否变化
 					existingNode := existingNodeByContentHash[contentHash]
-					if existingNode.Name != proxy.Name || existingNode.Link != link || existingNode.SourceSort != Node.SourceSort {
-						nodesToUpdate = append(nodesToUpdate, models.NodeInfoUpdate{
-							ID:         existingNode.ID,
-							Name:       proxy.Name,
-							LinkName:   proxy.Name,
-							Link:       link,
-							SourceSort: Node.SourceSort,
-						})
+					if existingNode.LinkName != proxy.Name || existingNode.Link != link || existingNode.SourceSort != Node.SourceSort {
+						nodesToUpdate = append(nodesToUpdate, models.BuildNodeInfoUpdate(existingNode, proxy.Name, link, Node.SourceSort))
 						updateCount++
 						nodeStatus = "updated"
-						utils.Info("✏️ 节点【%s】名称/链接/顺序已变更，将更新 [旧名称: %s]", proxy.Name, existingNode.Name)
+						utils.Info("✏️ 节点【%s】原始名称/链接/顺序已变更，将更新 [旧原始名称: %s]", proxy.Name, existingNode.LinkName)
 					} else {
 						utils.Debug("⏭️ 节点【%s】在本机场已存在，跳过", proxy.Name)
 					}
@@ -683,7 +679,11 @@ func scheduleClashToNodeLinks(id int, proxys []protocol.Proxy, subName string, r
 		// 信息节点：hash 仍在，但需要按名称精细判断，避免名称变化/部分移除导致垃圾节点残留（数据膨胀）
 		if infoNodeHashes[node.ContentHash] {
 			currentNames := currentNamesByHash[node.ContentHash]
-			if len(currentNames) == 0 || !currentNames[strings.TrimSpace(node.Name)] {
+			name := strings.TrimSpace(node.LinkName)
+			if name == "" {
+				name = strings.TrimSpace(node.Name)
+			}
+			if len(currentNames) == 0 || !currentNames[name] {
 				nodeIDsToDelete = append(nodeIDsToDelete, nodeID)
 			}
 		}

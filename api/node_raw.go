@@ -103,8 +103,8 @@ func UpdateNodeRawInfo(c *gin.Context) {
 	}
 	if newLinkName != "" {
 		updates["link_name"] = newLinkName
-		// 如果原始名称和显示名称一致，同步更新显示名称
-		if node.LinkName == node.Name {
+		// link 模式或历史“备注=原始名称”的节点继续同步备注；remark 模式下保留用户自定义备注。
+		if node.ShouldSyncNameFromLink() {
 			updates["name"] = newLinkName
 		}
 	}
@@ -122,6 +122,7 @@ func UpdateNodeRawInfo(c *gin.Context) {
 			node.Name = newLinkName
 		}
 	}
+	node.NameMode = models.NormalizeNodeNameMode(node.NameMode)
 	models.UpdateNodeCache(req.NodeID, node)
 
 	utils.OkWithData(c, gin.H{

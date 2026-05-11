@@ -350,7 +350,7 @@ func applyPreparedResponseMode(prepared preparedClientResponse) resolvedPrepared
 
 func buildRenamedNodeLink(node models.Node, processedLinkName, nodeNameRule, link string, index int) string {
 	if nodeNameRule == "" {
-		return link
+		return utils.RenameNodeLink(link, node.EffectiveName())
 	}
 	newName := utils.RenameNode(nodeNameRule, models.BuildNodeRenameInfo(node, processedLinkName, protocol.GetProtocolFromLink(link), index))
 	return utils.RenameNodeLink(link, newName)
@@ -358,7 +358,7 @@ func buildRenamedNodeLink(node models.Node, processedLinkName, nodeNameRule, lin
 
 func buildSurgeRenameInfo(node models.Node, processedLinkName, link string, index int) utils.NodeInfo {
 	return utils.NodeInfo{
-		Name:          node.Name,
+		Name:          node.EffectiveName(),
 		LinkName:      processedLinkName,
 		LinkCountry:   node.LinkCountry,
 		Speed:         node.Speed,
@@ -378,7 +378,7 @@ func buildSurgeRenameInfo(node models.Node, processedLinkName, link string, inde
 
 func buildSurgeRenamedNodeLink(node models.Node, processedLinkName, nodeNameRule, link string, index int) string {
 	if nodeNameRule == "" {
-		return link
+		return utils.RenameNodeLink(link, node.EffectiveName())
 	}
 	newName := utils.RenameNode(nodeNameRule, buildSurgeRenameInfo(node, processedLinkName, link, index))
 	return utils.RenameNodeLink(link, newName)
@@ -439,11 +439,9 @@ func renderPreparedV2ray(c *gin.Context, prepared preparedClientResponse) {
 		// 如果包含多条节点
 		case strings.Contains(v.Link, ","):
 			links := strings.Split(v.Link, ",")
-			// 对每个链接应用重命名
-			if sub.NodeNameRule != "" {
-				for i, link := range links {
-					links[i] = buildRenamedNodeLink(v, processedLinkName, sub.NodeNameRule, link, idx+1)
-				}
+			// 对每个链接应用节点名称模式和重命名规则。
+			for i, link := range links {
+				links[i] = buildRenamedNodeLink(v, processedLinkName, sub.NodeNameRule, link, idx+1)
 			}
 			compatibleLinks := filterV2rayCompatibleLinks(links)
 			if len(compatibleLinks) > 0 {
@@ -540,7 +538,7 @@ func renderPreparedClash(c *gin.Context, prepared preparedClientResponse) {
 	for idx, v := range sub.Nodes {
 		// 计算节点最终名称
 		processedLinkName := utils.PreprocessNodeName(sub.NodeNamePreprocess, v.LinkName)
-		finalName := v.LinkName // 默认使用原始名称
+		finalName := v.EffectiveName() // 默认使用节点名称模式计算后的实际名称
 		if sub.NodeNameRule != "" {
 			finalName = utils.RenameNode(sub.NodeNameRule, models.BuildNodeRenameInfo(v, processedLinkName, protocol.GetProtocolFromLink(v.Link), idx+1))
 		}

@@ -183,6 +183,27 @@ func RunMigrations() error {
 		utils.Error("执行迁移 0030_add_unlock_check_columns 失败: %v", err)
 	}
 
+	if err := database.RunCustomMigration("0032_backfill_node_name_mode", func() error {
+		if !db.Migrator().HasColumn(&Node{}, "NameMode") {
+			if err := db.Migrator().AddColumn(&Node{}, "NameMode"); err != nil {
+				return err
+			}
+		}
+
+		result := db.Model(&Node{}).Where("1 = 1").Update("name_mode", gorm.Expr(
+			"CASE WHEN TRIM(COALESCE(name, '')) <> '' AND TRIM(COALESCE(link_name, '')) <> '' AND TRIM(name) <> TRIM(link_name) THEN ? ELSE ? END",
+			NodeNameModeRemark,
+			NodeNameModeLink,
+		))
+		if result.Error != nil {
+			return result.Error
+		}
+		utils.Info("已回填 %d 个节点的名称模式", result.RowsAffected)
+		return nil
+	}); err != nil {
+		utils.Error("执行迁移 0032_backfill_node_name_mode 失败: %v", err)
+	}
+
 	if err := database.RunCustomMigration("0024_migrate_legacy_webhook_settings", func() error {
 		legacyURL, _ := GetSetting("webhook_url")
 		legacyMethod, _ := GetSetting("webhook_method")
