@@ -61,6 +61,17 @@ linters:
           deny:
             - pkg: github.com/gin-gonic/gin
               desc: "业务与数据层不应依赖 Gin Web 框架"
+        routers-only-register-routes:
+          list-mode: original
+          files:
+            - "routers/**/*.go"
+          deny:
+            - pkg: sublink/services
+              desc: "routers 只注册路由，业务处理应放在 api 层"
+            - pkg: sublink/config
+              desc: "routers 只注册路由，配置读取应放在 api 层"
+            - pkg: sublink/utils
+              desc: "routers 只注册路由，响应组装应放在 api 层"
         db-drivers-only-in-database:
           list-mode: original
           files:
