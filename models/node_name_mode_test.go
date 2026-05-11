@@ -74,3 +74,15 @@ func TestNodeNameSyncFromLinkName(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerateUniqueNodeNameUsesReservedNames(t *testing.T) {
+	reserved := map[string]bool{"节点": true, "节点-2": true}
+
+	got := GenerateUniqueNodeName("节点", 0, reserved)
+	if got != "节点-3" {
+		t.Fatalf("GenerateUniqueNodeName() = %q, want %q", got, "节点-3")
+	}
+	if !reserved["节点-3"] {
+		t.Fatalf("GenerateUniqueNodeName() should reserve generated name")
+	}
+}

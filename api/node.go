@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"sublink/models"
@@ -42,6 +43,14 @@ func normalizeIPType(value string) string {
 
 func normalizeUnlockStatus(value string) string {
 	return unlock.NormalizeUnlockStatus(value)
+}
+
+func failNodeNameConflict(c *gin.Context, err error) bool {
+	if errors.Is(err, models.ErrNodeNameExists) {
+		utils.FailWithMsg(c, "节点备注名称已存在，请换一个备注")
+		return true
+	}
+	return false
 }
 
 func parseUnlockRulesFromQuery(c *gin.Context) []models.UnlockFilterRule {
@@ -213,6 +222,7 @@ func NodeUpdadte(c *gin.Context) {
 		utils.FailWithMsg(c, "节点链接不能为空")
 		return
 	}
+	userProvidedName := strings.TrimSpace(name) != ""
 	// 查找旧节点
 	Node.Name = oldname
 	Node.Link = oldlink
@@ -247,6 +257,16 @@ func NodeUpdadte(c *gin.Context) {
 	Node.Name = name
 	if strings.TrimSpace(Node.Name) == "" {
 		Node.Name = identity.Name
+	}
+	if userProvidedName {
+		if err := models.EnsureNodeNameAvailable(Node.Name, Node.ID); err != nil {
+			if !failNodeNameConflict(c, err) {
+				utils.FailWithMsg(c, "检查节点备注名称失败")
+			}
+			return
+		}
+	} else {
+		Node.Name = models.GenerateUniqueNodeName(Node.Name, Node.ID, nil)
 	}
 	Node.LinkName = identity.Name
 	Node.LinkAddress = identity.Address
@@ -297,6 +317,9 @@ func NodeUpdadte(c *gin.Context) {
 
 	err = Node.Update()
 	if err != nil {
+		if failNodeNameConflict(c, err) {
+			return
+		}
 		utils.FailWithMsg(c, "更新失败")
 		return
 	}
@@ -441,6 +464,7 @@ func NodeAdd(c *gin.Context) {
 		utils.FailWithMsg(c, "link  不能为空")
 		return
 	}
+	userProvidedName := strings.TrimSpace(name) != ""
 
 	// 读取全局配置：是否启用跨机场去重（默认启用）
 	crossAirportDedupVal, _ := models.GetSetting("cross_airport_dedup_enabled")
@@ -468,9 +492,9 @@ func NodeAdd(c *gin.Context) {
 					failedCount++
 					continue
 				}
-				// 创建节点并添加
+				// 创建节点并添加；Clash YAML 中的备注由系统生成，重复时自动追加编号。
 				var n models.Node
-				n.Name = proxy.Name
+				n.Name = models.GenerateUniqueNodeName(proxy.Name, 0, nil)
 				n.NameMode = models.NodeNameModeLink
 				n.Link = proxyLink
 				n.LinkName = proxy.Name
@@ -527,6 +551,16 @@ func NodeAdd(c *gin.Context) {
 	if strings.TrimSpace(Node.Name) == "" {
 		Node.Name = identity.Name
 	}
+	if userProvidedName {
+		if err := models.EnsureNodeNameAvailable(Node.Name, 0); err != nil {
+			if !failNodeNameConflict(c, err) {
+				utils.FailWithMsg(c, "检查节点备注名称失败")
+			}
+			return
+		}
+	} else {
+		Node.Name = models.GenerateUniqueNodeName(Node.Name, 0, nil)
+	}
 	Node.LinkName = identity.Name
 	Node.LinkAddress = identity.Address
 	Node.LinkHost = identity.Host
@@ -577,6 +611,9 @@ func NodeAdd(c *gin.Context) {
 
 	err = Node.Add()
 	if err != nil {
+		if failNodeNameConflict(c, err) {
+			return
+		}
 		utils.FailWithMsg(c, "添加失败检查一下是否节点重复")
 		return
 	}

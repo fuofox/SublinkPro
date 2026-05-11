@@ -117,6 +117,9 @@ const (
 // nodeCache 使用新的泛型缓存，支持二级索引
 var nodeCache *cache.MapCache[int, Node]
 
+// ErrNodeNameExists 表示节点备注名称已被其他节点占用。
+var ErrNodeNameExists = errors.New("node name already exists")
+
 func init() {
 	// 初始化节点缓存，主键为 ID
 	nodeCache = cache.NewMapCache(func(n Node) int { return n.ID })
@@ -133,6 +136,85 @@ func init() {
 func hashNodeLink(link string) string {
 	sum := sha256.Sum256([]byte(link))
 	return hex.EncodeToString(sum[:])
+}
+
+func normalizeNodeRemarkName(name string) string {
+	return strings.TrimSpace(name)
+}
+
+// FindNodeNameConflict 查询除当前节点外是否存在相同备注名称的节点。
+func FindNodeNameConflict(name string, excludeID int) (Node, bool, error) {
+	trimmedName := normalizeNodeRemarkName(name)
+	if trimmedName == "" {
+		return Node{}, false, nil
+	}
+
+	if nodeCache != nil {
+		results := nodeCache.Filter(func(n Node) bool {
+			return n.ID != excludeID && normalizeNodeRemarkName(n.Name) == trimmedName
+		})
+		if len(results) > 0 {
+			return results[0], true, nil
+		}
+	}
+
+	if database.DB == nil {
+		return Node{}, false, nil
+	}
+	var node Node
+	err := database.DB.Where("TRIM(name) = ? AND id <> ?", trimmedName, excludeID).First(&node).Error
+	if err == nil {
+		return node, true, nil
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return Node{}, false, nil
+	}
+	return Node{}, false, err
+}
+
+// EnsureNodeNameAvailable 校验备注名称在全局节点中唯一。
+func EnsureNodeNameAvailable(name string, excludeID int) error {
+	if _, exists, err := FindNodeNameConflict(name, excludeID); err != nil {
+		return err
+	} else if exists {
+		return ErrNodeNameExists
+	}
+	return nil
+}
+
+func nodeNameReserved(name string, excludeID int, reserved map[string]bool) bool {
+	trimmedName := normalizeNodeRemarkName(name)
+	if trimmedName == "" {
+		return false
+	}
+	if reserved != nil && reserved[trimmedName] {
+		return true
+	}
+	_, exists, err := FindNodeNameConflict(trimmedName, excludeID)
+	return err == nil && exists
+}
+
+// GenerateUniqueNodeName 为自动导入节点生成全局唯一备注名称。
+func GenerateUniqueNodeName(baseName string, excludeID int, reserved map[string]bool) string {
+	baseName = normalizeNodeRemarkName(baseName)
+	if baseName == "" {
+		baseName = "未命名节点"
+	}
+	if !nodeNameReserved(baseName, excludeID, reserved) {
+		if reserved != nil {
+			reserved[baseName] = true
+		}
+		return baseName
+	}
+	for suffix := 2; ; suffix++ {
+		candidate := fmt.Sprintf("%s-%d", baseName, suffix)
+		if !nodeNameReserved(candidate, excludeID, reserved) {
+			if reserved != nil {
+				reserved[candidate] = true
+			}
+			return candidate
+		}
+	}
 }
 
 // NormalizeNodeNameMode 规范化节点名称模式，未知值统一回退到原始名称模式。
@@ -331,6 +413,11 @@ func UpdateNodeFields(id int, updates map[string]any) error {
 	if link, ok := updates["link"].(string); ok {
 		updates["link_hash"] = hashNodeLink(link)
 	}
+	if name, ok := updates["name"].(string); ok {
+		if err := EnsureNodeNameAvailable(name, id); err != nil {
+			return err
+		}
+	}
 	if err := database.DB.Model(&Node{}).Where("id = ?", id).Updates(updates).Error; err != nil {
 		return err
 	}
@@ -357,6 +444,9 @@ func UpdateNodeFields(id int, updates map[string]any) error {
 // Add 添加节点
 func (node *Node) Add() error {
 	node.NormalizeNameModeDefaults()
+	if err := EnsureNodeNameAvailable(node.Name, node.ID); err != nil {
+		return err
+	}
 	node.syncLinkHash()
 	// Write-Through: 先写数据库
 	err := database.DB.Create(node).Error
@@ -371,6 +461,9 @@ func (node *Node) Add() error {
 // Update 更新节点
 func (node *Node) Update() error {
 	node.NormalizeNameModeDefaults()
+	if err := EnsureNodeNameAvailable(node.Name, node.ID); err != nil {
+		return err
+	}
 	node.syncLinkHash()
 	node.UpdatedAt = time.Now()
 	// Write-Through: 先写数据库
@@ -464,6 +557,11 @@ type SpeedTestResult struct {
 func BatchAddNodes(nodes []Node) error {
 	if len(nodes) == 0 {
 		return nil
+	}
+	reservedNames := make(map[string]bool, len(nodes))
+	for i := range nodes {
+		nodes[i].NormalizeNameModeDefaults()
+		nodes[i].Name = GenerateUniqueNodeName(nodes[i].Name, nodes[i].ID, reservedNames)
 	}
 
 	// 分块处理
@@ -1383,6 +1481,9 @@ func (node *Node) Del() error {
 // UpsertNode 插入或更新节点
 func (node *Node) UpsertNode() error {
 	node.NormalizeNameModeDefaults()
+	if err := EnsureNodeNameAvailable(node.Name, node.ID); err != nil {
+		return err
+	}
 	node.syncLinkHash()
 	// Write-Through: 先写数据库
 	err := database.DB.Clauses(clause.OnConflict{
@@ -1701,6 +1802,7 @@ func BatchUpdateNodeInfo(updates []NodeInfoUpdate) (int, error) {
 			"source_sort": u.SourceSort,
 		}
 		if existing.ShouldSyncNameFromLink() {
+			newName = GenerateUniqueNodeName(newName, u.ID, nil)
 			fields["name"] = newName
 		}
 
@@ -1713,7 +1815,9 @@ func BatchUpdateNodeInfo(updates []NodeInfoUpdate) (int, error) {
 
 		// 同步更新缓存
 		if cachedNode, ok := nodeCache.Get(u.ID); ok {
-			cachedNode.Name = newName
+			if existing.ShouldSyncNameFromLink() {
+				cachedNode.Name = newName
+			}
 			cachedNode.LinkName = u.LinkName
 			cachedNode.Link = u.Link
 			cachedNode.LinkHash = hashNodeLink(u.Link)

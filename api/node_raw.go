@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"strconv"
 	"sublink/models"
 	"sublink/node/protocol"
@@ -110,6 +111,10 @@ func UpdateNodeRawInfo(c *gin.Context) {
 	}
 
 	if err := models.UpdateNodeFields(req.NodeID, updates); err != nil {
+		if errors.Is(err, models.ErrNodeNameExists) {
+			utils.FailWithMsg(c, "节点备注名称已存在，请换一个备注")
+			return
+		}
 		utils.FailWithMsg(c, "更新数据库失败")
 		return
 	}

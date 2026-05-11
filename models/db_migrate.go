@@ -204,6 +204,35 @@ func RunMigrations() error {
 		utils.Error("执行迁移 0032_backfill_node_name_mode 失败: %v", err)
 	}
 
+	if err := database.RunCustomMigration("0033_make_node_names_unique", func() error {
+		var nodes []Node
+		if err := db.Order("id ASC").Find(&nodes).Error; err != nil {
+			return err
+		}
+		reservedNames := make(map[string]bool, len(nodes))
+		updatedCount := 0
+		for _, node := range nodes {
+			currentName := strings.TrimSpace(node.Name)
+			if currentName == "" {
+				currentName = strings.TrimSpace(node.LinkName)
+			}
+			uniqueName := GenerateUniqueNodeName(currentName, node.ID, reservedNames)
+			if uniqueName == node.Name {
+				continue
+			}
+			if err := db.Model(&Node{}).Where("id = ?", node.ID).Update("name", uniqueName).Error; err != nil {
+				return err
+			}
+			updatedCount++
+		}
+		if updatedCount > 0 {
+			utils.Info("已为 %d 个重复节点备注追加编号", updatedCount)
+		}
+		return nil
+	}); err != nil {
+		utils.Error("执行迁移 0033_make_node_names_unique 失败: %v", err)
+	}
+
 	if err := database.RunCustomMigration("0024_migrate_legacy_webhook_settings", func() error {
 		legacyURL, _ := GetSetting("webhook_url")
 		legacyMethod, _ := GetSetting("webhook_method")
