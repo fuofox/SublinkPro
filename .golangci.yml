@@ -10,6 +10,7 @@ linters:
   default: none
   enable:
     - bodyclose
+    - depguard
     - errcheck
     - gosec
     - govet
@@ -22,6 +23,61 @@ linters:
     - wastedassign
 
   settings:
+    depguard:
+      rules:
+        lower-layers-no-http-entry:
+          list-mode: original
+          files:
+            - "services/**/*.go"
+            - "models/**/*.go"
+            - "node/**/*.go"
+            - "utils/**/*.go"
+            - "database/**/*.go"
+            - "config/**/*.go"
+            - "settings/**/*.go"
+            - "cache/**/*.go"
+            - "dto/**/*.go"
+            - "constants/**/*.go"
+            - "middlewares/**/*.go"
+          deny:
+            - pkg: sublink/api
+              desc: "下层包不应反向依赖 HTTP handler 层"
+            - pkg: sublink/routers
+              desc: "下层包不应反向依赖路由注册层"
+        non-http-layers-no-gin:
+          list-mode: original
+          files:
+            - "services/**/*.go"
+            - "models/**/*.go"
+            - "node/**/*.go"
+            - "database/**/*.go"
+            - "config/**/*.go"
+            - "settings/**/*.go"
+            - "cache/**/*.go"
+            - "dto/**/*.go"
+            - "constants/**/*.go"
+            - "utils/**/*.go"
+            - "!utils/response.go"
+          deny:
+            - pkg: github.com/gin-gonic/gin
+              desc: "业务与数据层不应依赖 Gin Web 框架"
+        db-drivers-only-in-database:
+          list-mode: original
+          files:
+            - "**/*.go"
+            - "!**/database/*.go"
+            - "!**/database/**/*.go"
+            - "!**/services/database_migration.go"
+            - "!**/*_test.go"
+          deny:
+            - pkg: gorm.io/driver/mysql
+              desc: "数据库驱动应集中在 database 包或迁移入口"
+            - pkg: gorm.io/driver/postgres
+              desc: "数据库驱动应集中在 database 包或迁移入口"
+            - pkg: github.com/glebarez/sqlite
+              desc: "数据库驱动应集中在 database 包或迁移入口"
+            - pkg: github.com/go-sql-driver/mysql
+              desc: "数据库驱动应集中在 database 包或迁移入口"
     errcheck:
       check-type-assertions: true
       check-blank: false
