@@ -75,8 +75,8 @@ Related to #
 
 ```
 
-<!-- PR 检查完成后，Action 会评论检查报告。 -->
-<!-- After PR checks finish, the Action will comment with a check report. -->
+<!-- PR 检查结果请查看 GitHub Actions 状态。 -->
+<!-- Check PR results in GitHub Actions status. -->
 
 ## 其他说明
 
