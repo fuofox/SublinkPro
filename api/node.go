@@ -266,7 +266,7 @@ func NodeUpdadte(c *gin.Context) {
 			return
 		}
 	} else {
-		Node.Name = models.GenerateUniqueNodeName(Node.Name, Node.ID, nil)
+		Node.Name = models.GenerateUniqueNodeNameWithSource(Node.Name, Node.Source, Node.ID, nil)
 	}
 	Node.LinkName = identity.Name
 	Node.LinkAddress = identity.Address

@@ -86,3 +86,21 @@ func TestGenerateUniqueNodeNameUsesReservedNames(t *testing.T) {
 		t.Fatalf("GenerateUniqueNodeName() should reserve generated name")
 	}
 }
+
+func TestGenerateUniqueNodeNameWithSourceUsesAtSuffix(t *testing.T) {
+	reserved := map[string]bool{"香港 01": true}
+
+	got := GenerateUniqueNodeNameWithSource("香港 01", "机场B", 0, reserved)
+	if got != "香港 01@机场B" {
+		t.Fatalf("GenerateUniqueNodeNameWithSource() = %q, want %q", got, "香港 01@机场B")
+	}
+}
+
+func TestGenerateUniqueNodeNameWithSourceNumbersDuplicateSourceSuffix(t *testing.T) {
+	reserved := map[string]bool{"香港 01": true, "香港 01@机场B": true}
+
+	got := GenerateUniqueNodeNameWithSource("香港 01", "机场B", 0, reserved)
+	if got != "香港 01@机场B-2" {
+		t.Fatalf("GenerateUniqueNodeNameWithSource() = %q, want %q", got, "香港 01@机场B-2")
+	}
+}

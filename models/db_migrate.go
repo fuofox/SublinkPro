@@ -216,7 +216,7 @@ func RunMigrations() error {
 			if currentName == "" {
 				currentName = strings.TrimSpace(node.LinkName)
 			}
-			uniqueName := GenerateUniqueNodeName(currentName, node.ID, reservedNames)
+			uniqueName := GenerateUniqueNodeNameWithSource(currentName, node.Source, node.ID, reservedNames)
 			if uniqueName == node.Name {
 				continue
 			}

@@ -194,27 +194,48 @@ func nodeNameReserved(name string, excludeID int, reserved map[string]bool) bool
 	return err == nil && exists
 }
 
-// GenerateUniqueNodeName 为自动导入节点生成全局唯一备注名称。
-func GenerateUniqueNodeName(baseName string, excludeID int, reserved map[string]bool) string {
+func reserveNodeName(name string, reserved map[string]bool) string {
+	if reserved != nil {
+		reserved[name] = true
+	}
+	return name
+}
+
+func uniqueNodeNameWithBase(baseName string, excludeID int, reserved map[string]bool) string {
 	baseName = normalizeNodeRemarkName(baseName)
 	if baseName == "" {
 		baseName = "未命名节点"
 	}
 	if !nodeNameReserved(baseName, excludeID, reserved) {
-		if reserved != nil {
-			reserved[baseName] = true
-		}
-		return baseName
+		return reserveNodeName(baseName, reserved)
 	}
 	for suffix := 2; ; suffix++ {
 		candidate := fmt.Sprintf("%s-%d", baseName, suffix)
 		if !nodeNameReserved(candidate, excludeID, reserved) {
-			if reserved != nil {
-				reserved[candidate] = true
-			}
-			return candidate
+			return reserveNodeName(candidate, reserved)
 		}
 	}
+}
+
+// GenerateUniqueNodeName 为自动导入节点生成全局唯一备注名称。
+func GenerateUniqueNodeName(baseName string, excludeID int, reserved map[string]bool) string {
+	return uniqueNodeNameWithBase(baseName, excludeID, reserved)
+}
+
+// GenerateUniqueNodeNameWithSource 在备注撞名时优先使用“原始名@来源”格式生成唯一备注。
+func GenerateUniqueNodeNameWithSource(baseName string, sourceName string, excludeID int, reserved map[string]bool) string {
+	baseName = normalizeNodeRemarkName(baseName)
+	if baseName == "" {
+		baseName = "未命名节点"
+	}
+	if !nodeNameReserved(baseName, excludeID, reserved) {
+		return reserveNodeName(baseName, reserved)
+	}
+	sourceName = normalizeNodeRemarkName(sourceName)
+	if sourceName != "" && sourceName != "manual" {
+		return uniqueNodeNameWithBase(baseName+"@"+sourceName, excludeID, reserved)
+	}
+	return uniqueNodeNameWithBase(baseName, excludeID, reserved)
 }
 
 // NormalizeNodeNameMode 规范化节点名称模式，未知值统一回退到原始名称模式。
@@ -561,7 +582,7 @@ func BatchAddNodes(nodes []Node) error {
 	reservedNames := make(map[string]bool, len(nodes))
 	for i := range nodes {
 		nodes[i].NormalizeNameModeDefaults()
-		nodes[i].Name = GenerateUniqueNodeName(nodes[i].Name, nodes[i].ID, reservedNames)
+		nodes[i].Name = GenerateUniqueNodeNameWithSource(nodes[i].Name, nodes[i].Source, nodes[i].ID, reservedNames)
 	}
 
 	// 分块处理
@@ -1754,6 +1775,7 @@ type NodeInfoUpdate struct {
 	LinkName        string
 	Link            string
 	SourceSort      int
+	Source          string
 	CurrentName     string
 	CurrentLinkName string
 	NameMode        string
@@ -1767,6 +1789,7 @@ func BuildNodeInfoUpdate(existing Node, linkName string, link string, sourceSort
 		LinkName:        linkName,
 		Link:            link,
 		SourceSort:      sourceSort,
+		Source:          existing.Source,
 		CurrentName:     existing.Name,
 		CurrentLinkName: existing.LinkName,
 		NameMode:        NormalizeNodeNameMode(existing.NameMode),
@@ -1802,7 +1825,7 @@ func BatchUpdateNodeInfo(updates []NodeInfoUpdate) (int, error) {
 			"source_sort": u.SourceSort,
 		}
 		if existing.ShouldSyncNameFromLink() {
-			newName = GenerateUniqueNodeName(newName, u.ID, nil)
+			newName = GenerateUniqueNodeNameWithSource(newName, u.Source, u.ID, nil)
 			fields["name"] = newName
 		}
 
