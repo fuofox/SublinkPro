@@ -170,7 +170,7 @@ func ListEnabledNodeCheckProfiles() ([]NodeCheckProfile, error) {
 
 // UpdateRunTime 更新运行时间 (Write-Through)
 func (p *NodeCheckProfile) UpdateRunTime(lastRun, nextRun *time.Time) error {
-	err := database.DB.Model(p).Select("LastRunTime", "NextRunTime").Updates(map[string]interface{}{
+	err := database.DB.Model(p).Select("LastRunTime", "NextRunTime").Updates(map[string]any{
 		"LastRunTime": lastRun,
 		"NextRunTime": nextRun,
 	}).Error

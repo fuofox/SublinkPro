@@ -71,7 +71,7 @@ func TestUserGetAISettingsReturnsMaskedKey(t *testing.T) {
 	if response.Code != 200 {
 		t.Fatalf("expected response code 200, got %d", response.Code)
 	}
-	var data map[string]interface{}
+	var data map[string]any
 	if err := json.Unmarshal(response.Data, &data); err != nil {
 		t.Fatalf("unmarshal response data: %v", err)
 	}

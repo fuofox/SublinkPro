@@ -200,33 +200,33 @@ func GetTaskTrafficDetails(c *gin.Context) {
 
 	// 解析任务结果
 	if task.Result == "" {
-		utils.OkDetailed(c, "无流量数据", gin.H{"nodes": []interface{}{}, "total": 0})
+		utils.OkDetailed(c, "无流量数据", gin.H{"nodes": []any{}, "total": 0})
 		return
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal([]byte(task.Result), &result); err != nil {
 		utils.FailWithMsg(c, "解析任务结果失败")
 		return
 	}
 
-	trafficData, ok := result["traffic"].(map[string]interface{})
+	trafficData, ok := result["traffic"].(map[string]any)
 	if !ok {
-		utils.OkDetailed(c, "无流量数据", gin.H{"nodes": []interface{}{}, "total": 0})
+		utils.OkDetailed(c, "无流量数据", gin.H{"nodes": []any{}, "total": 0})
 		return
 	}
 
 	// 获取byNode数据
 	byNodeRaw, hasNodeData := trafficData["byNode"]
 	if !hasNodeData {
-		utils.OkDetailed(c, "未开启节点流量统计", gin.H{"nodes": []interface{}{}, "total": 0, "enabled": false})
+		utils.OkDetailed(c, "未开启节点流量统计", gin.H{"nodes": []any{}, "total": 0, "enabled": false})
 		return
 	}
 
 	// 解析节点流量数据 (nodeID -> bytes)
 	byNode := make(map[int]int64)
 	switch v := byNodeRaw.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		for key, val := range v {
 			nodeID, _ := strconv.Atoi(key)
 			switch b := val.(type) {
@@ -239,7 +239,7 @@ func GetTaskTrafficDetails(c *gin.Context) {
 	}
 
 	if len(byNode) == 0 {
-		utils.OkDetailed(c, "无节点流量数据", gin.H{"nodes": []interface{}{}, "total": 0, "enabled": true})
+		utils.OkDetailed(c, "无节点流量数据", gin.H{"nodes": []any{}, "total": 0, "enabled": true})
 		return
 	}
 

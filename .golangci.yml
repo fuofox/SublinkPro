@@ -1,0 +1,115 @@
+version: "2"
+
+run:
+  timeout: 8m
+  tests: true
+  modules-download-mode: readonly
+  relative-path-mode: gomod
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - gosec
+    - govet
+    - ineffassign
+    - staticcheck
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+      verbose: true
+      exclude-functions:
+        - fmt.Print
+        - fmt.Printf
+        - fmt.Println
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+    gosec:
+      severity: high
+      confidence: high
+      excludes:
+        - G101
+        - G103
+        - G104
+        - G109
+        - G115
+        - G201
+        - G202
+        - G301
+        - G302
+        - G304
+        - G306
+        - G404
+    ineffassign:
+      check-escaping-errors: true
+    staticcheck:
+      checks:
+        - SA*
+      dot-import-whitelist:
+        - fmt
+      initialisms:
+        - ACL
+        - API
+        - ASCII
+        - CPU
+        - CSS
+        - DNS
+        - EOF
+        - GUID
+        - HTML
+        - HTTP
+        - HTTPS
+        - ID
+        - IP
+        - JSON
+        - QPS
+        - RAM
+        - RPC
+        - SLA
+        - SMTP
+        - SQL
+        - SSH
+        - TCP
+        - TLS
+        - TTL
+        - UDP
+        - UI
+        - GID
+        - UID
+        - UUID
+        - URI
+        - URL
+        - UTF8
+        - VM
+        - XML
+        - XMPP
+        - XSRF
+        - XSS
+        - SIP
+        - RTP
+        - AMQP
+        - DB
+        - TS
+      http-status-code-whitelist:
+        - "200"
+        - "400"
+        - "404"
+        - "500"
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: false
+      rewrite-rules:
+        - pattern: 'interface{}'
+          replacement: 'any'
+        - pattern: 'a[b:len(a)]'
+          replacement: 'a[b:]'
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

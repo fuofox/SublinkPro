@@ -45,7 +45,7 @@ func TestGetTelegramConfigReturnsDefaultsAndEventOptions(t *testing.T) {
 func TestUpdateTelegramConfigPersistsSettingsAndEvents(t *testing.T) {
 	setupSettingAPITestDB(t)
 
-	recorder := performJSONRequest(t, UpdateTelegramConfig, http.MethodPost, map[string]interface{}{
+	recorder := performJSONRequest(t, UpdateTelegramConfig, http.MethodPost, map[string]any{
 		"enabled":   false,
 		"botToken":  "test-bot-token",
 		"chatId":    123456789,

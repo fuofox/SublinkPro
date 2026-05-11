@@ -61,7 +61,7 @@ func SendNotification(eventKey string, payload notifications.Payload) {
 
 // formatSpeedTestNotification 格式化测速完成通知
 func formatSpeedTestNotification(payload notifications.Payload) string {
-	data, ok := payload.Data.(map[string]interface{})
+	data, ok := payload.Data.(map[string]any)
 	if !ok {
 		return fmt.Sprintf("⚡ *测速完成*\n\n%s", escapeMd(payload.Message))
 	}
@@ -88,7 +88,7 @@ func formatSpeedTestNotification(payload notifications.Payload) string {
 
 // formatSubUpdateNotification 格式化订阅更新通知
 func formatSubUpdateNotification(payload notifications.Payload) string {
-	data, ok := payload.Data.(map[string]interface{})
+	data, ok := payload.Data.(map[string]any)
 	if !ok {
 		return fmt.Sprintf("📋 *订阅更新*\n\n%s", escapeMd(payload.Message))
 	}
@@ -97,9 +97,10 @@ func formatSubUpdateNotification(payload notifications.Payload) string {
 	name := getStringFromData(data, "name")
 
 	icon := "📋"
-	if status == "error" {
+	switch status {
+	case "error":
 		icon = "❌"
-	} else if status == "success" {
+	case "success":
 		icon = "✅"
 	}
 
@@ -143,7 +144,7 @@ func formatGenericNotification(event string, payload notifications.Payload) stri
 
 // Helper functions
 
-func getIntFromData(data map[string]interface{}, key string) int {
+func getIntFromData(data map[string]any, key string) int {
 	if v, ok := data[key]; ok {
 		switch val := v.(type) {
 		case int:
@@ -171,7 +172,7 @@ func getIntFromData(data map[string]interface{}, key string) int {
 	return 0
 }
 
-func getFloatFromData(data map[string]interface{}, key string) float64 {
+func getFloatFromData(data map[string]any, key string) float64 {
 	if v, ok := data[key]; ok {
 		switch val := v.(type) {
 		case float32:
@@ -199,7 +200,7 @@ func getFloatFromData(data map[string]interface{}, key string) float64 {
 	return 0
 }
 
-func getStringFromData(data map[string]interface{}, key string) string {
+func getStringFromData(data map[string]any, key string) string {
 	if v, ok := data[key]; ok {
 		if s, ok := v.(string); ok {
 			return s

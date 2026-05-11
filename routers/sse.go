@@ -27,6 +27,7 @@ func SSE(r *gin.Engine) {
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
+						_ = r
 						// Channel was already closed by the broker, ignore
 					}
 				}()
@@ -47,7 +48,7 @@ func SSE(r *gin.Engine) {
 		c.Stream(func(w io.Writer) bool {
 			// Wait for a message from the broker
 			if msg, ok := <-clientChan; ok {
-				c.Writer.Write(msg)
+				_, _ = c.Writer.Write(msg)
 				c.Writer.Flush()
 				return true
 			}

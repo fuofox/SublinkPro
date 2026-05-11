@@ -13,7 +13,7 @@ func RunScript(scriptContent string, input string, clientType string) (string, e
 	vm := goja.New()
 
 	// Inject console object
-	vm.Set("console", map[string]interface{}{
+	_ = vm.Set("console", map[string]any{
 		"log":   fmt.Println,
 		"info":  fmt.Println,
 		"warn":  fmt.Println,
@@ -53,7 +53,7 @@ func RunNodeFilterScript(scriptContent string, nodesJSON []byte, clientType stri
 	vm := goja.New()
 
 	// Inject console object
-	vm.Set("console", map[string]interface{}{
+	_ = vm.Set("console", map[string]any{
 		"log":   fmt.Println,
 		"info":  fmt.Println,
 		"warn":  fmt.Println,
@@ -81,7 +81,7 @@ func RunNodeFilterScript(scriptContent string, nodesJSON []byte, clientType stri
 	}
 
 	// Unmarshal nodes
-	var nodes interface{}
+	var nodes any
 	if err := json.Unmarshal(nodesJSON, &nodes); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal nodes: %w", err)
 	}

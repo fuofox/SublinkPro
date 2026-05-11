@@ -212,7 +212,7 @@ func TagRuleTrigger(c *gin.Context) {
 	}
 	go func() {
 		if err := services.TriggerTagRule(id); err != nil {
-			// 记录错误日志
+			utils.Error("触发标签规则失败: %v", err)
 		}
 	}()
 	utils.OkWithMsg(c, "规则已开始执行")

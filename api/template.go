@@ -660,7 +660,7 @@ func GenerateTemplateAICandidateStream(c *gin.Context) {
 		utils.FailWithMsg(c, "当前环境不支持流式响应")
 		return
 	}
-	writeEvent := func(event string, payload interface{}) error {
+	writeEvent := func(event string, payload any) error {
 		writer := bufio.NewWriter(c.Writer)
 		data, err := json.Marshal(payload)
 		if err != nil {

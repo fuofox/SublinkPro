@@ -59,7 +59,7 @@ func ExecuteSubscriptionTaskWithTrigger(id int, url string, subName string, trig
 		notifications.Publish("subscription.sync_failed", notifications.Payload{
 			Title:   "订阅更新失败",
 			Message: fmt.Sprintf("订阅 [%s] 更新失败: %v", subName, err),
-			Data: map[string]interface{}{
+			Data: map[string]any{
 				"id":     id,
 				"name":   subName,
 				"status": "error",

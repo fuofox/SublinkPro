@@ -65,7 +65,7 @@ func VerifyTurnstile(token, secretKey, remoteIP, proxyLink string) (bool, error)
 		Error("Turnstile 验证请求失败: %v", err)
 		return false, fmt.Errorf("验证请求失败: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// 读取响应
 	body, err := io.ReadAll(resp.Body)

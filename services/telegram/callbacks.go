@@ -268,17 +268,17 @@ func handleProfileDetailCallback(bot *TelegramBot, callback *CallbackQuery, para
 	}
 
 	var text strings.Builder
-	text.WriteString(fmt.Sprintf("⚡ *策略详情: %s*\n\n", profile.Name))
+	fmt.Fprintf(&text, "⚡ *策略详情: %s*\n\n", profile.Name)
 
 	// 基本信息
 	status := "❌ 已禁用"
 	if profile.Enabled {
 		status = "✅ 已启用"
 	}
-	text.WriteString(fmt.Sprintf("🔌 定时状态: %s\n", status))
+	fmt.Fprintf(&text, "🔌 定时状态: %s\n", status)
 
 	if profile.CronExpr != "" {
-		text.WriteString(fmt.Sprintf("⏰ 定时: `%s`\n", profile.CronExpr))
+		fmt.Fprintf(&text, "⏰ 定时: `%s`\n", profile.CronExpr)
 	}
 
 	// 模式配置（与Web端保持一致）
@@ -286,36 +286,36 @@ func handleProfileDetailCallback(bot *TelegramBot, callback *CallbackQuery, para
 	if profile.Mode == "mihomo" {
 		mode = "延迟+速度测试"
 	}
-	text.WriteString(fmt.Sprintf("📡 模式: %s\n", mode))
-	text.WriteString(fmt.Sprintf("⏱️ 超时: %d 秒\n", profile.Timeout))
+	fmt.Fprintf(&text, "📡 模式: %s\n", mode)
+	fmt.Fprintf(&text, "⏱️ 超时: %d 秒\n", profile.Timeout)
 
 	// URL配置
 	if profile.TestURL != "" {
-		text.WriteString(fmt.Sprintf("🔗 测速URL: `%s`\n", truncateName(profile.TestURL, 35)))
+		fmt.Fprintf(&text, "🔗 测速URL: `%s`\n", truncateName(profile.TestURL, 35))
 	}
 	if profile.LatencyURL != "" {
-		text.WriteString(fmt.Sprintf("🔗 延迟URL: `%s`\n", truncateName(profile.LatencyURL, 35)))
+		fmt.Fprintf(&text, "🔗 延迟URL: `%s`\n", truncateName(profile.LatencyURL, 35))
 	}
 
 	// 并发配置
-	text.WriteString(fmt.Sprintf("\n*并发配置*\n"))
+	text.WriteString("\n*并发配置*\n")
 	latencyC := "自动"
 	if profile.LatencyConcurrency > 0 {
 		latencyC = fmt.Sprintf("%d", profile.LatencyConcurrency)
 	}
-	text.WriteString(fmt.Sprintf("├ 延迟并发: %s\n", latencyC))
-	text.WriteString(fmt.Sprintf("└ 速度并发: %d\n", profile.SpeedConcurrency))
+	fmt.Fprintf(&text, "├ 延迟并发: %s\n", latencyC)
+	fmt.Fprintf(&text, "└ 速度并发: %d\n", profile.SpeedConcurrency)
 
 	// 范围过滤
 	groups := profile.GetGroups()
 	tags := profile.GetTags()
 	if len(groups) > 0 || len(tags) > 0 {
-		text.WriteString(fmt.Sprintf("\n*检测范围*\n"))
+		text.WriteString("\n*检测范围*\n")
 		if len(groups) > 0 {
-			text.WriteString(fmt.Sprintf("├ 分组: %s\n", strings.Join(groups, ", ")))
+			fmt.Fprintf(&text, "├ 分组: %s\n", strings.Join(groups, ", "))
 		}
 		if len(tags) > 0 {
-			text.WriteString(fmt.Sprintf("└ 标签: %s\n", strings.Join(tags, ", ")))
+			fmt.Fprintf(&text, "└ 标签: %s\n", strings.Join(tags, ", "))
 		}
 	} else {
 		text.WriteString("\n*检测范围*: 全部节点\n")
@@ -323,10 +323,10 @@ func handleProfileDetailCallback(bot *TelegramBot, callback *CallbackQuery, para
 
 	// 执行时间
 	if profile.LastRunTime != nil {
-		text.WriteString(fmt.Sprintf("\n🕒 上次执行: %s\n", profile.LastRunTime.Format("2006-01-02 15:04:05")))
+		fmt.Fprintf(&text, "\n🕒 上次执行: %s\n", profile.LastRunTime.Format("2006-01-02 15:04:05"))
 	}
 	if profile.NextRunTime != nil {
-		text.WriteString(fmt.Sprintf("⏳ 下次执行: %s\n", profile.NextRunTime.Format("2006-01-02 15:04:05")))
+		fmt.Fprintf(&text, "⏳ 下次执行: %s\n", profile.NextRunTime.Format("2006-01-02 15:04:05"))
 	}
 
 	// 操作按钮
@@ -413,7 +413,7 @@ func handleProfileSelectUntestedCallback(bot *TelegramBot, callback *CallbackQue
 	}
 
 	var text strings.Builder
-	text.WriteString(fmt.Sprintf("🔍 *选择策略检测未测速节点*\n\n共有 *%d* 个未测速节点\n\n请选择一个策略：", untestedCount))
+	fmt.Fprintf(&text, "🔍 *选择策略检测未测速节点*\n\n共有 *%d* 个未测速节点\n\n请选择一个策略：", untestedCount)
 
 	var keyboard [][]InlineKeyboardButton
 	for _, p := range profiles {
@@ -557,18 +557,18 @@ func handleAirportDetailCallback(bot *TelegramBot, callback *CallbackQuery, para
 	}
 
 	var text strings.Builder
-	text.WriteString(fmt.Sprintf("✈️ *机场详情: %s*\n\n", airport.Name))
+	fmt.Fprintf(&text, "✈️ *机场详情: %s*\n\n", airport.Name)
 
 	// 基础信息
-	text.WriteString(fmt.Sprintf("🔗 地址: `%s`\n", airport.URL))
-	text.WriteString(fmt.Sprintf("📂 分组: `%s`\n", airport.Group))
-	text.WriteString(fmt.Sprintf("⏰ 定时: `%s`\n", airport.CronExpr))
+	fmt.Fprintf(&text, "🔗 地址: `%s`\n", airport.URL)
+	fmt.Fprintf(&text, "📂 分组: `%s`\n", airport.Group)
+	fmt.Fprintf(&text, "⏰ 定时: `%s`\n", airport.CronExpr)
 
 	status := "启用"
 	if !airport.Enabled {
 		status = "禁用"
 	}
-	text.WriteString(fmt.Sprintf("🔌 状态: %s\n", status))
+	fmt.Fprintf(&text, "🔌 状态: %s\n", status)
 
 	proxyStatus := "否"
 	if airport.DownloadWithProxy {
@@ -579,14 +579,14 @@ func handleAirportDetailCallback(bot *TelegramBot, callback *CallbackQuery, para
 			proxyStatus += " (自动)"
 		}
 	}
-	text.WriteString(fmt.Sprintf("🌐 代理下载: %s\n", proxyStatus))
+	fmt.Fprintf(&text, "🌐 代理下载: %s\n", proxyStatus)
 
 	if airport.UserAgent != "" {
-		text.WriteString(fmt.Sprintf("🕵️ UA: `%s`\n", airport.UserAgent))
+		fmt.Fprintf(&text, "🕵️ UA: `%s`\n", airport.UserAgent)
 	}
 
 	if airport.LastRunTime != nil {
-		text.WriteString(fmt.Sprintf("🕒 上次更新: %s\n", airport.LastRunTime.Format("2006-01-02 15:04:05")))
+		fmt.Fprintf(&text, "🕒 上次更新: %s\n", airport.LastRunTime.Format("2006-01-02 15:04:05"))
 	}
 
 	// 用量信息
@@ -594,11 +594,11 @@ func handleAirportDetailCallback(bot *TelegramBot, callback *CallbackQuery, para
 		text.WriteString("\n📊 *用量信息*\n")
 		// 注意: 这里假设 models.Airport 结构体中有用量字段，这在之前的文件查看中已确认
 		if airport.UsageTotal > 0 {
-			text.WriteString(fmt.Sprintf("⬆️ 上传: %s\n", utils.FormatBytes(airport.UsageUpload)))
-			text.WriteString(fmt.Sprintf("⬇️ 下载: %s\n", utils.FormatBytes(airport.UsageDownload)))
-			text.WriteString(fmt.Sprintf("📦 总量: %s\n", utils.FormatBytes(airport.UsageTotal)))
+			fmt.Fprintf(&text, "⬆️ 上传: %s\n", utils.FormatBytes(airport.UsageUpload))
+			fmt.Fprintf(&text, "⬇️ 下载: %s\n", utils.FormatBytes(airport.UsageDownload))
+			fmt.Fprintf(&text, "📦 总量: %s\n", utils.FormatBytes(airport.UsageTotal))
 			if airport.UsageExpire > 0 {
-				text.WriteString(fmt.Sprintf("⏳ 过期: %s\n", time.Unix(airport.UsageExpire, 0).Format("2006-01-02 15:04:05")))
+				fmt.Fprintf(&text, "⏳ 过期: %s\n", time.Unix(airport.UsageExpire, 0).Format("2006-01-02 15:04:05"))
 			}
 		} else if airport.UsageTotal == -1 {
 			text.WriteString("⚠️ 获取失败或不支持\n")

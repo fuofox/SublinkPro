@@ -179,7 +179,7 @@ func (sub *Subcription) AddScripts(scriptIDs []int) error {
 
 // 更新订阅 (Write-Through)
 func (sub *Subcription) Update() error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"name":                     sub.Name,
 		"config":                   sub.Config,
 		"create_date":              sub.CreateDate,

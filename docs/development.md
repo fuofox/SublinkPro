@@ -106,21 +106,21 @@ yarn run prettier
 
 ### 5. 后端校验
 
-后端开发完成后，Go 文件必须通过 `gofmt` 格式化，并运行基础 lint / 静态检查与相关测试：
+后端开发完成后，Go 文件必须通过 `gofmt` 格式化，并运行 `golangci-lint` 静态检查与相关测试：
 
 ```bash
 gofmt -w <changed-go-files>
-go vet ./...
+golangci-lint run
 go test ./...
 ```
 
-新增或修改关键业务逻辑、接口契约、权限判断、配置语义、迁移、调度任务、mihomo 集成、协议解析或数据转换时，应同步补充或更新对应 Go 测试。GitHub 发布构建会在构建二进制前运行 `gofmt` 检查、`go vet ./...` 和全仓 `go test ./...`。
+新增或修改关键业务逻辑、接口契约、权限判断、配置语义、迁移、调度任务、mihomo 集成、协议解析或数据转换时，应同步补充或更新对应 Go 测试。GitHub 发布构建会在构建二进制前运行 `golangci-lint` 和全仓 `go test ./...`。
 
 ### 6. PR 自动检查
 
 `.github/workflows/pr-checks.yml` 会在 PR 打开、重新打开或标记 ready for review 时自动运行，用于快速判断 PR 是否满足基础质量要求。后续修复提交不会自动重复消耗 Actions；PR 作者本人或仓库管理员确认修复完成后，可在 PR 评论 `/recheck` 手动触发新一轮检查。
 
-- 后端：`gofmt` 格式检查、`go vet ./...`、`go test ./...`
+- 后端：`golangci-lint`、`go test ./...`
 - 前端：`yarn run lint`、`yarn run build`
 
 每个检查 job 会写入 GitHub Step Summary，展示对应检查项是通过还是失败，方便作者和 reviewer 快速判断哪些工作已经完成、哪些还需要修复。
@@ -146,7 +146,7 @@ yarn run build
 # 2) 后端格式、lint 与测试
 cd ..
 gofmt -w <changed-go-files>
-go vet ./...
+golangci-lint run
 go test ./...
 
 # 3) 准备生产静态资源

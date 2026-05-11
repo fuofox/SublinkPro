@@ -107,7 +107,7 @@ func TestWebhookByID(c *gin.Context) {
 		Severity:     "info",
 		Title:        "Sublink Pro Webhook 测试",
 		Message:      "这是一条Sublink Pro测试消息，用于验证 Webhook 配置是否正确。",
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"test": true,
 		},
 	}
@@ -153,7 +153,7 @@ func bindWebhookRequest(c *gin.Context) (*notifications.WebhookConfig, error) {
 
 func normalizeWebhookRequestError(req webhookRequest) error {
 	if req.WebhookHeaders != "" {
-		var js map[string]interface{}
+		var js map[string]any
 		if json.Unmarshal([]byte(req.WebhookHeaders), &js) != nil {
 			return &webhookValidationError{message: "Headers 必须是有效的 JSON 格式"}
 		}

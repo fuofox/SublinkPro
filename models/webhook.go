@@ -38,7 +38,7 @@ func (w *Webhook) Update() error {
 		return fmt.Errorf("Webhook ID 不能为空")
 	}
 
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"name":         w.Name,
 		"url":          w.URL,
 		"method":       w.Method,

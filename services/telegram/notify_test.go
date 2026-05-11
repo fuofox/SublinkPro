@@ -10,7 +10,7 @@ import (
 func TestFormatSpeedTestNotificationIncludesCountsAndTraffic(t *testing.T) {
 	message := formatSpeedTestNotification(notifications.Payload{
 		Message: "测速已完成",
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"success_count":    int32(3),
 			"fail_count":       int32(1),
 			"total_traffic_mb": 12.5,
@@ -31,7 +31,7 @@ func TestFormatSpeedTestNotificationIncludesCountsAndTraffic(t *testing.T) {
 func TestFormatSpeedTestNotificationSupportsStringFallbackFields(t *testing.T) {
 	message := formatSpeedTestNotification(notifications.Payload{
 		Message: "测速已完成",
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"success":          "64",
 			"fail":             "103",
 			"total_traffic_mb": "58.86",
@@ -52,7 +52,7 @@ func TestFormatSpeedTestNotificationSupportsStringFallbackFields(t *testing.T) {
 func TestFormatSubUpdateNotificationUsesStatusIcon(t *testing.T) {
 	message := formatSubUpdateNotification(notifications.Payload{
 		Message: "同步失败",
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"name":   "测试订阅",
 			"status": "error",
 		},

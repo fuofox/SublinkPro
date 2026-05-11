@@ -29,7 +29,7 @@ func init() {
 type AnyTLS struct {
 	Name              string
 	Server            string
-	Port              interface{}
+	Port              any
 	Password          string
 	SkipCertVerify    bool
 	SNI               string

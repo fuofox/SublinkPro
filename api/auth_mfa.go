@@ -128,7 +128,7 @@ func issuePendingMFAChallenge(user *models.User) (string, error) {
 }
 
 func parsePendingMFAChallenge(tokenString string) (*pendingMFAClaims, *models.MFALoginChallenge, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &pendingMFAClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &pendingMFAClaims{}, func(token *jwt.Token) (any, error) {
 		return []byte(config.GetJwtSecret()), nil
 	})
 	if err != nil {
@@ -183,12 +183,11 @@ func consumeMFAChallenge(challenge *models.MFALoginChallenge) error {
 }
 
 func requireCurrentUser(c *gin.Context) (*models.User, bool) {
-	usernameValue, exists := c.Get("username")
-	if !exists {
-		utils.Forbidden(c, "请求未携带token")
+	username, ok := currentUsernameFromContext(c)
+	if !ok {
 		return nil, false
 	}
-	user, err := models.FindUserByUsername(usernameValue.(string))
+	user, err := models.FindUserByUsername(username)
 	if err != nil {
 		utils.FailWithMsg(c, "用户不存在")
 		return nil, false

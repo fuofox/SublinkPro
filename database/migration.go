@@ -11,7 +11,7 @@ type Migration struct {
 }
 
 // RunAutoMigrate 执行自动迁移，如果 migrationID 已存在则跳过
-func RunAutoMigrate(migrationID string, dst ...interface{}) error {
+func RunAutoMigrate(migrationID string, dst ...any) error {
 	// 确保 Migration 表存在
 	if !DB.Migrator().HasTable(&Migration{}) {
 		if err := DB.AutoMigrate(&Migration{}); err != nil {

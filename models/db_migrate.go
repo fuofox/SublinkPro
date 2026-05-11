@@ -85,7 +85,7 @@ func RunMigrations() error {
 
 	baseTables := []struct {
 		name  string
-		model interface{}
+		model any
 	}{
 		{name: "User", model: &User{}},
 		{name: "MFALoginChallenge", model: &MFALoginChallenge{}},
@@ -145,7 +145,7 @@ func RunMigrations() error {
 			}
 		}
 
-		if err := db.Model(&Node{}).Where("quality_status IS NULL OR quality_status = ''").Updates(map[string]interface{}{
+		if err := db.Model(&Node{}).Where("quality_status IS NULL OR quality_status = ''").Updates(map[string]any{
 			"quality_status": gorm.Expr("CASE WHEN fraud_score >= 0 THEN 'success' ELSE 'untested' END"),
 			"quality_family": gorm.Expr("CASE WHEN landing_ip LIKE '%:%' THEN 'ipv6' WHEN landing_ip IS NOT NULL AND landing_ip != '' THEN 'ipv4' ELSE '' END"),
 		}).Error; err != nil {

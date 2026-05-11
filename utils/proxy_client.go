@@ -92,7 +92,7 @@ func CreateProxyHTTPClient(useProxy bool, proxyLink string, timeout time.Duratio
 			// 使用 mihomo adapter 建立连接
 			return proxyAdapter.DialContext(ctx, metadata)
 		},
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 -- 代理连接需要兼容上游节点的证书配置
 	}
 
 	return client, proxyNodeLink, nil
@@ -128,7 +128,7 @@ func FetchWithProxy(url string, useProxy bool, proxyLink string, timeout time.Du
 	if err != nil {
 		return nil, fmt.Errorf("request error: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)

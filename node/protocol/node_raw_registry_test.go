@@ -6,13 +6,13 @@ func TestExtractNodeNameFromFields(t *testing.T) {
 	tests := []struct {
 		name     string
 		protocol string
-		fields   map[string]interface{}
+		fields   map[string]any
 		want     string
 	}{
-		{name: "vmess uses Ps", protocol: "vmess", fields: map[string]interface{}{"Ps": "VMess 节点"}, want: "VMess 节点"},
-		{name: "ssr uses remarks", protocol: "ssr", fields: map[string]interface{}{"Qurey.Remarks": "SSR 节点"}, want: "SSR 节点"},
-		{name: "vless uses Name", protocol: "vless", fields: map[string]interface{}{"Name": "VLESS 节点"}, want: "VLESS 节点"},
-		{name: "unknown protocol returns empty", protocol: "unknown", fields: map[string]interface{}{"Name": "ignored"}, want: ""},
+		{name: "vmess uses Ps", protocol: "vmess", fields: map[string]any{"Ps": "VMess 节点"}, want: "VMess 节点"},
+		{name: "ssr uses remarks", protocol: "ssr", fields: map[string]any{"Qurey.Remarks": "SSR 节点"}, want: "SSR 节点"},
+		{name: "vless uses Name", protocol: "vless", fields: map[string]any{"Name": "VLESS 节点"}, want: "VLESS 节点"},
+		{name: "unknown protocol returns empty", protocol: "unknown", fields: map[string]any{"Name": "ignored"}, want: ""},
 	}
 
 	for _, tt := range tests {

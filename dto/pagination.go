@@ -8,15 +8,15 @@ type PaginationRequest struct {
 
 // PaginationResponse 通用分页响应
 type PaginationResponse struct {
-	Items      interface{} `json:"items"`      // 数据列表
-	Total      int64       `json:"total"`      // 总条数
-	Page       int         `json:"page"`       // 当前页码
-	PageSize   int         `json:"pageSize"`   // 每页条数
-	TotalPages int         `json:"totalPages"` // 总页数
+	Items      any   `json:"items"`      // 数据列表
+	Total      int64 `json:"total"`      // 总条数
+	Page       int   `json:"page"`       // 当前页码
+	PageSize   int   `json:"pageSize"`   // 每页条数
+	TotalPages int   `json:"totalPages"` // 总页数
 }
 
 // NewPaginationResponse 创建分页响应
-func NewPaginationResponse(items interface{}, total int64, page, pageSize int) PaginationResponse {
+func NewPaginationResponse(items any, total int64, page, pageSize int) PaginationResponse {
 	totalPages := 0
 	if pageSize > 0 {
 		totalPages = int((total + int64(pageSize) - 1) / int64(pageSize))

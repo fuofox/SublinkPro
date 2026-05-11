@@ -56,7 +56,7 @@ func createUnlockHTTPClient(proxyAdapter constant.Proxy, timeout time.Duration) 
 				md := &constant.Metadata{Host: h, DstPort: uint16(pUint), Type: constant.HTTP}
 				return proxyAdapter.DialContext(ctx, md)
 			},
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 -- 解锁检测需要兼容目标站点的异常证书配置
 		},
 		Timeout: timeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -101,7 +101,7 @@ func fetchUnlockRequest(runtime UnlockRuntime, method string, target string, hea
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, bodyLimit))
 	if err != nil {

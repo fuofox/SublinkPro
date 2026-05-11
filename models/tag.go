@@ -44,9 +44,9 @@ type TagConditions struct {
 
 // TagCondition 单个条件
 type TagCondition struct {
-	Field    string      `json:"field"`    // 字段名
-	Operator string      `json:"operator"` // 操作符
-	Value    interface{} `json:"value"`    // 比较值
+	Field    string `json:"field"`    // 字段名
+	Operator string `json:"operator"` // 操作符
+	Value    any    `json:"value"`    // 比较值
 }
 
 // tagCache 标签缓存 - 使用name作为主键
@@ -112,7 +112,7 @@ func (t *Tag) Add() error {
 // Update 更新标签（可更新颜色、描述和标签组，不能修改名称）
 func (t *Tag) Update() error {
 	t.UpdatedAt = time.Now()
-	if err := database.DB.Model(t).Where("name = ?", t.Name).Updates(map[string]interface{}{
+	if err := database.DB.Model(t).Where("name = ?", t.Name).Updates(map[string]any{
 		"group_name":  t.GroupName,
 		"color":       t.Color,
 		"description": t.Description,
@@ -248,7 +248,7 @@ func (r *TagRule) Add() error {
 // Update 更新规则
 func (r *TagRule) Update() error {
 	r.UpdatedAt = time.Now()
-	if err := database.DB.Model(&TagRule{}).Where("id = ?", r.ID).Updates(map[string]interface{}{
+	if err := database.DB.Model(&TagRule{}).Where("id = ?", r.ID).Updates(map[string]any{
 		"tag_name":     r.TagName,
 		"name":         r.Name,
 		"enabled":      r.Enabled,
@@ -391,7 +391,7 @@ func evaluateCondition(node Node, cond TagCondition) bool {
 }
 
 // getNodeFieldValue 获取节点字段值
-func getNodeFieldValue(node Node, field string) interface{} {
+func getNodeFieldValue(node Node, field string) any {
 	switch field {
 	case "name":
 		return node.Name
@@ -451,7 +451,7 @@ func getNodeFieldValue(node Node, field string) interface{} {
 }
 
 // compareNumeric 数值比较，返回 -1, 0, 1
-func compareNumeric(a, b interface{}) int {
+func compareNumeric(a, b any) int {
 	aFloat := toFloat64(a)
 	bFloat := toFloat64(b)
 	if aFloat > bFloat {
@@ -463,7 +463,7 @@ func compareNumeric(a, b interface{}) int {
 }
 
 // toFloat64 转换为float64
-func toFloat64(v interface{}) float64 {
+func toFloat64(v any) float64 {
 	switch val := v.(type) {
 	case float64:
 		return val

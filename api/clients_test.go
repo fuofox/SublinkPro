@@ -160,7 +160,9 @@ func deleteClientSubscriptionByToken(t *testing.T, token string) {
 	if err := database.DB.Delete(&models.Subcription{}, share.SubscriptionID).Error; err != nil {
 		t.Fatalf("delete subscription %d: %v", share.SubscriptionID, err)
 	}
-	models.InitSubcriptionCache()
+	if err := models.InitSubcriptionCache(); err != nil {
+		t.Fatalf("refresh subscription cache: %v", err)
+	}
 }
 
 func writeTestClashTemplate(t *testing.T) string {

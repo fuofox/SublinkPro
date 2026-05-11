@@ -98,7 +98,7 @@ func FetchAirportUsageInfo(airport *models.Airport) (*UsageInfo, error) {
 	if err != nil || resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		// HEAD 请求失败或返回非 2xx，回退到 GET 请求
 		if resp != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 		if err != nil {
 			utils.Debug("机场【%s】HEAD 请求失败: %v，尝试 GET 请求", airport.Name, err)
@@ -117,7 +117,7 @@ func FetchAirportUsageInfo(airport *models.Airport) (*UsageInfo, error) {
 			return nil, fmt.Errorf("请求机场失败: %v", err)
 		}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// 解析 subscription-userinfo header
 	subUserInfo := resp.Header.Get("subscription-userinfo")
@@ -233,8 +233,18 @@ func BatchUpdateAirportUsage(airportIDs []int) map[int]*UsageResult {
 
 	// 将 sync.Map 转换为普通 map 返回
 	results := make(map[int]*UsageResult)
-	resultsMap.Range(func(key, value interface{}) bool {
-		results[key.(int)] = value.(*UsageResult)
+	resultsMap.Range(func(key, value any) bool {
+		airportID, ok := key.(int)
+		if !ok {
+			utils.Error("机场用量结果键类型异常: %T", key)
+			return true
+		}
+		result, ok := value.(*UsageResult)
+		if !ok {
+			utils.Error("机场用量结果值类型异常: %T", value)
+			return true
+		}
+		results[airportID] = result
 		return true
 	})
 

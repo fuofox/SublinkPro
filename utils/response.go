@@ -7,9 +7,9 @@ import (
 )
 
 type Response struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data"`
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data any    `json:"data"`
 }
 
 const (
@@ -17,7 +17,7 @@ const (
 	ERROR   = 500
 )
 
-func Result(c *gin.Context, httpCode int, code int, msg string, data interface{}) {
+func Result(c *gin.Context, httpCode int, code int, msg string, data any) {
 	c.JSON(httpCode, Response{
 		Code: code,
 		Msg:  msg,
@@ -29,7 +29,7 @@ func Ok(c *gin.Context) {
 	Result(c, http.StatusOK, SUCCESS, "操作成功", nil)
 }
 
-func OkWithData(c *gin.Context, data interface{}) {
+func OkWithData(c *gin.Context, data any) {
 	Result(c, http.StatusOK, SUCCESS, "操作成功", data)
 }
 
@@ -37,7 +37,7 @@ func OkWithMsg(c *gin.Context, msg string) {
 	Result(c, http.StatusOK, SUCCESS, msg, nil)
 }
 
-func OkDetailed(c *gin.Context, msg string, data interface{}) {
+func OkDetailed(c *gin.Context, msg string, data any) {
 	Result(c, http.StatusOK, SUCCESS, msg, data)
 }
 
@@ -50,7 +50,7 @@ func FailWithMsg(c *gin.Context, msg string) {
 }
 
 // FailWithData 返回失败响应并携带额外数据
-func FailWithData(c *gin.Context, msg string, data interface{}) {
+func FailWithData(c *gin.Context, msg string, data any) {
 	Result(c, http.StatusOK, ERROR, msg, data)
 }
 

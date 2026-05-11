@@ -100,12 +100,12 @@ type Protocol interface {
 	Label() string
 	Color() string
 	Icon() string
-	Prototype() interface{}
+	Prototype() any
 	Fields() []FieldMeta
 	NameFieldPath() string
-	DecodeLink(string) (interface{}, error)
-	EncodeLink(interface{}) (string, error)
-	ExtractIdentity(interface{}) (LinkIdentity, error)
+	DecodeLink(string) (any, error)
+	EncodeLink(any) (string, error)
+	ExtractIdentity(any) (LinkIdentity, error)
 	SupportsClient(string) bool
 }
 
@@ -129,15 +129,15 @@ type ProtocolSpec struct {
 	label                 string
 	color                 string
 	icon                  string
-	prototype             interface{}
+	prototype             any
 	fields                []FieldMeta
 	nameFieldPath         string
 	clientSupport         clientSupportSet
 	clientSupportExplicit bool
 	clientSupportAliases  []string
-	decode                func(string) (interface{}, error)
-	encode                func(interface{}) (string, error)
-	identity              func(interface{}) (LinkIdentity, error)
+	decode                func(string) (any, error)
+	encode                func(any) (string, error)
+	identity              func(any) (LinkIdentity, error)
 }
 
 func (p *ProtocolSpec) Name() string {
@@ -161,7 +161,7 @@ func (p *ProtocolSpec) Icon() string {
 }
 
 // Prototype 返回注册时保存的协议原型值，用于外部推断字段结构或生成默认元数据。
-func (p *ProtocolSpec) Prototype() interface{} {
+func (p *ProtocolSpec) Prototype() any {
 	return p.prototype
 }
 
@@ -224,7 +224,7 @@ func (p *ProtocolSpec) applyDefaultClientSupport(clients ...string) {
 }
 
 // DecodeLink 使用协议自身的解码函数解析链接；当协议未提供解码能力时返回错误。
-func (p *ProtocolSpec) DecodeLink(link string) (interface{}, error) {
+func (p *ProtocolSpec) DecodeLink(link string) (any, error) {
 	if p.decode == nil {
 		return nil, fmt.Errorf("protocol %s does not support decoding", p.name)
 	}
@@ -232,7 +232,7 @@ func (p *ProtocolSpec) DecodeLink(link string) (interface{}, error) {
 }
 
 // EncodeLink 使用协议自身的编码函数生成链接；当值类型不匹配或未提供编码能力时返回错误。
-func (p *ProtocolSpec) EncodeLink(value interface{}) (string, error) {
+func (p *ProtocolSpec) EncodeLink(value any) (string, error) {
 	if p.encode == nil {
 		return "", fmt.Errorf("protocol %s does not support encoding", p.name)
 	}
@@ -240,7 +240,7 @@ func (p *ProtocolSpec) EncodeLink(value interface{}) (string, error) {
 }
 
 // ExtractIdentity 从协议对象中提取 LinkIdentity；当协议未提供该能力或值类型不匹配时返回错误。
-func (p *ProtocolSpec) ExtractIdentity(value interface{}) (LinkIdentity, error) {
+func (p *ProtocolSpec) ExtractIdentity(value any) (LinkIdentity, error) {
 	if p.identity == nil {
 		return LinkIdentity{}, fmt.Errorf("protocol %s does not provide identity extraction", p.name)
 	}
@@ -510,17 +510,17 @@ func newProtocolSpec[T any](
 		fields:        append([]FieldMeta(nil), fieldMetas...),
 		nameFieldPath: nameFieldPath,
 		clientSupport: newClientSupport(ClientV2ray),
-		decode: func(link string) (interface{}, error) {
+		decode: func(link string) (any, error) {
 			return decode(link)
 		},
-		encode: func(value interface{}) (string, error) {
+		encode: func(value any) (string, error) {
 			typed, ok := value.(T)
 			if !ok {
 				return "", fmt.Errorf("invalid protocol value type %T for %s", value, name)
 			}
 			return encode(typed), nil
 		},
-		identity: func(value interface{}) (LinkIdentity, error) {
+		identity: func(value any) (LinkIdentity, error) {
 			typed, ok := value.(T)
 			if !ok {
 				return LinkIdentity{}, fmt.Errorf("invalid protocol identity type %T for %s", value, name)
@@ -615,7 +615,7 @@ func GetAllProtocolMeta() []ProtocolMeta {
 
 // ExtractNodeNameFromFields 根据协议定义的 NameFieldPath 从字段映射中提取节点名称。
 // 当协议不存在、字段映射为空、名称字段未声明或值不是字符串时，返回空字符串。
-func ExtractNodeNameFromFields(protocolName string, fields map[string]interface{}) string {
+func ExtractNodeNameFromFields(protocolName string, fields map[string]any) string {
 	protocol := getProtocolByName(protocolName)
 	if protocol == nil || fields == nil {
 		return ""
@@ -657,7 +657,7 @@ func ExtractLinkIdentity(link string) (LinkIdentity, error) {
 
 // DecodeProtocolObject 根据链接自动识别协议并返回对应的协议对象与规范化协议名。
 // 若链接无法识别协议，返回 nil、空协议名和错误；若识别成功但解码失败，仍会返回已识别的协议名。
-func DecodeProtocolObject(link string) (interface{}, string, error) {
+func DecodeProtocolObject(link string) (any, string, error) {
 	protocol := detectProtocol(link)
 	if protocol == nil {
 		return nil, "", fmt.Errorf("不支持的协议类型")
@@ -681,10 +681,10 @@ func EncodeProxyLink(proxy Proxy) (string, error) {
 }
 
 // extractFields 从协议原型结构体递归提取基础字段信息，用于没有显式 FieldMeta 的协议兜底展示。
-func extractFields(v interface{}) []FieldMeta {
+func extractFields(v any) []FieldMeta {
 	var fields []FieldMeta
 	t := reflect.TypeOf(v)
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 	if t.Kind() != reflect.Struct {
@@ -729,13 +729,13 @@ func extractFieldsRecursive(t reflect.Type, prefix string, fields *[]FieldMeta) 
 
 // GetProtocolFieldValue 按点路径读取协议对象中的导出字段值，并返回字符串形式结果。
 // fieldPath 使用 Go 导出字段名而不是 JSON 标签；当对象为空、路径不存在或最终值类型不受支持时返回空字符串。
-func GetProtocolFieldValue(protoObj interface{}, fieldPath string) string {
+func GetProtocolFieldValue(protoObj any, fieldPath string) string {
 	if protoObj == nil {
 		return ""
 	}
 
 	v := reflect.ValueOf(protoObj)
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		if v.IsNil() {
 			return ""
 		}
@@ -863,12 +863,12 @@ func RenameNodeLink(link string, newName string) string {
 	if !v.IsValid() {
 		return link
 	}
-	if v.Kind() != reflect.Ptr {
+	if v.Kind() != reflect.Pointer {
 		clone := reflect.New(v.Type())
 		clone.Elem().Set(v)
 		v = clone
 	}
-	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
+	if v.Kind() != reflect.Pointer || v.Elem().Kind() != reflect.Struct {
 		return renameFragmentOnly(link, newName)
 	}
 

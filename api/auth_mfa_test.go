@@ -89,7 +89,7 @@ func encodeForm(values map[string]string) string {
 	return encoded.Encode()
 }
 
-func performJSONRequestWithContext(t *testing.T, handler gin.HandlerFunc, body interface{}, username string) *httptest.ResponseRecorder {
+func performJSONRequestWithContext(t *testing.T, handler gin.HandlerFunc, body any, username string) *httptest.ResponseRecorder {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 

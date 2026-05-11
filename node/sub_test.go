@@ -20,7 +20,7 @@ func TestGenerateProxyLinkReconstructsDNSStyleECH(t *testing.T) {
 		Network:    "ws",
 		Tls:        true,
 		Servername: "example.com",
-		ECH_opts: map[string]interface{}{
+		ECH_opts: map[string]any{
 			"enable":            true,
 			"query-server-name": "encryptedsni.com",
 		},
@@ -53,7 +53,7 @@ func TestGenerateProxyLinkPreservesECHConfig(t *testing.T) {
 		Network:    "ws",
 		Tls:        true,
 		Servername: "example.com",
-		ECH_opts: map[string]interface{}{
+		ECH_opts: map[string]any{
 			"enable": true,
 			"config": "BASE64_ECH_CONFIG",
 		},
@@ -95,7 +95,7 @@ func TestGenerateProxyLinkDoesNotReconstructDisabledECH(t *testing.T) {
 		Network:    "ws",
 		Tls:        true,
 		Servername: "example.com",
-		ECH_opts: map[string]interface{}{
+		ECH_opts: map[string]any{
 			"enable":            false,
 			"query-server-name": "encryptedsni.com",
 		},

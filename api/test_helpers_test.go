@@ -55,7 +55,7 @@ func setupSettingAPITestDB(t *testing.T) {
 	})
 }
 
-func performJSONRequest(t *testing.T, handler gin.HandlerFunc, method string, body interface{}) *httptest.ResponseRecorder {
+func performJSONRequest(t *testing.T, handler gin.HandlerFunc, method string, body any) *httptest.ResponseRecorder {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 

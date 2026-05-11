@@ -41,7 +41,7 @@ func TestConnectionUsesResponsesEndpointWithHiPromptAndCappedTokens(t *testing.T
 		if err != nil {
 			t.Fatalf("read request body: %v", err)
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 
 		var payload requestPayload
 		if err := json.Unmarshal(body, &payload); err != nil {
@@ -114,7 +114,7 @@ func TestConnectionKeepsSmallerConfiguredMaxTokens(t *testing.T) {
 		if err != nil {
 			t.Fatalf("read request body: %v", err)
 		}
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 
 		var payload struct {
 			MaxTokens int `json:"max_output_tokens"`

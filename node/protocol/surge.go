@@ -99,7 +99,7 @@ func DecodeSurge(proxys, groups []string, file string) (string, error) {
 			log.Println("http.Get error", err)
 			return "", err
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		surge, err = io.ReadAll(resp.Body)
 		if err != nil {
 			log.Printf("error: %v", err)
@@ -137,9 +137,7 @@ func DecodeSurge(proxys, groups []string, file string) (string, error) {
 
 			// 在 [Proxy] section 后立即插入所有节点
 			if currentSection == "[Proxy]" {
-				for _, proxy := range proxys {
-					result = append(result, proxy)
-				}
+				result = append(result, proxys...)
 			}
 			continue
 		}

@@ -55,7 +55,7 @@ func GetSetting(key string) (string, error) {
 
 	// 缓存不存在，从数据库读取
 	var setting SystemSetting
-	err := database.DB.Where(map[string]interface{}{"key": key}).Take(&setting).Error
+	err := database.DB.Where(map[string]any{"key": key}).Take(&setting).Error
 	if err != nil {
 		return "", err
 	}

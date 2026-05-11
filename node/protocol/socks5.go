@@ -29,7 +29,7 @@ func init() {
 type Socks5 struct {
 	Name     string
 	Server   string
-	Port     interface{}
+	Port     any
 	Username string
 	Password string
 }

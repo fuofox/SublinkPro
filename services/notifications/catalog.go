@@ -22,15 +22,15 @@ type EventDefinition struct {
 }
 
 type Payload struct {
-	Event        string      `json:"event"`
-	EventName    string      `json:"eventName,omitempty"`
-	Category     string      `json:"category,omitempty"`
-	CategoryName string      `json:"categoryName,omitempty"`
-	Severity     string      `json:"severity,omitempty"`
-	Title        string      `json:"title"`
-	Message      string      `json:"message"`
-	Data         interface{} `json:"data"`
-	Time         string      `json:"time"`
+	Event        string `json:"event"`
+	EventName    string `json:"eventName,omitempty"`
+	Category     string `json:"category,omitempty"`
+	CategoryName string `json:"categoryName,omitempty"`
+	Severity     string `json:"severity,omitempty"`
+	Title        string `json:"title"`
+	Message      string `json:"message"`
+	Data         any    `json:"data"`
+	Time         string `json:"time"`
 }
 
 var eventCatalog = []EventDefinition{

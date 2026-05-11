@@ -195,10 +195,10 @@ func TestSaveTelegramEventKeysNormalizesCatalogOrder(t *testing.T) {
 
 func TestSendWebhookSupportsPUTAndTemplates(t *testing.T) {
 	var gotMethod, gotContentType, gotHeader string
-	var gotBody map[string]interface{}
+	var gotBody map[string]any
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		gotMethod = r.Method
 		gotContentType = r.Header.Get("Content-Type")
 		gotHeader = r.Header.Get("X-Test")
@@ -213,14 +213,14 @@ func TestSendWebhookSupportsPUTAndTemplates(t *testing.T) {
 	}))
 	defer server.Close()
 
-	err := SendWebhook(&WebhookConfig{URL: server.URL + "/hooks/{{event}}", Method: http.MethodPut, ContentType: "application/json", Headers: `{"X-Test":"abc"}`, Body: `{"title":"{{title}}","severity":"{{severity}}","payload":{{json .}}}`}, Payload{Event: "task.speed_test_completed", EventName: "节点测速完成", Category: "task", CategoryName: "任务执行", Severity: "success", Title: "测速结束", Message: "完成", Time: "2026-03-18 10:00:00", Data: map[string]interface{}{"success": 3}})
+	err := SendWebhook(&WebhookConfig{URL: server.URL + "/hooks/{{event}}", Method: http.MethodPut, ContentType: "application/json", Headers: `{"X-Test":"abc"}`, Body: `{"title":"{{title}}","severity":"{{severity}}","payload":{{json .}}}`}, Payload{Event: "task.speed_test_completed", EventName: "节点测速完成", Category: "task", CategoryName: "任务执行", Severity: "success", Title: "测速结束", Message: "完成", Time: "2026-03-18 10:00:00", Data: map[string]any{"success": 3}})
 	if err != nil {
 		t.Fatalf("send webhook: %v", err)
 	}
 	if gotMethod != http.MethodPut || gotContentType != "application/json" || gotHeader != "abc" {
 		t.Fatalf("unexpected request metadata: method=%s contentType=%s header=%s", gotMethod, gotContentType, gotHeader)
 	}
-	payload, ok := gotBody["payload"].(map[string]interface{})
+	payload, ok := gotBody["payload"].(map[string]any)
 	if !ok || payload["event"] != "task.speed_test_completed" {
 		t.Fatalf("unexpected payload: %#v", gotBody)
 	}
@@ -229,7 +229,7 @@ func TestSendWebhookSupportsPUTAndTemplates(t *testing.T) {
 func TestSendWebhookGETOmitsBodyAndInterpolatesURL(t *testing.T) {
 	var gotMethod, gotPath, gotBody string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Fatalf("read request body: %v", err)

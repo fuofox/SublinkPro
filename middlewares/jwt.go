@@ -62,7 +62,7 @@ func AuthToken(c *gin.Context) {
 		return
 	}
 	// 去掉Bearer前缀
-	token = strings.Replace(token, "Bearer ", "", -1)
+	token = strings.ReplaceAll(token, "Bearer ", "")
 	mc, err := ParseToken(token)
 	if err != nil {
 		utils.Forbidden(c, err.Error())
@@ -82,7 +82,7 @@ func AuthToken(c *gin.Context) {
 // ParseToken 解析JWT
 func ParseToken(tokenString string) (*JwtClaims, error) {
 	// 解析token
-	token, err := jwt.ParseWithClaims(tokenString, &JwtClaims{}, func(token *jwt.Token) (i interface{}, err error) {
+	token, err := jwt.ParseWithClaims(tokenString, &JwtClaims{}, func(token *jwt.Token) (i any, err error) {
 		return getJwtSecret(), nil
 	})
 	if err != nil {

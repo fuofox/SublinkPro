@@ -157,7 +157,7 @@ func (t *Task) UpdateStatus(status TaskStatus, message string) error {
 }
 
 // SetResult 设置任务结果
-func (t *Task) SetResult(result interface{}) error {
+func (t *Task) SetResult(result any) error {
 	resultJSON, err := json.Marshal(result)
 	if err != nil {
 		return err
@@ -281,7 +281,7 @@ func GetTaskStats() map[string]int64 {
 func MarkRunningTasksAsError() error {
 	return database.DB.Model(&Task{}).
 		Where("status = ?", TaskStatusRunning).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"status":  TaskStatusError,
 			"message": "服务重启，任务被中断",
 		}).Error

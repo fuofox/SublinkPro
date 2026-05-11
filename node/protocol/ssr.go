@@ -143,7 +143,7 @@ func DecodeSSRURL(s string) (Ssr, error) {
 
 type Ssr struct {
 	Server   string
-	Port     interface{}
+	Port     any
 	Protocol string
 	Method   string
 	Obfs     string

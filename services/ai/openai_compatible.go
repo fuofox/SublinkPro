@@ -36,8 +36,8 @@ type ResponsesEvent struct {
 
 type responseCompletedEventPayload struct {
 	Response struct {
-		Status string                 `json:"status,omitempty"`
-		Usage  map[string]interface{} `json:"usage,omitempty"`
+		Status string         `json:"status,omitempty"`
+		Usage  map[string]any `json:"usage,omitempty"`
 		Output []struct {
 			Type    string `json:"type,omitempty"`
 			Content []struct {
@@ -49,11 +49,11 @@ type responseCompletedEventPayload struct {
 }
 
 type responsesRequest struct {
-	Model       string                   `json:"model"`
-	Input       []map[string]interface{} `json:"input"`
-	Temperature float64                  `json:"temperature,omitempty"`
-	MaxTokens   int                      `json:"max_output_tokens,omitempty"`
-	Stream      bool                     `json:"stream"`
+	Model       string           `json:"model"`
+	Input       []map[string]any `json:"input"`
+	Temperature float64          `json:"temperature,omitempty"`
+	MaxTokens   int              `json:"max_output_tokens,omitempty"`
+	Stream      bool             `json:"stream"`
 }
 
 type chatCompletionRequest struct {
@@ -72,7 +72,7 @@ type chatCompletionResponse struct {
 		} `json:"message"`
 		FinishReason string `json:"finish_reason"`
 	} `json:"choices"`
-	Usage map[string]interface{} `json:"usage"`
+	Usage map[string]any `json:"usage"`
 }
 
 type Client struct {
@@ -86,12 +86,12 @@ type Client struct {
 }
 
 type TestResult struct {
-	Message      string                 `json:"message"`
-	Model        string                 `json:"model"`
-	BaseURL      string                 `json:"baseUrl"`
-	LatencyMs    int64                  `json:"latencyMs"`
-	Usage        map[string]interface{} `json:"usage,omitempty"`
-	FinishReason string                 `json:"finishReason,omitempty"`
+	Message      string         `json:"message"`
+	Model        string         `json:"model"`
+	BaseURL      string         `json:"baseUrl"`
+	LatencyMs    int64          `json:"latencyMs"`
+	Usage        map[string]any `json:"usage,omitempty"`
+	FinishReason string         `json:"finishReason,omitempty"`
 }
 
 const connectionTestMaxTokens = 16
@@ -152,7 +152,11 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 }
 
 func (c *Client) streamingHTTPClient() *http.Client {
-	transport := http.DefaultTransport.(*http.Transport).Clone()
+	defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		return &http.Client{Timeout: 45 * time.Second}
+	}
+	transport := defaultTransport.Clone()
 	transport.ResponseHeaderTimeout = 45 * time.Second
 	transport.IdleConnTimeout = 90 * time.Second
 	return &http.Client{Transport: transport}
@@ -222,7 +226,7 @@ func debugLogAIStreamEvent(eventName string, data string) {
 	utils.Debug("AI upstream stream event: event=%s data=%s", eventName, data)
 }
 
-func mustMarshalLogJSON(value interface{}) string {
+func mustMarshalLogJSON(value any) string {
 	if value == nil {
 		return "null"
 	}
@@ -233,7 +237,7 @@ func mustMarshalLogJSON(value interface{}) string {
 	return string(data)
 }
 
-func (c *Client) newJSONRequest(ctx context.Context, method string, endpoint string, payload interface{}) (*http.Request, error) {
+func (c *Client) newJSONRequest(ctx context.Context, method string, endpoint string, payload any) (*http.Request, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -256,7 +260,7 @@ func (c *Client) newJSONRequest(ctx context.Context, method string, endpoint str
 	return req, nil
 }
 
-func (c *Client) CreateChatCompletion(ctx context.Context, messages []Message) (string, string, map[string]interface{}, error) {
+func (c *Client) CreateChatCompletion(ctx context.Context, messages []Message) (string, string, map[string]any, error) {
 	endpoint, err := c.endpointURL()
 	if err != nil {
 		return "", "", nil, err
@@ -276,7 +280,7 @@ func (c *Client) CreateChatCompletion(ctx context.Context, messages []Message) (
 	if err != nil {
 		return "", "", nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", "", nil, err
@@ -300,14 +304,14 @@ func (c *Client) CreateChatCompletion(ctx context.Context, messages []Message) (
 	return content, parsed.Choices[0].FinishReason, parsed.Usage, nil
 }
 
-func (c *Client) StreamResponses(ctx context.Context, messages []Message, onEvent func(ResponsesEvent) error) (string, string, map[string]interface{}, error) {
+func (c *Client) StreamResponses(ctx context.Context, messages []Message, onEvent func(ResponsesEvent) error) (string, string, map[string]any, error) {
 	endpoint, err := c.responsesEndpointURL()
 	if err != nil {
 		return "", "", nil, err
 	}
-	input := make([]map[string]interface{}, 0, len(messages))
+	input := make([]map[string]any, 0, len(messages))
 	for _, msg := range messages {
-		input = append(input, map[string]interface{}{
+		input = append(input, map[string]any{
 			"role": msg.Role,
 			"content": []map[string]string{{
 				"type": "input_text",
@@ -331,7 +335,7 @@ func (c *Client) StreamResponses(ctx context.Context, messages []Message, onEven
 	if err != nil {
 		return "", "", nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		responseBody, _ := io.ReadAll(resp.Body)
 		debugLogAIResponse(endpoint, resp.StatusCode, responseBody)
@@ -344,7 +348,7 @@ func (c *Client) StreamResponses(ctx context.Context, messages []Message, onEven
 	var dataLines []string
 	var builder strings.Builder
 	finishReason := ""
-	var usage map[string]interface{}
+	var usage map[string]any
 
 	flushEvent := func() error {
 		if eventName == "" && len(dataLines) == 0 {
@@ -480,7 +484,7 @@ func DiscoverModels(ctx context.Context, cfg ClientConfig) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err

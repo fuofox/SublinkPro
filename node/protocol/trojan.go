@@ -37,7 +37,7 @@ func init() {
 type Trojan struct {
 	Password string      `json:"password"`
 	Hostname string      `json:"hostname"`
-	Port     interface{} `json:"port"`
+	Port     any         `json:"port"`
 	Query    TrojanQuery `json:"query,omitempty"`
 	Name     string      `json:"name"`
 	Type     string      `json:"type"`
@@ -216,7 +216,7 @@ func ConvertProxyToTrojan(proxy Proxy) Trojan {
 		if path, ok := proxy.Ws_opts["path"].(string); ok {
 			trojan.Query.Path = path
 		}
-		if headers, ok := proxy.Ws_opts["headers"].(map[string]interface{}); ok {
+		if headers, ok := proxy.Ws_opts["headers"].(map[string]any); ok {
 			if host, ok := headers["Host"].(string); ok {
 				trojan.Query.Host = host
 			}
@@ -245,7 +245,7 @@ func buildTrojanProxy(link Urls, config OutputConfig) (Proxy, error) {
 	if trojan.Name == "" {
 		trojan.Name = fmt.Sprintf("%s:%s", trojan.Hostname, utils.GetPortString(trojan.Port))
 	}
-	wsOpts := map[string]interface{}{"path": trojan.Query.Path, "headers": map[string]interface{}{"Host": trojan.Query.Host}}
+	wsOpts := map[string]any{"path": trojan.Query.Path, "headers": map[string]any{"Host": trojan.Query.Host}}
 	DeleteOpts(wsOpts)
 	skipCert := config.Cert || trojan.Query.AllowInsecure == 1
 	return Proxy{Name: trojan.Name, Type: "trojan", Server: trojan.Hostname, Port: FlexPort(utils.GetPortInt(trojan.Port)), Password: trojan.Password, Client_fingerprint: trojan.Query.Fp, Sni: trojan.Query.Sni, Network: trojan.Query.Type, Flow: trojan.Query.Flow, Alpn: trojan.Query.Alpn, Ws_opts: wsOpts, Udp: config.Udp, Skip_cert_verify: skipCert, Dialer_proxy: link.DialerProxyName}, nil

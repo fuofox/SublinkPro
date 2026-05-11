@@ -160,7 +160,7 @@ func executeDatabaseMigration(ctx context.Context, taskID, uploadPath, originalN
 	}
 
 	step := 0
-	reportStep := func(label string, payload interface{}) error {
+	reportStep := func(label string, payload any) error {
 		if err := checkDatabaseMigrationContext(ctx); err != nil {
 			return err
 		}
@@ -464,7 +464,7 @@ func looksLikeZipFile(path string) bool {
 	if err != nil {
 		return false
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	header := make([]byte, 4)
 	if _, err := io.ReadFull(file, header); err != nil {
@@ -478,7 +478,7 @@ func looksLikeSQLiteFile(path string) bool {
 	if err != nil {
 		return false
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	header := make([]byte, 16)
 	if _, err := io.ReadFull(file, header); err != nil {
@@ -492,7 +492,7 @@ func extractMigrationZip(zipPath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("读取迁移压缩包失败: %w", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	tempRoot, err := ensureDatabaseMigrationTempRoot()
 	if err != nil {
@@ -532,18 +532,23 @@ func extractMigrationZip(zipPath string) (string, error) {
 
 		dst, err := os.Create(targetPath)
 		if err != nil {
-			src.Close()
+			_ = src.Close()
 			return "", fmt.Errorf("创建迁移临时文件失败: %w", err)
 		}
 
 		if _, err := io.Copy(dst, src); err != nil {
-			dst.Close()
-			src.Close()
+			_ = dst.Close()
+			_ = src.Close()
 			return "", fmt.Errorf("解压迁移文件失败: %w", err)
 		}
 
-		dst.Close()
-		src.Close()
+		if err := dst.Close(); err != nil {
+			_ = src.Close()
+			return "", fmt.Errorf("保存迁移临时文件失败: %w", err)
+		}
+		if err := src.Close(); err != nil {
+			return "", fmt.Errorf("关闭迁移压缩包文件失败: %w", err)
+		}
 	}
 
 	return tempDir, nil
@@ -598,7 +603,7 @@ func loadPreservedTargetSettings(tx *gorm.DB) (map[string]string, error) {
 	result := make(map[string]string)
 	for _, key := range []string{"jwt_secret"} {
 		var setting models.SystemSetting
-		err := tx.Where(map[string]interface{}{"key": key}).Take(&setting).Error
+		err := tx.Where(map[string]any{"key": key}).Take(&setting).Error
 		if err == nil {
 			result[key] = setting.Value
 			continue
@@ -612,7 +617,7 @@ func loadPreservedTargetSettings(tx *gorm.DB) (map[string]string, error) {
 }
 
 func clearTargetBusinessData(tx *gorm.DB) error {
-	modelsInDeleteOrder := []interface{}{
+	modelsInDeleteOrder := []any{
 		&models.IPInfo{},
 		&models.SubLogs{},
 		&models.SubscriptionShare{},
@@ -1360,13 +1365,13 @@ func copyFile(sourcePath, targetPath string) error {
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
+	defer func() { _ = sourceFile.Close() }()
 
 	targetFile, err := os.Create(targetPath)
 	if err != nil {
 		return err
 	}
-	defer targetFile.Close()
+	defer func() { _ = targetFile.Close() }()
 
 	if _, err := io.Copy(targetFile, sourceFile); err != nil {
 		return err
@@ -1498,7 +1503,7 @@ func reseedPostgresSequences(tx *gorm.DB) error {
 }
 
 func sequenceTables(tx *gorm.DB) []string {
-	modelsWithSequence := []interface{}{
+	modelsWithSequence := []any{
 		&models.User{},
 		&models.Subcription{},
 		&models.Node{},
@@ -1528,7 +1533,7 @@ func sequenceTables(tx *gorm.DB) []string {
 	return tables
 }
 
-func tableName(db *gorm.DB, model interface{}) (string, error) {
+func tableName(db *gorm.DB, model any) (string, error) {
 	statement := &gorm.Statement{DB: db}
 	if err := statement.Parse(model); err != nil {
 		return "", err

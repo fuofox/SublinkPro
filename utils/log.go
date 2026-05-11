@@ -103,7 +103,7 @@ func InitLogger(logPath string, level string) {
 
 	// 关闭旧文件
 	if logger.file != nil {
-		logger.file.Close()
+		_ = logger.file.Close()
 	}
 	logger.file = file
 
@@ -146,7 +146,7 @@ func (l *Logger) shouldLog(level int) bool {
 }
 
 // formatMessage 格式化日志消息
-func (l *Logger) formatMessage(level int, format string, v ...interface{}) string {
+func (l *Logger) formatMessage(level int, format string, v ...any) string {
 	// 获取调用者信息
 	_, file, line, ok := runtime.Caller(3)
 	caller := "???"
@@ -173,7 +173,7 @@ func (l *Logger) formatMessage(level int, format string, v ...interface{}) strin
 }
 
 // output 输出日志
-func (l *Logger) output(level int, format string, v ...interface{}) {
+func (l *Logger) output(level int, format string, v ...any) {
 	if !l.shouldLog(level) {
 		return
 	}
@@ -193,27 +193,27 @@ func (l *Logger) output(level int, format string, v ...interface{}) {
 }
 
 // Debug 输出调试日志
-func (l *Logger) Debug(format string, v ...interface{}) {
+func (l *Logger) Debug(format string, v ...any) {
 	l.output(LevelDebug, format, v...)
 }
 
 // Info 输出信息日志
-func (l *Logger) Info(format string, v ...interface{}) {
+func (l *Logger) Info(format string, v ...any) {
 	l.output(LevelInfo, format, v...)
 }
 
 // Warn 输出警告日志
-func (l *Logger) Warn(format string, v ...interface{}) {
+func (l *Logger) Warn(format string, v ...any) {
 	l.output(LevelWarn, format, v...)
 }
 
 // Error 输出错误日志
-func (l *Logger) Error(format string, v ...interface{}) {
+func (l *Logger) Error(format string, v ...any) {
 	l.output(LevelError, format, v...)
 }
 
 // Fatal 输出致命错误日志并退出程序
-func (l *Logger) Fatal(format string, v ...interface{}) {
+func (l *Logger) Fatal(format string, v ...any) {
 	l.output(LevelFatal, format, v...)
 	os.Exit(1)
 }
@@ -221,27 +221,27 @@ func (l *Logger) Fatal(format string, v ...interface{}) {
 // ============= 全局便捷函数 =============
 
 // Debug 输出调试日志
-func Debug(format string, v ...interface{}) {
+func Debug(format string, v ...any) {
 	GetLogger().output(LevelDebug, format, v...)
 }
 
 // Info 输出信息日志
-func Info(format string, v ...interface{}) {
+func Info(format string, v ...any) {
 	GetLogger().output(LevelInfo, format, v...)
 }
 
 // Warn 输出警告日志
-func Warn(format string, v ...interface{}) {
+func Warn(format string, v ...any) {
 	GetLogger().output(LevelWarn, format, v...)
 }
 
 // Error 输出错误日志
-func Error(format string, v ...interface{}) {
+func Error(format string, v ...any) {
 	GetLogger().output(LevelError, format, v...)
 }
 
 // Fatal 输出致命错误日志并退出程序
-func Fatal(format string, v ...interface{}) {
+func Fatal(format string, v ...any) {
 	GetLogger().output(LevelFatal, format, v...)
 	os.Exit(1) // output normally doesn't exit for Fatal, but Logger.Fatal does. Wait Logger.Fatal calls output then Exit.
 }

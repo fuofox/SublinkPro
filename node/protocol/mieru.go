@@ -39,7 +39,7 @@ func init() {
 type Mieru struct {
 	Name           string
 	Server         string
-	Port           interface{}
+	Port           any
 	PortRange      string
 	Transport      string
 	Username       string

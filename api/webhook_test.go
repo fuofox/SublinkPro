@@ -58,7 +58,7 @@ func setupWebhookAPITestDB(t *testing.T) {
 	})
 }
 
-func performWebhookJSONRequest(t *testing.T, handler gin.HandlerFunc, method string, path string, body interface{}) *httptest.ResponseRecorder {
+func performWebhookJSONRequest(t *testing.T, handler gin.HandlerFunc, method string, path string, body any) *httptest.ResponseRecorder {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 
@@ -108,8 +108,8 @@ func TestListWebhooksReturnsEventOptions(t *testing.T) {
 	}
 
 	var data struct {
-		Items        []map[string]interface{} `json:"items"`
-		EventOptions []map[string]interface{} `json:"eventOptions"`
+		Items        []map[string]any `json:"items"`
+		EventOptions []map[string]any `json:"eventOptions"`
 	}
 	if err := json.Unmarshal(response.Data, &data); err != nil {
 		t.Fatalf("unmarshal webhook list data: %v", err)
@@ -125,7 +125,7 @@ func TestListWebhooksReturnsEventOptions(t *testing.T) {
 func TestCreateAndUpdateWebhookPersistData(t *testing.T) {
 	setupWebhookAPITestDB(t)
 
-	createRecorder := performWebhookJSONRequest(t, CreateWebhook, http.MethodPost, "/api/v1/settings/webhooks", map[string]interface{}{
+	createRecorder := performWebhookJSONRequest(t, CreateWebhook, http.MethodPost, "/api/v1/settings/webhooks", map[string]any{
 		"name":               "错误告警",
 		"webhookUrl":         "https://example.com/hook",
 		"webhookMethod":      "PUT",
@@ -157,7 +157,7 @@ func TestCreateAndUpdateWebhookPersistData(t *testing.T) {
 		t.Fatalf("unexpected webhook name: %s", created.Name)
 	}
 
-	updateRecorder := performWebhookJSONRequest(t, UpdateWebhook, http.MethodPut, "/api/v1/settings/webhooks/1", map[string]interface{}{
+	updateRecorder := performWebhookJSONRequest(t, UpdateWebhook, http.MethodPut, "/api/v1/settings/webhooks/1", map[string]any{
 		"name":               "订阅失败告警",
 		"webhookUrl":         "https://example.com/hook-2",
 		"webhookMethod":      "POST",
@@ -190,7 +190,7 @@ func TestCreateAndUpdateWebhookPersistData(t *testing.T) {
 func TestCreateWebhookRejectsInvalidHeaderJSON(t *testing.T) {
 	setupWebhookAPITestDB(t)
 
-	recorder := performWebhookJSONRequest(t, CreateWebhook, http.MethodPost, "/api/v1/settings/webhooks", map[string]interface{}{
+	recorder := performWebhookJSONRequest(t, CreateWebhook, http.MethodPost, "/api/v1/settings/webhooks", map[string]any{
 		"webhookUrl":     "https://example.com/hook",
 		"webhookHeaders": "{invalid",
 	})
@@ -212,7 +212,7 @@ func TestTestWebhookByIDSendsConfiguredRequest(t *testing.T) {
 	)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Fatalf("read request body: %v", err)

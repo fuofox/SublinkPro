@@ -237,7 +237,7 @@ func TestProxyStruct(t *testing.T) {
 func TestConvertToInt(t *testing.T) {
 	testCases := []struct {
 		name     string
-		input    interface{}
+		input    any
 		expected int
 		hasError bool
 	}{
@@ -268,14 +268,14 @@ func TestConvertToInt(t *testing.T) {
 
 // TestDeleteOpts 测试空值删除函数
 func TestDeleteOpts(t *testing.T) {
-	opts := map[string]interface{}{
+	opts := map[string]any{
 		"key1": "value1",
 		"key2": "",
-		"key3": map[string]interface{}{
+		"key3": map[string]any{
 			"nested1": "value",
 			"nested2": "",
 		},
-		"key4": map[string]interface{}{},
+		"key4": map[string]any{},
 	}
 
 	DeleteOpts(opts)
@@ -296,7 +296,7 @@ func TestDeleteOpts(t *testing.T) {
 	}
 
 	// nested2 应该被删除
-	if nested, ok := opts["key3"].(map[string]interface{}); ok {
+	if nested, ok := opts["key3"].(map[string]any); ok {
 		if _, exists := nested["nested2"]; exists {
 			t.Error("nested2 应该被删除")
 		}

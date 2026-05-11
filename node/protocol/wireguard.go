@@ -59,17 +59,17 @@ func buildWireGuardProxy(link Urls) (Proxy, error) {
 
 // WireGuard 结构体，存储 WireGuard 节点信息
 type WireGuard struct {
-	Name         string      `json:"name"`         // 节点名称
-	Server       string      `json:"server"`       // 服务器地址
-	Port         interface{} `json:"port"`         // 端口
-	PrivateKey   string      `json:"privateKey"`   // 客户端私钥
-	PublicKey    string      `json:"publicKey"`    // 服务端公钥
-	PreSharedKey string      `json:"preSharedKey"` // 预共享密钥（可选，提供额外的对称加密层）
-	IP           string      `json:"ip"`           // 客户端 IPv4 地址
-	IPv6         string      `json:"ipv6"`         // 客户端 IPv6 地址（可选）
-	MTU          int         `json:"mtu"`          // MTU 值（可选，默认 1280）
-	Reserved     []int       `json:"reserved"`     // 保留字段（可选，用于 WARP）
-	DNS          string      `json:"dns"`          // DNS 服务器（可选）
+	Name         string `json:"name"`         // 节点名称
+	Server       string `json:"server"`       // 服务器地址
+	Port         any    `json:"port"`         // 端口
+	PrivateKey   string `json:"privateKey"`   // 客户端私钥
+	PublicKey    string `json:"publicKey"`    // 服务端公钥
+	PreSharedKey string `json:"preSharedKey"` // 预共享密钥（可选，提供额外的对称加密层）
+	IP           string `json:"ip"`           // 客户端 IPv4 地址
+	IPv6         string `json:"ipv6"`         // 客户端 IPv6 地址（可选）
+	MTU          int    `json:"mtu"`          // MTU 值（可选，默认 1280）
+	Reserved     []int  `json:"reserved"`     // 保留字段（可选，用于 WARP）
+	DNS          string `json:"dns"`          // DNS 服务器（可选）
 }
 
 // DecodeWireGuardURL 解析 WireGuard URL

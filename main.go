@@ -203,7 +203,10 @@ func main() {
 			settingCmd.StringVar(&logLevel, "log-level", "", "日志等级 (debug/info/warn/error/fatal)")
 			settingCmd.StringVar(&configFile, "config", "", "配置文件名")
 			settingCmd.StringVar(&configFile, "c", "", "配置文件名 (简写)")
-			settingCmd.Parse(os.Args[2:])
+			if err := settingCmd.Parse(os.Args[2:]); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
 
 			// 初始化数据库目录和数据库
 			if err := initDatabase(dsn, dbPath, logPath, logLevel, configFile, port); err != nil {
@@ -226,7 +229,10 @@ func main() {
 			runCmd.StringVar(&logLevel, "log-level", "", "日志等级 (debug/info/warn/error/fatal)")
 			runCmd.StringVar(&configFile, "config", "", "配置文件名")
 			runCmd.StringVar(&configFile, "c", "", "配置文件名 (简写)")
-			runCmd.Parse(os.Args[2:])
+			if err := runCmd.Parse(os.Args[2:]); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
 
 			if err := initDatabase(dsn, dbPath, logPath, logLevel, configFile, port); err != nil {
 				fmt.Fprintln(os.Stderr, err)
@@ -572,7 +578,7 @@ func Run() {
 			serveIndexHTML := func(c *gin.Context) {
 				data, err := fs.ReadFile(staticFiles, "index.html")
 				if err != nil {
-					c.Error(err)
+					_ = c.Error(err)
 					return
 				}
 				// 注入配置脚本到 HTML
@@ -715,5 +721,7 @@ func Run() {
 	})
 
 	// 启动服务
-	r.Run(fmt.Sprintf("0.0.0.0:%d", port))
+	if err := r.Run(fmt.Sprintf("0.0.0.0:%d", port)); err != nil {
+		utils.Fatal("服务启动失败: %v", err)
+	}
 }

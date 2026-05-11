@@ -318,20 +318,20 @@ Run from the repo root:
 
 ```bash
 gofmt -w <changed-go-files>
-go vet ./...
+golangci-lint run
 go test ./...
 ```
 
-后端开发完成后必须保持 Go 文件通过 `gofmt` 格式化，并运行 `go vet ./...` 和相关 Go 测试；发布前的 GitHub 工作流会运行全仓 `go test ./...`。
-After backend changes, keep Go files formatted with `gofmt`, and run `go vet ./...` plus relevant Go tests; the GitHub release workflow runs repository-wide `go test ./...` before publishing.
+后端开发完成后必须保持 Go 文件通过 `gofmt` 格式化，并运行 `golangci-lint run` 和相关 Go 测试；发布前的 GitHub 工作流会运行 `golangci-lint` 和全仓 `go test ./...`。
+After backend changes, keep Go files formatted with `gofmt`, and run `golangci-lint run` plus relevant Go tests; the GitHub release workflow runs `golangci-lint` and repository-wide `go test ./...` before publishing.
 
 ### PR 自动检查 / PR automated checks
 
 `.github/workflows/pr-checks.yml` 会在 PR 打开、重新打开或标记 ready for review 时自动运行；后续修复提交不会自动重复消耗 Actions，PR 作者本人或仓库管理员可在 PR 评论 `/recheck` 手动触发新一轮检查。
 `.github/workflows/pr-checks.yml` runs automatically when a PR is opened, reopened, or marked ready for review; later fix commits do not auto-consume Actions, and the PR author or repository admin can comment `/recheck` on the PR to trigger another run.
 
-- 后端检查：`gofmt` 格式检查、`go vet ./...`、`go test ./...`。
-  Backend checks: `gofmt` formatting check, `go vet ./...`, and `go test ./...`.
+- 后端检查：`golangci-lint` 和 `go test ./...`。
+  Backend checks: `golangci-lint` and `go test ./...`.
 - 前端检查：`yarn run lint` 和 `yarn run build`。
   Frontend checks: `yarn run lint` and `yarn run build`.
 - 每个检查 job 会写入 GitHub Step Summary，方便快速看到哪些检查已通过、哪些检查失败。
@@ -379,9 +379,7 @@ Observed CI flow in `.github/workflows/build-release.yml`:
 - `cd webs && yarn run lint`
 - `cd webs && yarn run build`
 - Go 1.26.1
-- `gofmt` 格式检查
-  `gofmt` formatting check
-- `go vet ./...`
+- `golangci-lint`
 - `go test ./...`
 - 下载前端产物到 `static/`  
   download frontend artifacts into `static/`
@@ -720,8 +718,8 @@ For backend changes:
 
 - Go 文件必须通过 `gofmt` 格式化；本地开发可对改动文件运行 `gofmt -w <changed-go-files>`。
   Go files must be formatted with `gofmt`; locally, run `gofmt -w <changed-go-files>` for changed Go files.
-- 必须运行 `go vet ./...` 做基础 Go lint / 静态检查。
-  Run `go vet ./...` for baseline Go lint/static checks.
+- 必须运行 `golangci-lint run` 做基础 Go lint / 静态检查。
+  Run `golangci-lint run` for baseline Go lint/static checks.
 - 新增或修改后端逻辑时必须运行相关 `go test`；发布前 GitHub 工作流运行全仓 `go test ./...`。
   Run relevant `go test` for backend logic changes; the GitHub release workflow runs repository-wide `go test ./...` before publishing.
 - 至少保证相关包可以成功构建。  
@@ -732,8 +730,8 @@ For backend changes:
 注意：  
 Notes:
 
-- GitHub 发布构建会在构建二进制前运行 `gofmt` 检查、`go vet ./...` 和 `go test ./...`。
-  The GitHub release build runs a `gofmt` check, `go vet ./...`, and `go test ./...` before building binaries.
+- GitHub 发布构建会在构建二进制前运行 `golangci-lint` 和 `go test ./...`。
+  The GitHub release build runs `golangci-lint` and `go test ./...` before building binaries.
 - `webs/package.json` 中没有权威的前端 `test` 或 `typecheck` 脚本。  
   No authoritative frontend `test` or `typecheck` script was found in `webs/package.json`.
 

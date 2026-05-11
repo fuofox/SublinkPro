@@ -221,9 +221,9 @@ func GetChainOptions(c *gin.Context) {
 	}
 
 	// 构建节点简要信息列表
-	nodeOptions := make([]map[string]interface{}, 0, len(sub.Nodes))
+	nodeOptions := make([]map[string]any, 0, len(sub.Nodes))
 	for _, node := range sub.Nodes {
-		nodeOptions = append(nodeOptions, map[string]interface{}{
+		nodeOptions = append(nodeOptions, map[string]any{
 			"id":          node.ID,
 			"name":        node.Name,
 			"linkName":    node.LinkName,
@@ -349,7 +349,7 @@ func parseTemplateProxyGroups(configStr string) []string {
 		if err != nil {
 			return []string{}
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		data, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return []string{}
@@ -370,20 +370,20 @@ func parseTemplateProxyGroups(configStr string) []string {
 	}
 
 	// 解析 YAML 获取代理组列表
-	var clashConfig map[string]interface{}
+	var clashConfig map[string]any
 	if err := yaml.Unmarshal([]byte(templateContent), &clashConfig); err != nil {
 		return []string{}
 	}
 
 	// 提取 proxy-groups 中的 name 字段
-	proxyGroups, ok := clashConfig["proxy-groups"].([]interface{})
+	proxyGroups, ok := clashConfig["proxy-groups"].([]any)
 	if !ok {
 		return []string{}
 	}
 
 	var groupNames []string
 	for _, pg := range proxyGroups {
-		if group, ok := pg.(map[string]interface{}); ok {
+		if group, ok := pg.(map[string]any); ok {
 			if name, ok := group["name"].(string); ok && name != "" {
 				groupNames = append(groupNames, name)
 			}

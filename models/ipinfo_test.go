@@ -87,7 +87,7 @@ func TestIPInfoWhitelistUpdatePreservesCreatedAt(t *testing.T) {
 	refreshed.ID = existing.ID
 	refreshed.CreatedAt = existing.CreatedAt
 	refreshed.UpdatedAt = time.Now()
-	if err := database.DB.Model(&IPInfo{}).Where("id = ?", existing.ID).Updates(map[string]interface{}{
+	if err := database.DB.Model(&IPInfo{}).Where("id = ?", existing.ID).Updates(map[string]any{
 		"ip":           refreshed.IP,
 		"country":      refreshed.Country,
 		"country_code": refreshed.CountryCode,

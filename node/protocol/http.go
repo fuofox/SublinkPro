@@ -54,7 +54,7 @@ func init() {
 type HTTP struct {
 	Name           string
 	Server         string
-	Port           interface{}
+	Port           any
 	Username       string
 	Password       string
 	TLS            bool
@@ -150,7 +150,7 @@ func DecodeHTTPURL(s string) (HTTP, error) {
 	}
 	httpProxy.Port, err = strconv.Atoi(rawPort)
 	if err != nil {
-		return HTTP{}, fmt.Errorf("Port conversion failed: %v", err)
+		return HTTP{}, fmt.Errorf("port conversion failed: %v", err)
 	}
 
 	// 解析用户名和密码

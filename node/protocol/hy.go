@@ -30,7 +30,7 @@ func init() {
 
 type HY struct {
 	Host     string
-	Port     interface{}
+	Port     any
 	Insecure int
 	Peer     string
 	Auth     string

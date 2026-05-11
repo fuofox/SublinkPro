@@ -44,11 +44,11 @@ func (a *taskManagerAdapter) UpdateTotal(taskID string, total int) error {
 	return a.tm.UpdateTotal(taskID, total)
 }
 
-func (a *taskManagerAdapter) UpdateProgress(taskID string, progress int, currentItem string, result interface{}) error {
+func (a *taskManagerAdapter) UpdateProgress(taskID string, progress int, currentItem string, result any) error {
 	return a.tm.UpdateProgress(taskID, progress, currentItem, result)
 }
 
-func (a *taskManagerAdapter) CompleteTask(taskID string, message string, result interface{}) error {
+func (a *taskManagerAdapter) CompleteTask(taskID string, message string, result any) error {
 	return a.tm.CompleteTask(taskID, message, result)
 }
 

@@ -34,21 +34,21 @@ func init() {
 }
 
 type Vmess struct {
-	Add  string      `json:"add,omitempty"` // 服务器地址
-	Aid  interface{} `json:"aid,omitempty"`
-	Alpn string      `json:"alpn,omitempty"`
-	Fp   string      `json:"fp,omitempty"`
-	Host string      `json:"host,omitempty"`
-	Id   string      `json:"id,omitempty"`
-	Net  string      `json:"net,omitempty"`
-	Path string      `json:"path,omitempty"`
-	Port interface{} `json:"port,omitempty"`
-	Ps   string      `json:"ps,omitempty"`
-	Scy  string      `json:"scy,omitempty"`
-	Sni  string      `json:"sni,omitempty"`
-	Tls  string      `json:"tls,omitempty"`
-	Type string      `json:"type,omitempty"`
-	V    string      `json:"v,omitempty"`
+	Add  string `json:"add,omitempty"` // 服务器地址
+	Aid  any    `json:"aid,omitempty"`
+	Alpn string `json:"alpn,omitempty"`
+	Fp   string `json:"fp,omitempty"`
+	Host string `json:"host,omitempty"`
+	Id   string `json:"id,omitempty"`
+	Net  string `json:"net,omitempty"`
+	Path string `json:"path,omitempty"`
+	Port any    `json:"port,omitempty"`
+	Ps   string `json:"ps,omitempty"`
+	Scy  string `json:"scy,omitempty"`
+	Sni  string `json:"sni,omitempty"`
+	Tls  string `json:"tls,omitempty"`
+	Type string `json:"type,omitempty"`
+	V    string `json:"v,omitempty"`
 }
 
 // EncodeVmessURL 将 VMess 结构编码为标准 vmess:// base64 JSON 链接。
@@ -142,7 +142,7 @@ func ConvertProxyToVmess(proxy Proxy) Vmess {
 		if path, ok := proxy.Ws_opts["path"].(string); ok {
 			vmess.Path = path
 		}
-		if headers, ok := proxy.Ws_opts["headers"].(map[string]interface{}); ok {
+		if headers, ok := proxy.Ws_opts["headers"].(map[string]any); ok {
 			if host, ok := headers["Host"].(string); ok {
 				vmess.Host = host
 			}
@@ -176,7 +176,7 @@ func buildVMessProxy(link Urls, config OutputConfig) (Proxy, error) {
 	if vmess.Ps == "" {
 		vmess.Ps = fmt.Sprintf("%s:%s", vmess.Add, utils.GetPortString(vmess.Port))
 	}
-	wsOpts := map[string]interface{}{"path": vmess.Path, "headers": map[string]interface{}{"Host": vmess.Host}}
+	wsOpts := map[string]any{"path": vmess.Path, "headers": map[string]any{"Host": vmess.Host}}
 	DeleteOpts(wsOpts)
 	tls := vmess.Tls != "none" && vmess.Tls != ""
 	port, _ := convertToInt(vmess.Port)

@@ -129,7 +129,7 @@ func (s *SubscriptionShare) Add() error {
 
 	// 检查 token 唯一性
 	if IsTokenExists(s.Token, 0) {
-		return fmt.Errorf("Token 已被使用，请更换")
+		return fmt.Errorf("token 已被使用，请更换")
 	}
 
 	err := database.DB.Create(s).Error
@@ -146,10 +146,10 @@ func (s *SubscriptionShare) Update() error {
 
 	// 检查 token 唯一性（排除自己）
 	if IsTokenExists(s.Token, s.ID) {
-		return fmt.Errorf("Token 已被使用，请更换")
+		return fmt.Errorf("token 已被使用，请更换")
 	}
 
-	err := database.DB.Model(s).Updates(map[string]interface{}{
+	err := database.DB.Model(s).Updates(map[string]any{
 		"name":        s.Name,
 		"token":       s.Token,
 		"expire_type": s.ExpireType,
@@ -263,7 +263,7 @@ func (s *SubscriptionShare) RecordAccess() {
 	s.AccessCount++
 	now := time.Now()
 	s.LastAccessAt = &now
-	database.DB.Model(s).Updates(map[string]interface{}{
+	database.DB.Model(s).Updates(map[string]any{
 		"access_count":   s.AccessCount,
 		"last_access_at": s.LastAccessAt,
 	})

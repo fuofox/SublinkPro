@@ -104,9 +104,9 @@ func TestGenerateProxyContentHash_WsOptsOrder(t *testing.T) {
 		Type:   "vmess",
 		Server: "example.com",
 		Port:   443,
-		Ws_opts: map[string]interface{}{
+		Ws_opts: map[string]any{
 			"path": "/ws",
-			"headers": map[string]interface{}{
+			"headers": map[string]any{
 				"Host": "example.com",
 			},
 		},
@@ -116,8 +116,8 @@ func TestGenerateProxyContentHash_WsOptsOrder(t *testing.T) {
 		Type:   "vmess",
 		Server: "example.com",
 		Port:   443,
-		Ws_opts: map[string]interface{}{
-			"headers": map[string]interface{}{
+		Ws_opts: map[string]any{
+			"headers": map[string]any{
 				"Host": "example.com",
 			},
 			"path": "/ws",

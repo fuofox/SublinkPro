@@ -10,8 +10,8 @@ import (
 
 // ParsedNodeInfo 解析后的节点原始信息
 type ParsedNodeInfo struct {
-	Protocol string                 `json:"protocol"` // 协议类型
-	Fields   map[string]interface{} `json:"fields"`   // 字段键值对
+	Protocol string         `json:"protocol"` // 协议类型
+	Fields   map[string]any `json:"fields"`   // 字段键值对
 }
 
 // ParseNodeLink 解析节点链接，返回协议类型和所有字段的键值对
@@ -41,15 +41,15 @@ func ParseNodeLink(link string) (*ParsedNodeInfo, error) {
 }
 
 // extractFieldValues 使用反射提取结构体所有字段值
-func extractFieldValues(v interface{}) map[string]interface{} {
-	fields := make(map[string]interface{})
+func extractFieldValues(v any) map[string]any {
+	fields := make(map[string]any)
 	extractFieldValuesRecursive(reflect.ValueOf(v), "", fields)
 	return fields
 }
 
 // extractFieldValuesRecursive 递归提取字段值
-func extractFieldValuesRecursive(v reflect.Value, prefix string, fields map[string]interface{}) {
-	if v.Kind() == reflect.Ptr {
+func extractFieldValuesRecursive(v reflect.Value, prefix string, fields map[string]any) {
+	if v.Kind() == reflect.Pointer {
 		if v.IsNil() {
 			return
 		}
@@ -89,7 +89,7 @@ func extractFieldValuesRecursive(v reflect.Value, prefix string, fields map[stri
 		case reflect.Slice:
 			// 处理切片类型（如 ALPN []string）
 			if fieldValue.Len() > 0 {
-				slice := make([]interface{}, fieldValue.Len())
+				slice := make([]any, fieldValue.Len())
 				for j := 0; j < fieldValue.Len(); j++ {
 					slice[j] = fieldValue.Index(j).Interface()
 				}
@@ -109,7 +109,7 @@ func UpdateNodeLinkFields(link string, fieldsJSON string) (string, error) {
 		return "", fmt.Errorf("链接不能为空")
 	}
 
-	var fields map[string]interface{}
+	var fields map[string]any
 	if err := json.Unmarshal([]byte(fieldsJSON), &fields); err != nil {
 		return "", fmt.Errorf("解析字段JSON失败: %w", err)
 	}
@@ -125,13 +125,13 @@ func UpdateNodeLinkFields(link string, fieldsJSON string) (string, error) {
 	}
 
 	v := reflect.ValueOf(decoded)
-	if v.Kind() != reflect.Ptr {
+	if v.Kind() != reflect.Pointer {
 		clone := reflect.New(reflect.TypeOf(decoded))
 		clone.Elem().Set(v)
 		v = clone
 	}
 
-	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
+	if v.Kind() != reflect.Pointer || v.Elem().Kind() != reflect.Struct {
 		return "", fmt.Errorf("协议对象不可编辑")
 	}
 
@@ -146,8 +146,8 @@ func UpdateNodeLinkFields(link string, fieldsJSON string) (string, error) {
 }
 
 // setFieldValue 使用反射设置字段值
-func setFieldValue(v reflect.Value, fieldPath string, value interface{}) error {
-	if v.Kind() == reflect.Ptr {
+func setFieldValue(v reflect.Value, fieldPath string, value any) error {
+	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 
@@ -173,7 +173,7 @@ func setFieldValue(v reflect.Value, fieldPath string, value interface{}) error {
 }
 
 // setValueByKind 根据字段类型设置值
-func setValueByKind(field reflect.Value, value interface{}) error {
+func setValueByKind(field reflect.Value, value any) error {
 	if value == nil {
 		return nil
 	}
@@ -208,7 +208,7 @@ func setValueByKind(field reflect.Value, value interface{}) error {
 	case reflect.Interface:
 		field.Set(reflect.ValueOf(value))
 	case reflect.Slice:
-		if arr, ok := value.([]interface{}); ok {
+		if arr, ok := value.([]any); ok {
 			if field.Type().Elem().Kind() == reflect.String {
 				strSlice := make([]string, len(arr))
 				for i, v := range arr {

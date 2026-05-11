@@ -448,7 +448,7 @@ func AirportPullAll(c *gin.Context) {
 		return
 	}
 
-	utils.OkWithData(c, map[string]interface{}{
+	utils.OkWithData(c, map[string]any{
 		"message": "批量拉取任务已提交",
 		"count":   count,
 	})
@@ -482,7 +482,7 @@ func AirportRefreshUsage(c *gin.Context) {
 	}
 
 	// 返回用量信息
-	utils.OkDetailed(c, "用量信息已更新", map[string]interface{}{
+	utils.OkDetailed(c, "用量信息已更新", map[string]any{
 		"upload":   usageInfo.Upload,
 		"download": usageInfo.Download,
 		"total":    usageInfo.Total,

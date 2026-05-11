@@ -107,7 +107,7 @@ func (h *Host) Update() error {
 		}
 	}
 
-	err := database.DB.Model(h).Updates(map[string]interface{}{
+	err := database.DB.Model(h).Updates(map[string]any{
 		"hostname":   h.Hostname,
 		"ip":         h.IP,
 		"remark":     h.Remark,
@@ -240,7 +240,7 @@ func SyncHostsFromText(text string) (added, updated, deleted int, err error) {
 				existing.IP = newHost.IP
 				existing.Remark = newHost.Remark
 				existing.UpdatedAt = time.Now()
-				if err := tx.Model(&existing).Updates(map[string]interface{}{
+				if err := tx.Model(&existing).Updates(map[string]any{
 					"ip":         existing.IP,
 					"remark":     existing.Remark,
 					"updated_at": existing.UpdatedAt,
@@ -446,7 +446,7 @@ func upsertSingleHost(h Host) error {
 	existingHosts := hostCache.GetByIndex("hostname", h.Hostname)
 	if len(existingHosts) > 0 {
 		existing := existingHosts[0]
-		return database.DB.Model(&existing).Updates(map[string]interface{}{
+		return database.DB.Model(&existing).Updates(map[string]any{
 			"ip":         h.IP,
 			"remark":     h.Remark,
 			"source":     h.Source,
@@ -584,7 +584,7 @@ func GetHostExpireHours() int {
 		return 0
 	}
 	hours := 0
-	fmt.Sscanf(hoursStr, "%d", &hours)
+	_, _ = fmt.Sscanf(hoursStr, "%d", &hours)
 	if hours < 0 {
 		return 0
 	}

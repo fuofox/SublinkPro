@@ -506,7 +506,7 @@ func tryBatchUpdateWithCaseWhen(chunk []SpeedTestResult, skipSpeed bool) (int, e
 		sb.WriteString(field.column)
 		sb.WriteString(" = CASE id ")
 		for _, r := range chunk {
-			sb.WriteString(fmt.Sprintf("WHEN %d THEN %s ", r.NodeID, field.valueFunc(r)))
+			fmt.Fprintf(&sb, "WHEN %d THEN %s ", r.NodeID, field.valueFunc(r))
 		}
 		sb.WriteString("END")
 	}
@@ -517,7 +517,7 @@ func tryBatchUpdateWithCaseWhen(chunk []SpeedTestResult, skipSpeed bool) (int, e
 		if i > 0 {
 			sb.WriteString(",")
 		}
-		sb.WriteString(fmt.Sprintf("%d", r.NodeID))
+		fmt.Fprintf(&sb, "%d", r.NodeID)
 	}
 	sb.WriteString(")")
 
@@ -568,7 +568,7 @@ func batchUpdateNodeCache(chunk []SpeedTestResult, skipSpeed bool) {
 func fallbackToIndividualSpeedUpdate(chunk []SpeedTestResult, skipSpeed bool) int {
 	successCount := 0
 	for _, r := range chunk {
-		updates := map[string]interface{}{
+		updates := map[string]any{
 			"delay_time":       r.DelayTime,
 			"delay_status":     r.DelayStatus,
 			"latency_check_at": r.LatencyCheckAt,
@@ -1480,7 +1480,7 @@ func ListBySourceID(sourceID int) ([]Node, error) {
 // UpdateNodesBySourceID 根据订阅ID批量更新节点的来源名称和分组
 func UpdateNodesBySourceID(sourceID int, sourceName string, group string) error {
 	// Write-Through: 先更新数据库
-	updateFields := map[string]interface{}{
+	updateFields := map[string]any{
 		"source": sourceName,
 		"group":  group,
 	}
@@ -1516,7 +1516,7 @@ func BatchUpdateNodeInfo(updates []NodeInfoUpdate) (int, error) {
 
 	successCount := 0
 	for _, u := range updates {
-		err := database.DB.Model(&Node{}).Where("id = ?", u.ID).Updates(map[string]interface{}{
+		err := database.DB.Model(&Node{}).Where("id = ?", u.ID).Updates(map[string]any{
 			"name":        u.Name,
 			"link_name":   u.LinkName,
 			"link":        u.Link,

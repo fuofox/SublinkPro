@@ -46,8 +46,8 @@ func GenerateProxyContentHash(proxy Proxy) string {
 
 // extractProxyFields 使用反射提取 Proxy 的非忽略、非空字段
 // 返回按字段名排序的 map
-func extractProxyFields(proxy Proxy, ignoredFields map[string]bool) map[string]interface{} {
-	result := make(map[string]interface{})
+func extractProxyFields(proxy Proxy, ignoredFields map[string]bool) map[string]any {
+	result := make(map[string]any)
 	v := reflect.ValueOf(proxy)
 	t := v.Type()
 
@@ -87,7 +87,7 @@ func isZeroValue(v reflect.Value) bool {
 		return v.Len() == 0
 	case reflect.Map:
 		return v.Len() == 0
-	case reflect.Interface, reflect.Ptr:
+	case reflect.Interface, reflect.Pointer:
 		return v.IsNil()
 	default:
 		return false
@@ -95,9 +95,9 @@ func isZeroValue(v reflect.Value) bool {
 }
 
 // normalizeValue 规范化字段值，确保序列化结果一致
-func normalizeValue(v reflect.Value) interface{} {
+func normalizeValue(v reflect.Value) any {
 	// 如果是指针或接口，先解引用
-	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+	if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
 		if v.IsNil() {
 			return nil
 		}
@@ -135,7 +135,7 @@ func normalizeValue(v reflect.Value) interface{} {
 }
 
 // normalizeSlice 规范化切片类型
-func normalizeSlice(v reflect.Value) interface{} {
+func normalizeSlice(v reflect.Value) any {
 	if v.Len() == 0 {
 		return nil
 	}
@@ -162,7 +162,7 @@ func normalizeSlice(v reflect.Value) interface{} {
 	}
 
 	// 其他类型切片，递归处理每个元素
-	result := make([]interface{}, v.Len())
+	result := make([]any, v.Len())
 	for i := 0; i < v.Len(); i++ {
 		result[i] = normalizeValue(v.Index(i))
 	}
@@ -170,8 +170,8 @@ func normalizeSlice(v reflect.Value) interface{} {
 }
 
 // normalizeStruct 规范化 struct 类型
-func normalizeStruct(v reflect.Value) map[string]interface{} {
-	result := make(map[string]interface{})
+func normalizeStruct(v reflect.Value) map[string]any {
+	result := make(map[string]any)
 	t := v.Type()
 
 	for i := 0; i < v.NumField(); i++ {
@@ -196,12 +196,12 @@ func normalizeStruct(v reflect.Value) map[string]interface{} {
 }
 
 // normalizeMap 规范化 map 类型，递归处理嵌套结构
-func normalizeMap(v reflect.Value) map[string]interface{} {
+func normalizeMap(v reflect.Value) map[string]any {
 	if v.Len() == 0 {
 		return nil
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	// 获取所有 key 并排序
 	keys := v.MapKeys()
@@ -257,6 +257,6 @@ func IsFieldIgnoredForHash(fieldName string) bool {
 }
 
 // NormalizeProxyForHash 返回用于哈希计算的规范化数据（用于调试）
-func NormalizeProxyForHash(proxy Proxy) map[string]interface{} {
+func NormalizeProxyForHash(proxy Proxy) map[string]any {
 	return extractProxyFields(proxy, defaultHashConfig.IgnoredFields)
 }

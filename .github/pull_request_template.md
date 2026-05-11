@@ -53,8 +53,7 @@ Related to #
 - [ ] 后端检查已通过
 
   ```text
-  gofmt
-  go vet ./...
+  golangci-lint run
   go test ./...
   ```
 

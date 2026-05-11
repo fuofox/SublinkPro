@@ -228,7 +228,7 @@ func resolveWithDoH(ctx context.Context, host, dohServer string, useProxy bool, 
 		utils.Warn("[DNS] DoH请求失败: %s, %v", dohServer, err)
 		return ""
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		utils.Warn("[DNS] DoH响应状态码非200: %s, %d", dohServer, resp.StatusCode)

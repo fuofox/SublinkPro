@@ -88,7 +88,7 @@ func (tm *TaskManager) CreateTask(taskType models.TaskType, name string, trigger
 // UpdateProgress 更新任务进度
 // 仅更新内存状态并通过 SSE 广播，不写入数据库
 // 数据库同步延迟到任务结束时统一处理
-func (tm *TaskManager) UpdateProgress(taskID string, progress int, currentItem string, result interface{}) error {
+func (tm *TaskManager) UpdateProgress(taskID string, progress int, currentItem string, result any) error {
 	tm.mutex.Lock()
 	defer tm.mutex.Unlock()
 
@@ -128,7 +128,7 @@ func (tm *TaskManager) UpdateTotal(taskID string, total int) error {
 }
 
 // CompleteTask 完成任务
-func (tm *TaskManager) CompleteTask(taskID string, message string, result interface{}) error {
+func (tm *TaskManager) CompleteTask(taskID string, message string, result any) error {
 	tm.mutex.Lock()
 	defer tm.mutex.Unlock()
 
@@ -347,7 +347,7 @@ func (tm *TaskManager) broadcastProgress(task *models.Task, status string) {
 }
 
 // broadcastProgressWithResult 广播任务进度到 SSE（带结果）
-func (tm *TaskManager) broadcastProgressWithResult(task *models.Task, status string, result interface{}) {
+func (tm *TaskManager) broadcastProgressWithResult(task *models.Task, status string, result any) {
 	startTimeMs := int64(0)
 	if task.StartedAt != nil {
 		startTimeMs = task.StartedAt.UnixMilli()
@@ -368,7 +368,7 @@ func (tm *TaskManager) broadcastProgressWithResult(task *models.Task, status str
 }
 
 // BroadcastEvent 广播任务事件（用于完成通知等）
-func (tm *TaskManager) BroadcastEvent(task *models.Task, eventType string, data map[string]interface{}) {
+func (tm *TaskManager) BroadcastEvent(task *models.Task, eventType string, data map[string]any) {
 	notifications.Publish(eventType, notifications.Payload{
 		Title:   fmt.Sprintf("%s - %s", task.Name, getTaskStatusTitle(task.Status)),
 		Message: task.Message,

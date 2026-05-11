@@ -8,21 +8,21 @@ import (
 // CacheManager 全局缓存管理器
 // 用于统一管理和初始化所有模块的缓存
 type CacheManager struct {
-	caches       map[string]interface{}
+	caches       map[string]any
 	initializers map[string]func() error
 	lock         sync.RWMutex
 }
 
 // Manager 全局缓存管理器实例
 var Manager = &CacheManager{
-	caches:       make(map[string]interface{}),
+	caches:       make(map[string]any),
 	initializers: make(map[string]func() error),
 }
 
 // Register 注册模块缓存
 // name: 模块名称
 // cache: 缓存实例
-func (m *CacheManager) Register(name string, cache interface{}) {
+func (m *CacheManager) Register(name string, cache any) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	m.caches[name] = cache
@@ -33,7 +33,7 @@ func (m *CacheManager) Register(name string, cache interface{}) {
 // name: 模块名称
 // cache: 缓存实例
 // initFunc: 初始化函数（从数据库加载数据）
-func (m *CacheManager) RegisterWithInit(name string, cache interface{}, initFunc func() error) {
+func (m *CacheManager) RegisterWithInit(name string, cache any, initFunc func() error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	m.caches[name] = cache
@@ -42,7 +42,7 @@ func (m *CacheManager) RegisterWithInit(name string, cache interface{}, initFunc
 }
 
 // Get 获取指定模块的缓存
-func (m *CacheManager) Get(name string) (interface{}, bool) {
+func (m *CacheManager) Get(name string) (any, bool) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 	cache, exists := m.caches[name]

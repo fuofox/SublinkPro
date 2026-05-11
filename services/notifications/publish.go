@@ -74,7 +74,7 @@ func TriggerWebhook(eventKey string, payload Payload) {
 
 func SendWebhook(config *WebhookConfig, payload Payload) error {
 	enrichedPayload := FillPayloadMeta(payload.Event, payload)
-	data := map[string]interface{}{
+	data := map[string]any{
 		"event":        enrichedPayload.Event,
 		"eventName":    enrichedPayload.EventName,
 		"category":     enrichedPayload.Category,
@@ -105,9 +105,9 @@ func SendWebhook(config *WebhookConfig, payload Payload) error {
 	req.Header.Set("User-Agent", "Sublink-Webhook/2.0")
 
 	if strings.TrimSpace(config.Headers) != "" {
-		var headers map[string]interface{}
+		var headers map[string]any
 		if err := json.Unmarshal([]byte(config.Headers), &headers); err != nil {
-			return fmt.Errorf("Headers 不是有效的 JSON: %w", err)
+			return fmt.Errorf("headers 不是有效的 JSON: %w", err)
 		}
 		for key, value := range headers {
 			req.Header.Set(key, fmt.Sprint(value))
@@ -120,7 +120,7 @@ func SendWebhook(config *WebhookConfig, payload Payload) error {
 		utils.Error("发送 Webhook 失败: %v", err)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= http.StatusBadRequest {
 		utils.Warn("Webhook 发送失败，状态码: %d", resp.StatusCode)
@@ -148,7 +148,7 @@ func TriggerTelegram(eventKey string, payload Payload) {
 	telegramSender(eventKey, FillPayloadMeta(eventKey, payload))
 }
 
-func buildWebhookBody(config *WebhookConfig, payload Payload, data map[string]interface{}, method string) string {
+func buildWebhookBody(config *WebhookConfig, payload Payload, data map[string]any, method string) string {
 	customBody := config.Body
 	if strings.TrimSpace(customBody) == "" {
 		if method == http.MethodGet {

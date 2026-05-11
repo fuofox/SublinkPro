@@ -36,7 +36,7 @@ func init() {
 type HY2 struct {
 	Password          string
 	Host              string
-	Port              interface{}
+	Port              any
 	MPort             string
 	Insecure          int
 	Peer              string

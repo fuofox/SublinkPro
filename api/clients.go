@@ -95,7 +95,7 @@ func getResolvedSubscriptionName(c *gin.Context) (string, bool) {
 func resolvedSubscriptionNameOrWriteError(c *gin.Context) (string, bool) {
 	subName, ok := getResolvedSubscriptionName(c)
 	if !ok {
-		c.Writer.WriteString("订阅名为空")
+		_, _ = c.Writer.WriteString("订阅名为空")
 		return "", false
 	}
 
@@ -107,7 +107,7 @@ func GetClient(c *gin.Context) {
 	token := c.Query("token")
 	if token == "" {
 		utils.Warn("token为空")
-		c.Writer.WriteString("Not Found")
+		_, _ = c.Writer.WriteString("Not Found")
 		return
 	}
 	clientType := resolveSubscriptionClient(c)
@@ -178,20 +178,13 @@ func resolveSubscriptionClient(c *gin.Context) string {
 		return clientIndex
 	}
 
-	for k, v := range c.Request.Header {
-		if k != "User-Agent" {
-			continue
-		}
-		for _, userAgent := range v {
-			if userAgent == "" {
-				fmt.Println("User-Agent为空")
-			}
-			for _, client := range []string{"clash", "surge"} {
-				if strings.Contains(strings.ToLower(userAgent), strings.ToLower(client)) {
-					return client
-				}
-			}
-			return "v2ray"
+	userAgent := c.GetHeader("User-Agent")
+	if userAgent == "" {
+		fmt.Println("User-Agent为空")
+	}
+	for _, client := range []string{"clash", "surge"} {
+		if strings.Contains(strings.ToLower(userAgent), strings.ToLower(client)) {
+			return client
 		}
 	}
 
@@ -291,7 +284,7 @@ func writeSyntheticTemplateFile(pattern, content string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	if _, err := file.WriteString(content); err != nil {
 		return "", err
@@ -404,12 +397,12 @@ func GetV2ray(c *gin.Context) {
 	var sub models.Subcription
 	sub.Name = subName
 	if err := sub.Find(); err != nil {
-		c.Writer.WriteString("找不到这个订阅:" + subName)
+		_, _ = c.Writer.WriteString("找不到这个订阅:" + subName)
 		return
 	}
 	prepared, ok := buildPreparedResponseFromSubscription(sub, "v2ray", 0)
 	if !ok {
-		c.Writer.WriteString("读取错误")
+		_, _ = c.Writer.WriteString("读取错误")
 		return
 	}
 	renderPreparedV2ray(c, prepared)
@@ -455,7 +448,7 @@ func renderPreparedV2ray(c *gin.Context, prepared preparedClientResponse) {
 				utils.Error("Error getting link: %v", err)
 				return
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			body, _ := io.ReadAll(resp.Body)
 			nodes := utils.Base64Decode(string(body))
 			compatibleLinks := filterV2rayCompatibleLinks(strings.Split(nodes, "\n"))
@@ -479,7 +472,7 @@ func renderPreparedV2ray(c *gin.Context, prepared preparedClientResponse) {
 		}
 		baselist = res
 	}
-	c.Writer.WriteString(utils.Base64Encode(baselist))
+	_, _ = c.Writer.WriteString(utils.Base64Encode(baselist))
 }
 
 func filterV2rayCompatibleLinks(links []string) []string {
@@ -506,12 +499,12 @@ func GetClash(c *gin.Context) {
 	var sub models.Subcription
 	sub.Name = subName
 	if err := sub.Find(); err != nil {
-		c.Writer.WriteString("找不到这个订阅:" + subName)
+		_, _ = c.Writer.WriteString("找不到这个订阅:" + subName)
 		return
 	}
 	prepared, ok := buildPreparedResponseFromSubscription(sub, "clash", 0)
 	if !ok {
-		c.Writer.WriteString("读取错误")
+		_, _ = c.Writer.WriteString("读取错误")
 		return
 	}
 	renderPreparedClash(c, prepared)
@@ -623,7 +616,7 @@ func renderPreparedClash(c *gin.Context, prepared preparedClientResponse) {
 				utils.Error("获取包含链接失败: %v", err)
 				continue
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			body, _ := io.ReadAll(resp.Body)
 			nodes := utils.Base64Decode(string(body))
 			links := strings.Split(nodes, "\n")
@@ -645,7 +638,7 @@ func renderPreparedClash(c *gin.Context, prepared preparedClientResponse) {
 	var configs protocol.OutputConfig
 	err := json.Unmarshal([]byte(sub.Config), &configs)
 	if err != nil {
-		c.Writer.WriteString("配置读取错误")
+		_, _ = c.Writer.WriteString("配置读取错误")
 		return
 	}
 
@@ -675,7 +668,7 @@ func renderPreparedClash(c *gin.Context, prepared preparedClientResponse) {
 
 	DecodeClash, err := protocol.EncodeClash(urls, configs)
 	if err != nil {
-		c.Writer.WriteString(err.Error())
+		_, _ = c.Writer.WriteString(err.Error())
 		return
 	}
 	// 执行脚本
@@ -687,7 +680,7 @@ func renderPreparedClash(c *gin.Context, prepared preparedClientResponse) {
 		}
 		DecodeClash = []byte(res)
 	}
-	c.Writer.WriteString(string(DecodeClash))
+	_, _ = c.Writer.WriteString(string(DecodeClash))
 }
 
 func GetSurge(c *gin.Context) {
@@ -698,12 +691,12 @@ func GetSurge(c *gin.Context) {
 	var sub models.Subcription
 	sub.Name = subName
 	if err := sub.Find(); err != nil {
-		c.Writer.WriteString("找不到这个订阅:" + subName)
+		_, _ = c.Writer.WriteString("找不到这个订阅:" + subName)
 		return
 	}
 	prepared, ok := buildPreparedResponseFromSubscription(sub, "surge", 0)
 	if !ok {
-		c.Writer.WriteString("读取错误")
+		_, _ = c.Writer.WriteString("读取错误")
 		return
 	}
 	renderPreparedSurge(c, prepared)
@@ -742,7 +735,7 @@ func renderPreparedSurge(c *gin.Context, prepared preparedClientResponse) {
 				utils.Error("Error getting link: %v", err)
 				return
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			body, _ := io.ReadAll(resp.Body)
 			nodes := utils.Base64Decode(string(body))
 			links := strings.Split(nodes, "\n")
@@ -756,7 +749,7 @@ func renderPreparedSurge(c *gin.Context, prepared preparedClientResponse) {
 	var configs protocol.OutputConfig
 	err := json.Unmarshal([]byte(sub.Config), &configs)
 	if err != nil {
-		c.Writer.WriteString("配置读取错误")
+		_, _ = c.Writer.WriteString("配置读取错误")
 		return
 	}
 
@@ -768,14 +761,14 @@ func renderPreparedSurge(c *gin.Context, prepared preparedClientResponse) {
 	// log.Println("surge路径:", configs)
 	DecodeClash, err := protocol.EncodeSurge(urls, configs)
 	if err != nil {
-		c.Writer.WriteString(err.Error())
+		_, _ = c.Writer.WriteString(err.Error())
 		return
 	}
 	host := c.Request.Host
 	url := c.Request.URL.String()
 	// 如果包含头部更新信息
 	if strings.Contains(DecodeClash, "#!MANAGED-CONFIG") {
-		c.Writer.WriteString(DecodeClash)
+		_, _ = c.Writer.WriteString(DecodeClash)
 		return
 	}
 	var domain string
@@ -804,7 +797,7 @@ func renderPreparedSurge(c *gin.Context, prepared preparedClientResponse) {
 		}
 		DecodeClash = res
 	}
-	c.Writer.WriteString(string(interval + "\n" + DecodeClash))
+	_, _ = c.Writer.WriteString(string(interval + "\n" + DecodeClash))
 }
 
 // getSubscriptionUsage 计算订阅的流量使用情况

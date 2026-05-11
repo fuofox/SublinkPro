@@ -136,7 +136,7 @@ func (ss *SubScheduler) Del() error {
 
 // UpdateRunTime 更新运行时间 (Write-Through)
 func (ss *SubScheduler) UpdateRunTime(lastRun, nextRun *time.Time) error {
-	err := database.DB.Model(ss).Select("LastRunTime", "NextRunTime").Updates(map[string]interface{}{
+	err := database.DB.Model(ss).Select("LastRunTime", "NextRunTime").Updates(map[string]any{
 		"LastRunTime": lastRun,
 		"NextRunTime": nextRun,
 	}).Error

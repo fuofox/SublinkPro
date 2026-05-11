@@ -240,13 +240,13 @@ func TestVlessTopLevelECHRoundTrip(t *testing.T) {
 }
 
 func TestVlessXHTTPURLMapping(t *testing.T) {
-	extra := map[string]interface{}{
-		"headers": map[string]interface{}{
+	extra := map[string]any{
+		"headers": map[string]any{
 			"User-Agent": "curl/8.0",
 		},
 		"noGRPCHeader":  true,
 		"xPaddingBytes": "10-20",
-		"downloadSettings": map[string]interface{}{
+		"downloadSettings": map[string]any{
 			"path":              "/download",
 			"host":              "dl.example.com",
 			"tls":               true,
@@ -296,10 +296,12 @@ func TestVlessXHTTPURLMapping(t *testing.T) {
 	if decodedExtra == nil {
 		t.Fatal("decoded extra 不应为空")
 	}
-	assertEqualString(t, "DecodedHeader", "curl/8.0", decodedExtra["headers"].(map[string]interface{})["User-Agent"].(string))
-	assertEqualString(t, "DecodedPadding", "10-20", decodedExtra["x-padding-bytes"].(string))
-	assertEqualString(t, "DecodedDownloadPath", "/download", decodedExtra["download-settings"].(map[string]interface{})["path"].(string))
-	assertEqualString(t, "DecodedDownloadFingerprint", "chrome", decodedExtra["download-settings"].(map[string]interface{})["client-fingerprint"].(string))
+	headers := mustMap(t, "DecodedHeader headers", decodedExtra["headers"])
+	assertEqualString(t, "DecodedHeader", "curl/8.0", mustString(t, "DecodedHeader User-Agent", headers["User-Agent"]))
+	assertEqualString(t, "DecodedPadding", "10-20", mustString(t, "DecodedPadding", decodedExtra["x-padding-bytes"]))
+	downloadSettings := mustMap(t, "DecodedDownloadPath download-settings", decodedExtra["download-settings"])
+	assertEqualString(t, "DecodedDownloadPath", "/download", mustString(t, "DecodedDownloadPath path", downloadSettings["path"]))
+	assertEqualString(t, "DecodedDownloadFingerprint", "chrome", mustString(t, "DecodedDownloadFingerprint", downloadSettings["client-fingerprint"]))
 }
 
 func TestConvertProxyToVlessXHTTP(t *testing.T) {
@@ -311,15 +313,15 @@ func TestConvertProxyToVlessXHTTP(t *testing.T) {
 		Uuid:    "12345678-1234-1234-1234-123456789abc",
 		Network: "xhttp",
 		Tls:     true,
-		XHTTP_opts: map[string]interface{}{
+		XHTTP_opts: map[string]any{
 			"path": "/xhttp",
 			"host": "cdn.example.com",
 			"mode": "packet-up",
-			"headers": map[string]interface{}{
+			"headers": map[string]any{
 				"User-Agent": "curl/8.0",
 			},
 			"no-grpc-header": true,
-			"download-settings": map[string]interface{}{
+			"download-settings": map[string]any{
 				"path":               "/download",
 				"client-fingerprint": "chrome",
 			},
@@ -336,13 +338,15 @@ func TestConvertProxyToVlessXHTTP(t *testing.T) {
 	if extra == nil {
 		t.Fatal("extra 不应为空")
 	}
-	var rawExtra map[string]interface{}
+	var rawExtra map[string]any
 	if err := json.Unmarshal([]byte(vless.Query.Extra), &rawExtra); err != nil {
 		t.Fatalf("extra 解析失败: %v", err)
 	}
-	assertEqualString(t, "ExtraHeader", "curl/8.0", rawExtra["headers"].(map[string]interface{})["User-Agent"].(string))
-	assertEqualString(t, "ExtraDownloadPath", "/download", rawExtra["downloadSettings"].(map[string]interface{})["path"].(string))
-	assertEqualString(t, "ExtraDownloadFingerprint", "chrome", rawExtra["downloadSettings"].(map[string]interface{})["clientFingerprint"].(string))
+	rawHeaders := mustMap(t, "ExtraHeader headers", rawExtra["headers"])
+	assertEqualString(t, "ExtraHeader", "curl/8.0", mustString(t, "ExtraHeader User-Agent", rawHeaders["User-Agent"]))
+	rawDownloadSettings := mustMap(t, "ExtraDownloadPath downloadSettings", rawExtra["downloadSettings"])
+	assertEqualString(t, "ExtraDownloadPath", "/download", mustString(t, "ExtraDownloadPath path", rawDownloadSettings["path"]))
+	assertEqualString(t, "ExtraDownloadFingerprint", "chrome", mustString(t, "ExtraDownloadFingerprint", rawDownloadSettings["clientFingerprint"]))
 
 	encoded := EncodeVLESSURL(vless)
 	assertContains(t, "EncodedType", encoded, "type=xhttp")
@@ -358,7 +362,7 @@ func TestConvertProxyToVlessPreservesTopLevelECH(t *testing.T) {
 		Network:    "ws",
 		Tls:        true,
 		Servername: "example.com",
-		ECH_opts: map[string]interface{}{
+		ECH_opts: map[string]any{
 			"enable": true,
 			"config": "BASE64_ECH_CONFIG",
 		},
@@ -394,18 +398,18 @@ func TestVlessTopLevelECHMapsToECHOpts(t *testing.T) {
 		t.Fatalf("buildVLESSProxy 失败: %v", err)
 	}
 
-	assertEqualString(t, "TopLevelECHConfig", "BASE64_ECH_CONFIG", proxy.ECH_opts["config"].(string))
-	assertEqualBool(t, "TopLevelECHEnable", true, proxy.ECH_opts["enable"].(bool))
-	downloadSettings, ok := proxy.XHTTP_opts["download-settings"].(map[string]interface{})
+	assertEqualString(t, "TopLevelECHConfig", "BASE64_ECH_CONFIG", mustString(t, "TopLevelECHConfig", proxy.ECH_opts["config"]))
+	assertEqualBool(t, "TopLevelECHEnable", true, mustBool(t, "TopLevelECHEnable", proxy.ECH_opts["enable"]))
+	downloadSettings, ok := proxy.XHTTP_opts["download-settings"].(map[string]any)
 	if !ok {
 		t.Fatal("download-settings 不应为空")
 	}
-	xhttpECHOpts, ok := downloadSettings["ech-opts"].(map[string]interface{})
+	xhttpECHOpts, ok := downloadSettings["ech-opts"].(map[string]any)
 	if !ok {
 		t.Fatal("ech-opts 不应为空")
 	}
-	assertEqualString(t, "NestedECHConfig", "base64-ech", xhttpECHOpts["config"].(string))
-	assertEqualString(t, "NestedECHQueryServerName", "dns.example.com", xhttpECHOpts["query-server-name"].(string))
+	assertEqualString(t, "NestedECHConfig", "base64-ech", mustString(t, "NestedECHConfig", xhttpECHOpts["config"]))
+	assertEqualString(t, "NestedECHQueryServerName", "dns.example.com", mustString(t, "NestedECHQueryServerName", xhttpECHOpts["query-server-name"]))
 
 	restored := ConvertProxyToVless(proxy)
 	assertEqualString(t, "RestoredTopLevelECH", original.Query.Ech, restored.Query.Ech)
@@ -432,8 +436,8 @@ func TestVlessDNSStyleECHUsesBestEffortECHOpts(t *testing.T) {
 		t.Fatalf("buildVLESSProxy 失败: %v", err)
 	}
 
-	assertEqualBool(t, "ECHEnable", true, proxy.ECH_opts["enable"].(bool))
-	assertEqualString(t, "ECHQueryServerName", "encryptedsni.com", proxy.ECH_opts["query-server-name"].(string))
+	assertEqualBool(t, "ECHEnable", true, mustBool(t, "ECHEnable", proxy.ECH_opts["enable"]))
+	assertEqualString(t, "ECHQueryServerName", "encryptedsni.com", mustString(t, "ECHQueryServerName", proxy.ECH_opts["query-server-name"]))
 	if _, exists := proxy.ECH_opts["config"]; exists {
 		t.Fatalf("DNS 风格 ech 不应被错误映射为 config: %#v", proxy.ECH_opts)
 	}
@@ -466,9 +470,9 @@ func TestLinkToProxy_VLESSXHTTPSkipCertFollowsSubscriptionConfig(t *testing.T) {
 
 	assertEqualString(t, "Network", "xhttp", proxy.Network)
 	assertEqualBool(t, "SkipCertVerify", true, proxy.Skip_cert_verify)
-	downloadSettings, ok := proxy.XHTTP_opts["download-settings"].(map[string]interface{})
+	downloadSettings, ok := proxy.XHTTP_opts["download-settings"].(map[string]any)
 	if !ok {
 		t.Fatal("download-settings 不应为空")
 	}
-	assertEqualBool(t, "DownloadSkipCertVerify", true, downloadSettings["skip-cert-verify"].(bool))
+	assertEqualBool(t, "DownloadSkipCertVerify", true, mustBool(t, "DownloadSkipCertVerify", downloadSettings["skip-cert-verify"]))
 }

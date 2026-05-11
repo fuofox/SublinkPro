@@ -37,7 +37,7 @@ type Tuic struct {
 	Name               string
 	Password           string //v5
 	Host               string
-	Port               interface{}
+	Port               any
 	Uuid               string //v5
 	Congestion_control string
 	Token              string //v4

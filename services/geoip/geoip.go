@@ -85,7 +85,9 @@ func loadDatabase() error {
 
 	// 关闭旧的 reader
 	if geoIP != nil {
-		geoIP.Close()
+		if err := geoIP.Close(); err != nil {
+			utils.Warn("关闭旧 GeoIP 数据库失败: %v", err)
+		}
 	}
 
 	geoIP = reader

@@ -66,8 +66,8 @@ func ProcessProxyListWithRegex(proxies []string, nodeNames []string) []string {
 }
 
 // ProcessProxyListWithRegexInterface 处理 interface{} 类型的代理列表
-func ProcessProxyListWithRegexInterface(proxies []interface{}, nodeNames []string) []interface{} {
-	var result []interface{}
+func ProcessProxyListWithRegexInterface(proxies []any, nodeNames []string) []any {
+	var result []any
 
 	for _, proxy := range proxies {
 		proxyStr, ok := proxy.(string)

@@ -74,7 +74,7 @@ func ValidateTemplateCandidate(input TemplateValidationInput) TemplateValidation
 }
 
 func validateClash(content string) error {
-	var parsed map[string]interface{}
+	var parsed map[string]any
 	if err := yaml.Unmarshal([]byte(content), &parsed); err != nil {
 		return err
 	}

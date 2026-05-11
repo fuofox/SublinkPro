@@ -40,9 +40,9 @@ type TaskManagerInterface interface {
 	// UpdateTotal 更新任务总数
 	UpdateTotal(taskID string, total int) error
 	// UpdateProgress 更新任务进度
-	UpdateProgress(taskID string, progress int, currentItem string, result interface{}) error
+	UpdateProgress(taskID string, progress int, currentItem string, result any) error
 	// CompleteTask 标记任务完成
-	CompleteTask(taskID string, message string, result interface{}) error
+	CompleteTask(taskID string, message string, result any) error
 	// FailTask 标记任务失败
 	FailTask(taskID string, errMsg string) error
 	// CreateTask 创建新任务

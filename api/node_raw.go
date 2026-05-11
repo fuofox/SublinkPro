@@ -39,8 +39,8 @@ func ParseNodeLinkAPI(c *gin.Context) {
 
 // UpdateNodeRawRequest 更新节点原始信息请求
 type UpdateNodeRawRequest struct {
-	NodeID int                    `json:"nodeId"` // 节点 ID
-	Fields map[string]interface{} `json:"fields"` // 要更新的字段
+	NodeID int            `json:"nodeId"` // 节点 ID
+	Fields map[string]any `json:"fields"` // 要更新的字段
 }
 
 // UpdateNodeRawInfo 更新节点原始信息
@@ -101,7 +101,7 @@ func UpdateNodeRawInfo(c *gin.Context) {
 	newLinkName := protocol.ExtractNodeNameFromFields(newInfo.Protocol, newInfo.Fields)
 
 	// 更新数据库
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"link": newLink,
 	}
 	if newLinkName != "" {

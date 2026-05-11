@@ -19,19 +19,19 @@ func NewTaskManagerReporter(tm TaskManagerInterface, taskID string) *TaskManager
 }
 
 func (r *TaskManagerReporter) UpdateTotal(total int) {
-	r.tm.UpdateTotal(r.taskID, total)
+	_ = r.tm.UpdateTotal(r.taskID, total)
 }
 
-func (r *TaskManagerReporter) ReportProgress(current int, currentItem string, result interface{}) {
-	r.tm.UpdateProgress(r.taskID, current, currentItem, result)
+func (r *TaskManagerReporter) ReportProgress(current int, currentItem string, result any) {
+	_ = r.tm.UpdateProgress(r.taskID, current, currentItem, result)
 }
 
-func (r *TaskManagerReporter) ReportComplete(message string, result interface{}) {
-	r.tm.CompleteTask(r.taskID, message, result)
+func (r *TaskManagerReporter) ReportComplete(message string, result any) {
+	_ = r.tm.CompleteTask(r.taskID, message, result)
 }
 
 func (r *TaskManagerReporter) ReportFail(errMsg string) {
-	r.tm.FailTask(r.taskID, errMsg)
+	_ = r.tm.FailTask(r.taskID, errMsg)
 }
 
 // 确保 TaskManagerReporter 实现了 node.TaskReporter 接口

@@ -195,7 +195,9 @@ func StartAccessKeyCleanupScheduler() {
 						utils.Error("AccessKey 清理任务异常: %v", r)
 					}
 				}()
-				CleanupExpiredAccessKeys()
+				if err := CleanupExpiredAccessKeys(); err != nil {
+					utils.Error("AccessKey 清理失败: %v", err)
+				}
 			}()
 		}
 	}()
@@ -207,6 +209,8 @@ func StartAccessKeyCleanupScheduler() {
 				utils.Error("AccessKey 初始清理任务异常: %v", r)
 			}
 		}()
-		CleanupExpiredAccessKeys()
+		if err := CleanupExpiredAccessKeys(); err != nil {
+			utils.Error("AccessKey 初始清理失败: %v", err)
+		}
 	}()
 }

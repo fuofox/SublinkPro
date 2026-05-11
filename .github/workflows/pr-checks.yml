@@ -100,8 +100,7 @@ jobs:
     if: needs.prepare-pr-check.outputs.should_run == 'true' && needs.prepare-pr-check.outputs.authorized == 'true'
     runs-on: ubuntu-latest
     outputs:
-      gofmt: ${{ steps.backend-summary.outputs.gofmt }}
-      govet: ${{ steps.backend-summary.outputs.govet }}
+      golangci: ${{ steps.backend-summary.outputs.golangci }}
       gotest: ${{ steps.backend-summary.outputs.gotest }}
     steps:
       - name: Checkout code
@@ -113,7 +112,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '1.26.1'
           cache: true
@@ -122,21 +121,12 @@ jobs:
       - name: Download Go modules
         run: go mod download
 
-      - name: Check Go formatting
-        id: gofmt
+      - name: Run golangci-lint
+        id: golangci
         continue-on-error: true
-        run: |
-          UNFORMATTED="$(gofmt -l $(git ls-files '*.go'))"
-          if [ -n "$UNFORMATTED" ]; then
-            echo "Go files are not gofmt-formatted:"
-            printf '%s\n' "$UNFORMATTED"
-            exit 1
-          fi
-
-      - name: Run Go vet
-        id: govet
-        continue-on-error: true
-        run: go vet ./...
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.12.2
 
       - name: Run Go tests
         id: gotest
@@ -147,23 +137,20 @@ jobs:
         id: backend-summary
         if: always()
         run: |
-          gofmt_status="${{ steps.gofmt.outcome }}"
-          govet_status="${{ steps.govet.outcome }}"
+          golangci_status="${{ steps.golangci.outcome }}"
           gotest_status="${{ steps.gotest.outcome }}"
 
-          echo "gofmt=$gofmt_status" >> "$GITHUB_OUTPUT"
-          echo "govet=$govet_status" >> "$GITHUB_OUTPUT"
+          echo "golangci=$golangci_status" >> "$GITHUB_OUTPUT"
           echo "gotest=$gotest_status" >> "$GITHUB_OUTPUT"
 
           echo "## Backend Checks" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Check | Result |" >> "$GITHUB_STEP_SUMMARY"
           echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| gofmt | $gofmt_status |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| go vet ./... | $govet_status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| golangci-lint | $golangci_status |" >> "$GITHUB_STEP_SUMMARY"
           echo "| go test ./... | $gotest_status |" >> "$GITHUB_STEP_SUMMARY"
 
-          if [ "$gofmt_status" != "success" ] || [ "$govet_status" != "success" ] || [ "$gotest_status" != "success" ]; then
+          if [ "$golangci_status" != "success" ] || [ "$gotest_status" != "success" ]; then
             exit 1
           fi
 
@@ -257,8 +244,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ needs.prepare-pr-check.outputs.pr_number }}
-          GOFMT_STATUS: ${{ needs.backend-checks.outputs.gofmt }}
-          GOVET_STATUS: ${{ needs.backend-checks.outputs.govet }}
+          GOLANGCI_STATUS: ${{ needs.backend-checks.outputs.golangci }}
           GOTEST_STATUS: ${{ needs.backend-checks.outputs.gotest }}
           FRONTEND_LINT_STATUS: ${{ needs.frontend-checks.outputs.lint }}
           FRONTEND_BUILD_STATUS: ${{ needs.frontend-checks.outputs.build }}
@@ -275,8 +261,7 @@ jobs:
           }
 
           body_file="$(mktemp)"
-          if [ "$GOFMT_STATUS" = "success" ] && \
-            [ "$GOVET_STATUS" = "success" ] && \
+          if [ "$GOLANGCI_STATUS" = "success" ] && \
             [ "$GOTEST_STATUS" = "success" ] && \
             [ "$FRONTEND_LINT_STATUS" = "success" ] && \
             [ "$FRONTEND_BUILD_STATUS" = "success" ]; then
@@ -292,8 +277,7 @@ jobs:
             printf '%s\n\n' "$message"
             printf '| 检查项 | 结果 |\n'
             printf '| --- | --- |\n'
-            printf '| gofmt | %s |\n' "$(status_label "$GOFMT_STATUS")"
-            printf '| go vet ./... | %s |\n' "$(status_label "$GOVET_STATUS")"
+            printf '| golangci-lint | %s |\n' "$(status_label "$GOLANGCI_STATUS")"
             printf '| go test ./... | %s |\n' "$(status_label "$GOTEST_STATUS")"
             printf '| yarn run lint | %s |\n' "$(status_label "$FRONTEND_LINT_STATUS")"
             printf '| yarn run build | %s |\n\n' "$(status_label "$FRONTEND_BUILD_STATUS")"

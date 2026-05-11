@@ -158,19 +158,19 @@ func (h *StatsHandler) Handle(bot *TelegramBot, message *Message) error {
 	text.WriteString("📊 *仪表盘统计*\n\n")
 
 	// 基础统计
-	text.WriteString(fmt.Sprintf("📋 订阅: *%d*\n", subCount))
-	text.WriteString(fmt.Sprintf("📦 节点: *%d* / %d\n\n", available, total))
+	fmt.Fprintf(&text, "📋 订阅: *%d*\n", subCount)
+	fmt.Fprintf(&text, "📦 节点: *%d* / %d\n\n", available, total)
 
 	// 最快速度
 	if fastestNode != nil && fastestNode.Speed > 0 {
-		text.WriteString(fmt.Sprintf("🚀 最快速度: *%.2f MB/s*\n", fastestNode.Speed))
-		text.WriteString(fmt.Sprintf("   └ %s\n\n", truncateName(fastestNode.Name, 25)))
+		fmt.Fprintf(&text, "🚀 最快速度: *%.2f MB/s*\n", fastestNode.Speed)
+		fmt.Fprintf(&text, "   └ %s\n\n", truncateName(fastestNode.Name, 25))
 	}
 
 	// 最低延迟
 	if lowestDelayNode != nil && lowestDelayNode.DelayTime > 0 {
-		text.WriteString(fmt.Sprintf("⚡ 最低延迟: *%d ms*\n", lowestDelayNode.DelayTime))
-		text.WriteString(fmt.Sprintf("   └ %s\n\n", truncateName(lowestDelayNode.Name, 25)))
+		fmt.Fprintf(&text, "⚡ 最低延迟: *%d ms*\n", lowestDelayNode.DelayTime)
+		fmt.Fprintf(&text, "   └ %s\n\n", truncateName(lowestDelayNode.Name, 25))
 	}
 
 	// 国家分布
@@ -183,7 +183,7 @@ func (h *StatsHandler) Handle(bot *TelegramBot, message *Message) error {
 				prefix = "└"
 			}
 			flag := getCountryFlag(kv.Key)
-			text.WriteString(fmt.Sprintf("%s %s %s: %d\n", prefix, flag, kv.Key, kv.Value))
+			fmt.Fprintf(&text, "%s %s %s: %d\n", prefix, flag, kv.Key, kv.Value)
 		}
 		text.WriteString("\n")
 	}
@@ -197,7 +197,7 @@ func (h *StatsHandler) Handle(bot *TelegramBot, message *Message) error {
 			if i == len(sortedProtocols)-1 {
 				prefix = "└"
 			}
-			text.WriteString(fmt.Sprintf("%s %s: %d\n", prefix, kv.Key, kv.Value))
+			fmt.Fprintf(&text, "%s %s: %d\n", prefix, kv.Key, kv.Value)
 		}
 		text.WriteString("\n")
 	}
@@ -216,7 +216,7 @@ func (h *StatsHandler) Handle(bot *TelegramBot, message *Message) error {
 			if i == len(tagStats)-1 {
 				prefix = "└"
 			}
-			text.WriteString(fmt.Sprintf("%s %s: %d\n", prefix, ts.Name, ts.Count))
+			fmt.Fprintf(&text, "%s %s: %d\n", prefix, ts.Name, ts.Count)
 		}
 	}
 
@@ -334,23 +334,23 @@ func buildAirportUsageOverview(text *strings.Builder) {
 
 	// 构建输出
 	text.WriteString("\n✈️ *机场流量概览*\n")
-	text.WriteString(fmt.Sprintf("├ 机场数量: %d 个\n", len(airportsWithUsage)))
-	text.WriteString(fmt.Sprintf("├ 全局使用: %s / %s (%.1f%%)\n",
-		formatBytesLocal(totalUsed), formatBytesLocal(totalQuota), globalPercent))
+	fmt.Fprintf(text, "├ 机场数量: %d 个\n", len(airportsWithUsage))
+	fmt.Fprintf(text, "├ 全局使用: %s / %s (%.1f%%)\n",
+		formatBytesLocal(totalUsed), formatBytesLocal(totalQuota), globalPercent)
 
 	if nearestExpireAirport != nil {
-		text.WriteString(fmt.Sprintf("├ 最近到期: %s\n", truncateName(nearestExpireAirport.Name, 15)))
-		text.WriteString(fmt.Sprintf("│    └ %s\n", formatExpireTimeLocal(nearestExpireAirport.UsageExpire)))
+		fmt.Fprintf(text, "├ 最近到期: %s\n", truncateName(nearestExpireAirport.Name, 15))
+		fmt.Fprintf(text, "│    └ %s\n", formatExpireTimeLocal(nearestExpireAirport.UsageExpire))
 	}
 
 	if len(lowUsageAirports) > 0 {
-		text.WriteString(fmt.Sprintf("└ ⚠️ 流量不足: %d 个\n", len(lowUsageAirports)))
+		fmt.Fprintf(text, "└ ⚠️ 流量不足: %d 个\n", len(lowUsageAirports))
 		for i, a := range lowUsageAirports {
 			if i >= 3 { // 最多显示3个
-				text.WriteString(fmt.Sprintf("     └ ...等%d个\n", len(lowUsageAirports)-3))
+				fmt.Fprintf(text, "     └ ...等%d个\n", len(lowUsageAirports)-3)
 				break
 			}
-			text.WriteString(fmt.Sprintf("     %s %s\n", "├", truncateName(a.Name, 20)))
+			fmt.Fprintf(text, "     %s %s\n", "├", truncateName(a.Name, 20))
 		}
 	} else {
 		text.WriteString("└ ✓ 所有机场流量充足\n")
@@ -476,7 +476,7 @@ func (h *ProfilesHandler) HandleWithPage(bot *TelegramBot, message *Message, pag
 
 	var text strings.Builder
 	if totalPages > 1 {
-		text.WriteString(fmt.Sprintf("⚡ *检测策略列表* (%d/%d 页)\n\n", page+1, totalPages))
+		fmt.Fprintf(&text, "⚡ *检测策略列表* (%d/%d 页)\n\n", page+1, totalPages)
 	} else {
 		text.WriteString("⚡ *检测策略列表*\n\n")
 	}
@@ -498,15 +498,15 @@ func (h *ProfilesHandler) HandleWithPage(bot *TelegramBot, message *Message, pag
 			mode = "延迟+速度测试"
 		}
 
-		text.WriteString(fmt.Sprintf("%s *%s*\n", status, p.Name))
-		text.WriteString(fmt.Sprintf("   └ 模式: %s", mode))
+		fmt.Fprintf(&text, "%s *%s*\n", status, p.Name)
+		fmt.Fprintf(&text, "   └ 模式: %s", mode)
 		if p.CronExpr != "" {
-			text.WriteString(fmt.Sprintf(" | 定时: `%s`", p.CronExpr))
+			fmt.Fprintf(&text, " | 定时: `%s`", p.CronExpr)
 		}
 		text.WriteString("\n")
 
 		if p.LastRunTime != nil {
-			text.WriteString(fmt.Sprintf("   └ 上次执行: %s\n", p.LastRunTime.Format("01-02 15:04")))
+			fmt.Fprintf(&text, "   └ 上次执行: %s\n", p.LastRunTime.Format("01-02 15:04"))
 		}
 		text.WriteString("\n")
 
@@ -542,7 +542,7 @@ func (h *ProfilesHandler) HandleWithPage(bot *TelegramBot, message *Message, pag
 	}
 
 	if untestedCount > 0 {
-		text.WriteString(fmt.Sprintf("\n📌 *未测速节点: %d*\n", untestedCount))
+		fmt.Fprintf(&text, "\n📌 *未测速节点: %d*\n", untestedCount)
 		keyboard = append(keyboard, []InlineKeyboardButton{
 			NewInlineButton("🔍 选择策略检测未测速节点", "profile_select_untested"),
 		})
@@ -598,7 +598,7 @@ func (h *SubscriptionsHandler) HandleWithPage(bot *TelegramBot, message *Message
 
 	var text strings.Builder
 	if totalPages > 1 {
-		text.WriteString(fmt.Sprintf("📋 *订阅列表* (%d/%d 页)\n\n", page+1, totalPages))
+		fmt.Fprintf(&text, "📋 *订阅列表* (%d/%d 页)\n\n", page+1, totalPages)
 	} else {
 		text.WriteString("📋 *订阅列表*\n\n")
 	}
@@ -612,10 +612,10 @@ func (h *SubscriptionsHandler) HandleWithPage(bot *TelegramBot, message *Message
 		nodeCount := len(s.NodesWithSort)
 		groupCount := len(s.GroupsWithSort)
 
-		text.WriteString(fmt.Sprintf("*%d. %s*\n", i+1, truncateName(s.Name, 20)))
-		text.WriteString(fmt.Sprintf("   └ %d 节点, %d 分组\n", nodeCount, groupCount))
+		fmt.Fprintf(&text, "*%d. %s*\n", i+1, truncateName(s.Name, 20))
+		fmt.Fprintf(&text, "   └ %d 节点, %d 分组\n", nodeCount, groupCount)
 		if s.CreatedAt.Year() > 2000 {
-			text.WriteString(fmt.Sprintf("   └ %s\n", s.CreatedAt.Format("2006-01-02")))
+			fmt.Fprintf(&text, "   └ %s\n", s.CreatedAt.Format("2006-01-02"))
 		}
 		text.WriteString("\n")
 
@@ -687,7 +687,7 @@ func (h *NodesHandler) Handle(bot *TelegramBot, message *Message) error {
 		if i >= 5 {
 			break
 		}
-		countryText.WriteString(fmt.Sprintf("├ %s: %d\n", cs.Country, cs.Count))
+		fmt.Fprintf(&countryText, "├ %s: %d\n", cs.Country, cs.Count)
 	}
 
 	text := fmt.Sprintf(`🌐 *节点信息*
@@ -750,7 +750,7 @@ func (h *TagsHandler) HandleWithPage(bot *TelegramBot, message *Message, page in
 
 	var text strings.Builder
 	if totalPages > 1 {
-		text.WriteString(fmt.Sprintf("🏷️ *标签规则* (%d/%d 页)\n\n", page+1, totalPages))
+		fmt.Fprintf(&text, "🏷️ *标签规则* (%d/%d 页)\n\n", page+1, totalPages)
 	} else {
 		text.WriteString("🏷️ *标签规则*\n\n")
 	}
@@ -763,7 +763,7 @@ func (h *TagsHandler) HandleWithPage(bot *TelegramBot, message *Message, page in
 		if !rule.Enabled {
 			status = "⏸️"
 		}
-		text.WriteString(fmt.Sprintf("%s %s → %s\n", status, rule.Name, rule.TagName))
+		fmt.Fprintf(&text, "%s %s → %s\n", status, rule.Name, rule.TagName)
 
 		// 为每个规则添加执行按钮
 		keyboard = append(keyboard, []InlineKeyboardButton{
@@ -818,22 +818,22 @@ func (h *TasksHandler) Handle(bot *TelegramBot, message *Message) error {
 
 	for _, task := range runningTasks {
 		// 任务名称
-		text.WriteString(fmt.Sprintf("📋 *%s*\n", task.Name))
+		fmt.Fprintf(&text, "📋 *%s*\n", task.Name)
 
 		// 进度信息
 		if task.Total > 0 {
 			percent := float64(task.Progress) / float64(task.Total) * 100
-			text.WriteString(fmt.Sprintf("├ 进度: %d/%d (%.0f%%)\n", task.Progress, task.Total, percent))
+			fmt.Fprintf(&text, "├ 进度: %d/%d (%.0f%%)\n", task.Progress, task.Total, percent)
 		}
 
 		// 当前处理项
 		if task.CurrentItem != "" {
-			text.WriteString(fmt.Sprintf("├ 当前: %s\n", truncateName(task.CurrentItem, 30)))
+			fmt.Fprintf(&text, "├ 当前: %s\n", truncateName(task.CurrentItem, 30))
 		}
 
 		// 状态消息
 		if task.Message != "" {
-			text.WriteString(fmt.Sprintf("└ 状态: %s\n", task.Message))
+			fmt.Fprintf(&text, "└ 状态: %s\n", task.Message)
 		}
 		text.WriteString("\n")
 
@@ -952,7 +952,7 @@ func ToggleProfileEnabled(profileID int) (bool, error) {
 // TriggerTagRule 执行指定标签规则
 func TriggerTagRule(ruleID int) error {
 	if servicesWrapper != nil {
-		go servicesWrapper.TriggerTagRule(ruleID)
+		go func() { _ = servicesWrapper.TriggerTagRule(ruleID) }()
 		return nil
 	}
 	return fmt.Errorf("服务未初始化")
@@ -1037,7 +1037,7 @@ func (h *AirportsHandler) HandleWithPage(bot *TelegramBot, message *Message, pag
 	}
 
 	var text strings.Builder
-	text.WriteString(fmt.Sprintf("✈️ *机场列表* (%d/%d 页)\n\n", page+1, totalPages))
+	fmt.Fprintf(&text, "✈️ *机场列表* (%d/%d 页)\n\n", page+1, totalPages)
 
 	var keyboard [][]InlineKeyboardButton
 
@@ -1053,11 +1053,11 @@ func (h *AirportsHandler) HandleWithPage(bot *TelegramBot, message *Message, pag
 		nodes, _ := models.ListNodesByAirportID(ap.ID)
 		nodeCount := len(nodes)
 
-		text.WriteString(fmt.Sprintf("%s *%s*\n", status, truncateName(ap.Name, 20)))
-		text.WriteString(fmt.Sprintf("   └ 🔗 %s\n", truncateName(ap.URL, 30)))
-		text.WriteString(fmt.Sprintf("   └ 📦 %d 个节点\n", nodeCount))
+		fmt.Fprintf(&text, "%s *%s*\n", status, truncateName(ap.Name, 20))
+		fmt.Fprintf(&text, "   └ 🔗 %s\n", truncateName(ap.URL, 30))
+		fmt.Fprintf(&text, "   └ 📦 %d 个节点\n", nodeCount)
 		if ap.LastRunTime != nil {
-			text.WriteString(fmt.Sprintf("   └ 🕒 上次更新: %s\n", ap.LastRunTime.Format("01-02 15:04")))
+			fmt.Fprintf(&text, "   └ 🕒 上次更新: %s\n", ap.LastRunTime.Format("01-02 15:04"))
 		}
 		text.WriteString("\n")
 

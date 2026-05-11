@@ -35,12 +35,12 @@ func init() {
 
 // ss匹配规则
 type Ss struct {
-	Param  Param       `json:"param"`
-	Server string      `json:"server"`
-	Port   interface{} `json:"port"`
-	Name   string      `json:"name"`
-	Type   string      `json:"type"`
-	Plugin SsPlugin    `json:"plugin"` // SS 插件配置
+	Param  Param    `json:"param"`
+	Server string   `json:"server"`
+	Port   any      `json:"port"`
+	Name   string   `json:"name"`
+	Type   string   `json:"type"`
+	Plugin SsPlugin `json:"plugin"` // SS 插件配置
 }
 type Param struct {
 	Cipher   string `json:"cipher"`

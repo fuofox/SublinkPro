@@ -323,7 +323,7 @@ func IsUUID(id string) bool {
 }
 
 // GetPortString 将 interface{} 类型的端口转换为字符串
-func GetPortString(port interface{}) string {
+func GetPortString(port any) string {
 	switch p := port.(type) {
 	case int:
 		return strconv.Itoa(p)
@@ -337,7 +337,7 @@ func GetPortString(port interface{}) string {
 }
 
 // GetPortInt 将 interface{} 类型的端口转换为整数
-func GetPortInt(port interface{}) int {
+func GetPortInt(port any) int {
 	switch p := port.(type) {
 	case int:
 		return p

@@ -170,7 +170,7 @@ func notifyUserLogin(username, ip string) {
 	payload := notifications.Payload{
 		Title:   "用户登录通知",
 		Message: fmt.Sprintf("用户 %s 已登录\nIP: %s (%s)\n时间: %s", username, ip, location, timeStr),
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"username": username,
 			"ip":       ip,
 			"location": location,

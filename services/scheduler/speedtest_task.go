@@ -66,7 +66,7 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 	defer func() {
 		if r := recover(); r != nil {
 			utils.Error("测速任务执行过程中发生严重错误: %v", r)
-			tm.FailTask(taskID, fmt.Sprintf("任务执行异常: %v", r))
+			_ = tm.FailTask(taskID, fmt.Sprintf("任务执行异常: %v", r))
 		}
 	}()
 
@@ -224,7 +224,6 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 			cancelled = true
 			mu.Unlock()
 			utils.Debug("任务被取消，停止新的延迟测试")
-			break
 		default:
 		}
 
@@ -401,7 +400,7 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 			}
 			// 格式化节点显示项（包含分组和来源信息，方便手机端查看）
 			currentItemDisplay := formatNodeDisplayItem(n.Name, n.Group, n.Source)
-			tm.UpdateProgress(taskID, progressCurrent, currentItemDisplay, map[string]interface{}{
+			_ = tm.UpdateProgress(taskID, progressCurrent, currentItemDisplay, map[string]any{
 				"status":  resultStatus,
 				"phase":   "latency",
 				"latency": latency,
@@ -409,7 +408,7 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 
 			// 同时更新任务的 Total（如果是 mihomo 模式）
 			if speedTestMode != "tcp" && idx == 0 {
-				tm.UpdateTotal(taskID, progressTotal)
+				_ = tm.UpdateTotal(taskID, progressTotal)
 			}
 		}(i, node)
 	}
@@ -419,7 +418,7 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 	// 检查是否被取消
 	if cancelled || ctx.Err() != nil {
 		utils.Info("任务被取消，跳过阶段二 (已完成: %d/%d)", completedCount, totalNodes)
-		tm.UpdateProgress(taskID, int(completedCount), "已取消", nil)
+		_ = tm.UpdateProgress(taskID, int(completedCount), "已取消", nil)
 		// 任务已被 CancelTask 标记为取消，无需再次更新
 		goto applyTags
 	}
@@ -446,7 +445,6 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 				cancelled = true
 				mu.Unlock()
 				utils.Debug("任务被取消，停止新的速度测试")
-				break
 			default:
 			}
 
@@ -589,7 +587,7 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 				}
 
 				var resultStatus string
-				var resultData map[string]interface{}
+				var resultData map[string]any
 
 				if err != nil {
 					atomic.AddInt32(&failCount, 1)
@@ -602,7 +600,7 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 					result.node.DelayTime = result.latency            // 保留延迟测试结果
 					result.node.DelayStatus = constants.StatusSuccess // 延迟测试是成功的
 					resultStatus = "failed"
-					resultData = map[string]interface{}{
+					resultData = map[string]any{
 						"speed":   -1,
 						"latency": result.latency,
 						"error":   err.Error(),
@@ -618,7 +616,7 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 					result.node.DelayTime = result.latency
 					result.node.DelayStatus = constants.StatusSuccess
 					resultStatus = "success"
-					resultData = map[string]interface{}{
+					resultData = map[string]any{
 						"speed":   speed,
 						"latency": result.latency,
 					}
@@ -693,13 +691,13 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 				// 更新任务进度（速度测试占后50%）
 				// 格式化节点显示项（包含分组和来源信息，方便手机端查看）
 				currentItemDisplay := formatNodeDisplayItem(result.node.Name, result.node.Group, result.node.Source)
-				tm.UpdateProgress(taskID, totalNodes+currentCompleted, currentItemDisplay, map[string]interface{}{
+				_ = tm.UpdateProgress(taskID, totalNodes+currentCompleted, currentItemDisplay, map[string]any{
 					"status":  resultStatus,
 					"phase":   "speed",
 					"speed":   result.node.Speed,
 					"latency": result.latency,
 					"data":    resultData,
-					"traffic": map[string]interface{}{
+					"traffic": map[string]any{
 						"totalBytes":     currentTrafficTotal,
 						"totalFormatted": currentTrafficFormatted,
 					},
@@ -752,16 +750,16 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 		// 格式化流量统计数据
 		trafficAcc.mutex.Lock()
 		// 构建流量统计对象
-		trafficData := map[string]interface{}{
+		trafficData := map[string]any{
 			"totalBytes":     trafficAcc.totalBytes,
 			"totalFormatted": formatBytes(trafficAcc.totalBytes),
 		}
 
 		// 按分组统计（仅开关开启时包含）
 		if trafficAcc.enableGroup && len(trafficAcc.groupBytes) > 0 {
-			formattedGroupStats := make(map[string]map[string]interface{})
+			formattedGroupStats := make(map[string]map[string]any)
 			for group, bytes := range trafficAcc.groupBytes {
-				formattedGroupStats[group] = map[string]interface{}{
+				formattedGroupStats[group] = map[string]any{
 					"bytes":     bytes,
 					"formatted": formatBytes(bytes),
 				}
@@ -771,9 +769,9 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 
 		// 按来源统计（仅开关开启时包含）
 		if trafficAcc.enableSource && len(trafficAcc.sourceBytes) > 0 {
-			formattedSourceStats := make(map[string]map[string]interface{})
+			formattedSourceStats := make(map[string]map[string]any)
 			for source, bytes := range trafficAcc.sourceBytes {
-				formattedSourceStats[source] = map[string]interface{}{
+				formattedSourceStats[source] = map[string]any{
 					"bytes":     bytes,
 					"formatted": formatBytes(bytes),
 				}
@@ -789,7 +787,7 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 		trafficTotal := trafficAcc.totalBytes
 		trafficAcc.mutex.Unlock()
 
-		resultData := map[string]interface{}{
+		resultData := map[string]any{
 			"success": successCount,
 			"fail":    failCount,
 			"total":   totalNodes,
@@ -809,13 +807,13 @@ func RunSpeedTestWithConfig(nodes []models.Node, trigger models.TaskTrigger, pro
 			resultData["unlock"] = models.BuildUnlockAggregate(unlockSummaries, unlockProviders)
 		}
 		utils.Info("测速任务完成 - 总计: %d, 成功: %d, 失败: %d, 流量: %s", totalNodes, successCount, failCount, formatBytes(trafficTotal))
-		tm.CompleteTask(taskID, fmt.Sprintf("测速完成 (成功: %d, 失败: %d, 流量: %s)", successCount, failCount, formatBytes(trafficTotal)), resultData)
+		_ = tm.CompleteTask(taskID, fmt.Sprintf("测速完成 (成功: %d, 失败: %d, 流量: %s)", successCount, failCount, formatBytes(trafficTotal)), resultData)
 
 		// 广播测速完成通知（让用户在通知中心看到）
 		notifications.Publish("task.speed_test_completed", notifications.Payload{
 			Title:   "节点测速完成",
 			Message: fmt.Sprintf("测速完成: 成功 %d 个, 失败 %d 个, 消耗流量 %s", successCount, failCount, formatBytes(trafficTotal)),
-			Data: map[string]interface{}{
+			Data: map[string]any{
 				"status":           "success",
 				"success":          successCount,
 				"success_count":    successCount,

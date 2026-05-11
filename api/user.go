@@ -37,8 +37,11 @@ func UserAdd(c *gin.Context) {
 func UserMe(c *gin.Context) {
 	// 获取jwt中的username
 	// 返回用户信息
-	username, _ := c.Get("username")
-	user := &models.User{Username: username.(string)}
+	username, ok := currentUsernameFromContext(c)
+	if !ok {
+		return
+	}
+	user := &models.User{Username: username}
 	err := user.Find()
 	if err != nil {
 		utils.FailWithMsg(c, err.Error())
@@ -73,8 +76,11 @@ func UserMe(c *gin.Context) {
 func UserPages(c *gin.Context) {
 	// 获取jwt中的username
 	// 返回用户信息
-	username, _ := c.Get("username")
-	user := &models.User{Username: username.(string)}
+	username, ok := currentUsernameFromContext(c)
+	if !ok {
+		return
+	}
+	user := &models.User{Username: username}
 	users, err := user.All()
 	if err != nil {
 		utils.Error("获取用户信息失败: %v", err)
@@ -102,8 +108,11 @@ func UserSet(c *gin.Context) {
 		utils.FailWithMsg(c, "用户名或密码不能为空")
 		return
 	}
-	username, _ := c.Get("username")
-	user := &models.User{Username: username.(string)}
+	username, ok := currentUsernameFromContext(c)
+	if !ok {
+		return
+	}
+	user := &models.User{Username: username}
 
 	// 先查找用户获取ID
 	if err := user.Find(); err != nil {
@@ -152,8 +161,11 @@ func UserChangePassword(c *gin.Context) {
 		return
 	}
 
-	username, _ := c.Get("username")
-	user := &models.User{Username: username.(string)}
+	username, ok := currentUsernameFromContext(c)
+	if !ok {
+		return
+	}
+	user := &models.User{Username: username}
 	if err := user.Find(); err != nil {
 		utils.FailWithMsg(c, "用户不存在")
 		return
@@ -197,8 +209,11 @@ func UserUpdateProfile(c *gin.Context) {
 	}
 
 	// 获取当前用户
-	username, _ := c.Get("username")
-	user := &models.User{Username: username.(string)}
+	username, ok := currentUsernameFromContext(c)
+	if !ok {
+		return
+	}
+	user := &models.User{Username: username}
 
 	// 查找用户获取ID
 	if err := user.Find(); err != nil {
@@ -212,7 +227,7 @@ func UserUpdateProfile(c *gin.Context) {
 	}
 
 	// 使用 map 更新字段，避免 GORM 忽略零值
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"username": req.Username,
 		"nickname": req.Nickname,
 	}

@@ -275,7 +275,7 @@ func (user *User) BeginTOTPEnrollment() (string, string, []string, error) {
 	if err != nil {
 		return "", "", nil, err
 	}
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"totp_pending_secret":         encryptedSecret,
 		"totp_pending_recovery_codes": encodedCodes,
 	}
@@ -300,7 +300,7 @@ func (user *User) ConfirmTOTPEnrollment(code string, now time.Time) error {
 	if !VerifyTOTPCode(pendingSecret, code, now) {
 		return fmt.Errorf("验证码错误或已过期")
 	}
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"totp_enabled":                true,
 		"totp_secret":                 user.TOTPPendingSecret,
 		"totp_pending_secret":         "",
@@ -388,7 +388,7 @@ func (user *User) RegenerateRecoveryCodes() ([]string, error) {
 }
 
 func (user *User) DisableTOTP() error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"totp_enabled":                false,
 		"totp_secret":                 "",
 		"totp_pending_secret":         "",

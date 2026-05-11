@@ -32,7 +32,7 @@ func assertEqualFlexPort(t *testing.T, field string, expected int, actual FlexPo
 }
 
 // assertEqualIntInterface 验证 interface{} 类型的整数（用于协议结构体的 Port 字段）
-func assertEqualIntInterface(t *testing.T, field string, expected, actual interface{}) {
+func assertEqualIntInterface(t *testing.T, field string, expected, actual any) {
 	t.Helper()
 	expectedInt := toInt(expected)
 	actualInt := toInt(actual)
@@ -42,7 +42,7 @@ func assertEqualIntInterface(t *testing.T, field string, expected, actual interf
 }
 
 // toInt 将 interface{} 转换为 int
-func toInt(v interface{}) int {
+func toInt(v any) int {
 	switch val := v.(type) {
 	case int:
 		return val
@@ -89,6 +89,33 @@ func assertContains(t *testing.T, field string, str, substr string) {
 	if !found {
 		t.Errorf("%s 应包含 [%s], 实际: [%s]", field, substr, str)
 	}
+}
+
+func mustMap(t *testing.T, field string, value any) map[string]any {
+	t.Helper()
+	m, ok := value.(map[string]any)
+	if !ok {
+		t.Fatalf("%s 类型不匹配: 期望 map[string]any, 实际 %#v", field, value)
+	}
+	return m
+}
+
+func mustString(t *testing.T, field string, value any) string {
+	t.Helper()
+	s, ok := value.(string)
+	if !ok {
+		t.Fatalf("%s 类型不匹配: 期望 string, 实际 %#v", field, value)
+	}
+	return s
+}
+
+func mustBool(t *testing.T, field string, value any) bool {
+	t.Helper()
+	b, ok := value.(bool)
+	if !ok {
+		t.Fatalf("%s 类型不匹配: 期望 bool, 实际 %#v", field, value)
+	}
+	return b
 }
 
 // AssertEqualString 导出版本，供其他测试包复用。

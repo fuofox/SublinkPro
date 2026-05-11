@@ -29,9 +29,9 @@ type TaskReporter interface {
 	// UpdateTotal 更新任务总数（在解析完订阅后调用）
 	UpdateTotal(total int)
 	// ReportProgress 报告任务进度
-	ReportProgress(current int, currentItem string, result interface{})
+	ReportProgress(current int, currentItem string, result any)
 	// ReportComplete 报告任务完成
-	ReportComplete(message string, result interface{})
+	ReportComplete(message string, result any)
 	// ReportFail 报告任务失败
 	ReportFail(errMsg string)
 }
@@ -39,10 +39,10 @@ type TaskReporter interface {
 // NoOpTaskReporter 空实现，当没有传入reporter时使用
 type NoOpTaskReporter struct{}
 
-func (n *NoOpTaskReporter) UpdateTotal(total int)                                              {}
-func (n *NoOpTaskReporter) ReportProgress(current int, currentItem string, result interface{}) {}
-func (n *NoOpTaskReporter) ReportComplete(message string, result interface{})                  {}
-func (n *NoOpTaskReporter) ReportFail(errMsg string)                                           {}
+func (n *NoOpTaskReporter) UpdateTotal(total int)                                      {}
+func (n *NoOpTaskReporter) ReportProgress(current int, currentItem string, result any) {}
+func (n *NoOpTaskReporter) ReportComplete(message string, result any)                  {}
+func (n *NoOpTaskReporter) ReportFail(errMsg string)                                   {}
 
 // UsageInfo 订阅用量信息（从 subscription-userinfo header 解析）
 type UsageInfo struct {
@@ -254,7 +254,7 @@ func LoadClashConfigFromURLWithReporter(id int, urlStr string, subName string, d
 		notifications.Publish("subscription.sync_failed", notifications.Payload{
 			Title:   title,
 			Message: message,
-			Data: map[string]interface{}{
+			Data: map[string]any{
 				"id":       id,
 				"name":     subName,
 				"status":   "error",
@@ -264,7 +264,7 @@ func LoadClashConfigFromURLWithReporter(id int, urlStr string, subName string, d
 		})
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// 解析用量信息（仅当开启获取用量信息时）
 	var usageInfo *UsageInfo
@@ -294,7 +294,7 @@ func LoadClashConfigFromURLWithReporter(id int, urlStr string, subName string, d
 		notifications.Publish("subscription.sync_failed", notifications.Payload{
 			Title:   "订阅更新失败",
 			Message: fmt.Sprintf("❌订阅【%s】读取响应失败: %v", subName, err),
-			Data: map[string]interface{}{
+			Data: map[string]any{
 				"id":     id,
 				"name":   subName,
 				"status": "error",
@@ -353,7 +353,7 @@ func LoadClashConfigFromURLWithReporter(id int, urlStr string, subName string, d
 		notifications.Publish("subscription.sync_failed", notifications.Payload{
 			Title:   "订阅更新失败",
 			Message: fmt.Sprintf("❌订阅【%s】解析失败或未找到节点", subName),
-			Data: map[string]interface{}{
+			Data: map[string]any{
 				"id":     id,
 				"name":   subName,
 				"status": "error",
@@ -664,7 +664,7 @@ func scheduleClashToNodeLinks(id int, proxys []protocol.Proxy, subName string, r
 
 		// 更新进度（通过 reporter 报告）
 		processedCount++
-		reporter.ReportProgress(processedCount, proxy.Name, map[string]interface{}{
+		reporter.ReportProgress(processedCount, proxy.Name, map[string]any{
 			"status":  nodeStatus,
 			"added":   addSuccessCount,
 			"skipped": skipCount,
@@ -739,7 +739,7 @@ func scheduleClashToNodeLinks(id int, proxys []protocol.Proxy, subName string, r
 		return err1
 	}
 	// 通过 reporter 报告任务完成
-	reporter.ReportComplete(fmt.Sprintf("订阅更新完成 (新增: %d, 更新: %d, 已存在: %d, 删除: %d)", addSuccessCount, actualUpdateCount, skipCount, deleteCount), map[string]interface{}{
+	reporter.ReportComplete(fmt.Sprintf("订阅更新完成 (新增: %d, 更新: %d, 已存在: %d, 删除: %d)", addSuccessCount, actualUpdateCount, skipCount, deleteCount), map[string]any{
 		"added":   addSuccessCount,
 		"updated": actualUpdateCount,
 		"skipped": skipCount,
@@ -752,7 +752,7 @@ func scheduleClashToNodeLinks(id int, proxys []protocol.Proxy, subName string, r
 
 	// 构建用量信息文本
 	var usageText string
-	usageData := make(map[string]interface{})
+	usageData := make(map[string]any)
 	if usageInfo != nil {
 		if usageInfo.Total != -1 {
 			usageText = fmt.Sprintf("\n📊 用量信息\n⬆️ 上传: %s\n⬇️ 下载: %s\n📦 总量: %s\n⏳ 过期: %s",
@@ -767,7 +767,7 @@ func scheduleClashToNodeLinks(id int, proxys []protocol.Proxy, subName string, r
 		}
 	}
 
-	nData := map[string]interface{}{
+	nData := map[string]any{
 		"id":       id,
 		"name":     subName,
 		"status":   "success",
@@ -1048,7 +1048,7 @@ func applyAirportIntraNodeUniquify(airport *models.Airport, proxys []protocol.Pr
 }
 
 // parseProtoFromLink 根据协议类型解析链接获取结构体
-func parseProtoFromLink(link string, protoType string) (interface{}, error) {
+func parseProtoFromLink(link string, protoType string) (any, error) {
 	protoObj, detectedProto, err := protocol.DecodeProtocolObject(link)
 	if err != nil {
 		return nil, err

@@ -25,9 +25,9 @@ func ResetUser(username string, password string) {
 	// 遍历所有用户
 	for _, user := range users {
 		// 删除所有用户
-		user.Del()
+		_ = user.Del()
 	}
 
 	User = &models.User{Username: username, Password: password, Role: "admin", Nickname: "管理员"}
-	User.Create()
+	_ = User.Create()
 }

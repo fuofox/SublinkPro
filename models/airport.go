@@ -32,7 +32,7 @@ func (h AirportRequestHeaders) Value() (driver.Value, error) {
 	return string(data), nil
 }
 
-func (h *AirportRequestHeaders) Scan(value interface{}) error {
+func (h *AirportRequestHeaders) Scan(value any) error {
 	if value == nil {
 		*h = AirportRequestHeaders{}
 		return nil
@@ -280,7 +280,7 @@ func (a *Airport) Del() error {
 
 // UpdateRunTime 更新运行时间 (Write-Through)
 func (a *Airport) UpdateRunTime(lastRun, nextRun *time.Time) error {
-	err := database.DB.Model(a).Select("LastRunTime", "NextRunTime").Updates(map[string]interface{}{
+	err := database.DB.Model(a).Select("LastRunTime", "NextRunTime").Updates(map[string]any{
 		"LastRunTime": lastRun,
 		"NextRunTime": nextRun,
 	}).Error
@@ -386,7 +386,7 @@ func BatchUpdateAirports(ids []int, params AirportBatchUpdateParams) ([]Airport,
 		}
 
 		for _, airport := range airports {
-			updates := make(map[string]interface{})
+			updates := make(map[string]any)
 			if params.ApplyGroup {
 				updates["group"] = params.Group
 			}
@@ -436,7 +436,7 @@ func BatchUpdateAirports(ids []int, params AirportBatchUpdateParams) ([]Airport,
 
 // UpdateUsageInfo 更新用量信息 (Write-Through)
 func (a *Airport) UpdateUsageInfo(upload, download, total, expire int64) error {
-	err := database.DB.Model(a).Select("UsageUpload", "UsageDownload", "UsageTotal", "UsageExpire").Updates(map[string]interface{}{
+	err := database.DB.Model(a).Select("UsageUpload", "UsageDownload", "UsageTotal", "UsageExpire").Updates(map[string]any{
 		"UsageUpload":   upload,
 		"UsageDownload": download,
 		"UsageTotal":    total,

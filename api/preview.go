@@ -49,7 +49,7 @@ type PreviewRequest struct {
 	DeduplicationRule  string   `json:"DeduplicationRule"`  // 去重规则配置
 
 	// 兼容旧版本：节点名称列表（已废弃，保留向后兼容）
-	Nodes []interface{} `json:"Nodes"` // 可以是节点ID或节点名称
+	Nodes []any `json:"Nodes"` // 可以是节点ID或节点名称
 }
 
 // PreviewSubscriptionNodes 预览订阅节点

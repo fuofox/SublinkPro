@@ -16,13 +16,12 @@ import (
 )
 
 func ImportDatabaseMigration(c *gin.Context) {
-	usernameValue, exists := c.Get("username")
-	if !exists {
-		utils.Forbidden(c, "未获取到当前用户")
+	username, ok := currentUsernameFromContext(c)
+	if !ok {
 		return
 	}
 
-	currentUser := &models.User{Username: usernameValue.(string)}
+	currentUser := &models.User{Username: username}
 	if err := currentUser.Find(); err != nil {
 		utils.Forbidden(c, "当前用户不存在")
 		return

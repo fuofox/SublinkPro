@@ -7,13 +7,13 @@ import (
 )
 
 type ProtocolDemo struct {
-	Name     string      `json:"name"`
-	Server   string      `json:"server"`
-	Port     interface{} `json:"port"`
-	Token    string      `json:"token"`
-	Mode     string      `json:"mode"`
-	TLS      bool        `json:"tls"`
-	Insecure bool        `json:"insecure"`
+	Name     string `json:"name"`
+	Server   string `json:"server"`
+	Port     any    `json:"port"`
+	Token    string `json:"token"`
+	Mode     string `json:"mode"`
+	TLS      bool   `json:"tls"`
+	Insecure bool   `json:"insecure"`
 }
 
 func init() {
