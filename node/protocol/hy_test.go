@@ -119,3 +119,30 @@ func TestHY2NameModification(t *testing.T) {
 
 	t.Logf("✓ Hysteria2 名称修改测试通过: %s -> %s", original.Name, final.Name)
 }
+
+// TestHY2IPv6RawUpdatePreservesBracketedAuthority 覆盖原始信息编辑器保存 IPv6 HY2 节点的回归场景。
+// DecodeHY2URL 会把 Host 规范化为不带方括号的 IPv6；再次编码时必须恢复 URL authority 所需的方括号。
+func TestHY2IPv6RawUpdatePreservesBracketedAuthority(t *testing.T) {
+	original := "hy2://test-password@[2001:db8::3]:22000?insecure=1&sni=example.com#ipv6-hy2-test"
+
+	updated, err := UpdateNodeLinkFields(original, `{"Host":"2001:db8::3","Sni":"example.com"}`)
+	if err != nil {
+		t.Fatalf("更新 HY2 IPv6 原始字段失败: %v", err)
+	}
+	if !strings.Contains(updated, "@[2001:db8::3]:22000") {
+		t.Fatalf("IPv6 authority 应保留方括号，实际链接: %s", updated)
+	}
+
+	decoded, err := DecodeHY2URL(updated)
+	if err != nil {
+		t.Fatalf("回写后的 HY2 IPv6 链接应可解析: %v", err)
+	}
+	assertEqualString(t, "Host", "2001:db8::3", decoded.Host)
+	assertEqualIntInterface(t, "Port", 22000, decoded.Port)
+
+	identity, err := ExtractLinkIdentity(updated)
+	if err != nil {
+		t.Fatalf("提取 HY2 IPv6 身份信息失败: %v", err)
+	}
+	assertEqualString(t, "Address", "[2001:db8::3]:22000", identity.Address)
+}

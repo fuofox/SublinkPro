@@ -75,7 +75,7 @@ func DecodeSocks5URL(s string) (Socks5, error) {
 func EncodeSocks5URL(s Socks5) string {
 	u := url.URL{
 		Scheme:   "socks5",
-		Host:     fmt.Sprintf("%s:%s", s.Server, utils.GetPortString(s.Port)),
+		Host:     formatURLHostPort(s.Server, utils.GetPortString(s.Port)),
 		Fragment: s.Name,
 	}
 	if s.Username != "" {

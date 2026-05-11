@@ -193,7 +193,7 @@ func EncodeWireGuardURL(wg WireGuard) string {
 	u := url.URL{
 		Scheme:   "wireguard",
 		User:     url.User(wg.PrivateKey),
-		Host:     fmt.Sprintf("%s:%s", wg.Server, utils.GetPortString(wg.Port)),
+		Host:     formatURLHostPort(wg.Server, utils.GetPortString(wg.Port)),
 		Fragment: wg.Name,
 	}
 

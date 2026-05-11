@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"reflect"
 	"sort"
@@ -476,8 +477,13 @@ func buildIdentity(protocolName, name, host, port string) LinkIdentity {
 		Name:     name,
 		Host:     host,
 		Port:     port,
-		Address:  fmt.Sprintf("%s:%s", host, port),
+		Address:  formatURLHostPort(host, port),
 	}
+}
+
+// formatURLHostPort 按 URL authority 规则拼接主机与端口，避免 IPv6 地址丢失方括号。
+func formatURLHostPort(host, port string) string {
+	return net.JoinHostPort(strings.Trim(host, "[]"), port)
 }
 
 // newProtocolSpec 将具体协议的编解码函数包装为统一的元数据描述，供注册表与 UI 共用。

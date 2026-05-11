@@ -141,7 +141,7 @@ func DecodeTuicURL(s string) (Tuic, error) {
 func EncodeTuicURL(t Tuic) string {
 	u := url.URL{
 		Scheme:   "tuic",
-		Host:     fmt.Sprintf("%s:%s", t.Host, utils.GetPortString(t.Port)),
+		Host:     formatURLHostPort(t.Host, utils.GetPortString(t.Port)),
 		Fragment: t.Name,
 	}
 	// 设置用户信息：uuid:password

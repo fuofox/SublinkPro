@@ -89,7 +89,7 @@ func EncodeAnyTLSURL(a AnyTLS) string {
 	u := url.URL{
 		Scheme:   "anytls",
 		User:     url.User(a.Password),
-		Host:     fmt.Sprintf("%s:%s", a.Server, utils.GetPortString(a.Port)),
+		Host:     formatURLHostPort(a.Server, utils.GetPortString(a.Port)),
 		Fragment: a.Name,
 	}
 	q := u.Query()

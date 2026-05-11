@@ -2,7 +2,6 @@ package protocol
 
 import (
 	"fmt"
-	"net"
 	"net/url"
 	"strconv"
 	"strings"
@@ -119,7 +118,7 @@ func EncodeMieruURL(m Mieru) string {
 	if portRange == "" {
 		port := strings.TrimSpace(utils.GetPortString(m.Port))
 		if port != "" && port != "0" && port != "<nil>" {
-			host = net.JoinHostPort(strings.Trim(server, "[]"), port)
+			host = formatURLHostPort(server, port)
 		}
 	}
 

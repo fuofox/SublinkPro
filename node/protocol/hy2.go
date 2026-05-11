@@ -61,7 +61,7 @@ func EncodeHY2URL(hy2 HY2) string {
 	u := url.URL{
 		Scheme:   "hy2",
 		User:     url.User(hy2.Password),
-		Host:     fmt.Sprintf("%s:%s", hy2.Host, utils.GetPortString(hy2.Port)),
+		Host:     formatURLHostPort(hy2.Host, utils.GetPortString(hy2.Port)),
 		Fragment: hy2.Name,
 	}
 	q := u.Query()

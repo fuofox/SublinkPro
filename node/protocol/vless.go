@@ -162,7 +162,7 @@ func EncodeVLESSURL(v VLESS) string {
 	u := url.URL{
 		Scheme: "vless",
 		User:   url.User(v.Uuid),
-		Host:   fmt.Sprintf("%s:%s", v.Server, utils.GetPortString(v.Port)),
+		Host:   formatURLHostPort(v.Server, utils.GetPortString(v.Port)),
 	}
 	q := u.Query()
 

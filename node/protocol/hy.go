@@ -50,7 +50,7 @@ func EncodeHYURL(hy HY) string {
 	}
 	u := url.URL{
 		Scheme:   "hysteria",
-		Host:     fmt.Sprintf("%s:%s", hy.Host, utils.GetPortString(hy.Port)),
+		Host:     formatURLHostPort(hy.Host, utils.GetPortString(hy.Port)),
 		Fragment: hy.Name,
 	}
 	q := u.Query()

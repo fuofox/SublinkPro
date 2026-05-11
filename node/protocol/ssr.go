@@ -113,7 +113,7 @@ func DecodeSSRURL(s string) (Ssr, error) {
 	method := param[len(param)-3]
 	protocol := param[len(param)-4]
 	port, _ := strconv.Atoi(param[len(param)-5])
-	server := utils.UnwrapIPv6Host(param[len(param)-6])
+	server := utils.UnwrapIPv6Host(strings.Join(param[:len(param)-5], ":"))
 	// 如果没有备注默认使用服务器+端口作为备注
 	if remarks == "" {
 		remarks = server + ":" + strconv.Itoa(port)

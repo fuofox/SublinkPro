@@ -67,7 +67,7 @@ func EncodeTrojanURL(t Trojan) string {
 	u := url.URL{
 		Scheme: "trojan",
 		User:   url.User(t.Password),
-		Host:   fmt.Sprintf("%s:%s", t.Hostname, utils.GetPortString(t.Port)),
+		Host:   formatURLHostPort(t.Hostname, utils.GetPortString(t.Port)),
 	}
 	q := u.Query()
 	q.Set("peer", t.Query.Peer)

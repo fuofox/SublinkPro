@@ -100,7 +100,7 @@ func EncodeProtocolDemoURL(p ProtocolDemo) string {
 
 	return (&url.URL{
 		Scheme:   "demo",
-		Host:     fmt.Sprintf("%s:%s", p.Server, utils.GetPortString(p.Port)),
+		Host:     formatURLHostPort(p.Server, utils.GetPortString(p.Port)),
 		RawQuery: query.Encode(),
 		Fragment: p.Name,
 	}).String()

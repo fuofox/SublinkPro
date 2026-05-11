@@ -178,7 +178,7 @@ func EncodeHTTPURL(h HTTP) string {
 
 	u := url.URL{
 		Scheme:   scheme,
-		Host:     fmt.Sprintf("%s:%s", h.Server, utils.GetPortString(h.Port)),
+		Host:     formatURLHostPort(h.Server, utils.GetPortString(h.Port)),
 		Fragment: h.Name,
 	}
 
