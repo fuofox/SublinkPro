@@ -22,7 +22,6 @@ import (
 	"sublink/services/telegram"
 	"sublink/utils"
 
-	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -131,7 +130,7 @@ func executeDatabaseMigration(ctx context.Context, taskID, uploadPath, originalN
 		}()
 	}
 
-	sourceDB, err := gorm.Open(sqlite.Open(sourceBundle.DBPath), &gorm.Config{})
+	sourceDB, err := database.OpenMigrationSourceSQLite(sourceBundle.DBPath)
 	if err != nil {
 		return nil, fmt.Errorf("打开源 SQLite 数据库失败: %w", err)
 	}

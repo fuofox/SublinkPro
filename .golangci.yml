@@ -86,17 +86,16 @@ linters:
             - "**/*.go"
             - "!**/database/*.go"
             - "!**/database/**/*.go"
-            - "!**/services/database_migration.go"
             - "!**/*_test.go"
           deny:
             - pkg: gorm.io/driver/mysql
-              desc: "数据库驱动应集中在 database 包或迁移入口"
+              desc: "数据库驱动应集中在 database 包初始化"
             - pkg: gorm.io/driver/postgres
-              desc: "数据库驱动应集中在 database 包或迁移入口"
+              desc: "数据库驱动应集中在 database 包初始化"
             - pkg: github.com/glebarez/sqlite
-              desc: "数据库驱动应集中在 database 包或迁移入口"
+              desc: "数据库驱动应集中在 database 包初始化"
             - pkg: github.com/go-sql-driver/mysql
-              desc: "数据库驱动应集中在 database 包或迁移入口"
+              desc: "数据库驱动应集中在 database 包初始化"
     errcheck:
       check-type-assertions: true
       check-blank: false

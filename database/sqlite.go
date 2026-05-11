@@ -101,6 +101,11 @@ func defaultSQLiteDSN(dbPath string) string {
 	return "sqlite://" + dbFile
 }
 
+// OpenMigrationSourceSQLite 打开上传的源 SQLite 数据库，供跨库迁移读取旧数据使用。
+func OpenMigrationSourceSQLite(dbPath string) (*gorm.DB, error) {
+	return gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+}
+
 func openDatabase(rawDSN string, gormConfig *gorm.Config) (*gorm.DB, *dbConnectionInfo, error) {
 	info, err := buildConnectionInfo(rawDSN)
 	if err != nil {
