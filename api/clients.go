@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -73,6 +74,14 @@ var (
 	syntheticSurgePath    string
 	syntheticTemplateErr  error
 )
+
+func getRemoteSubscription(ctx context.Context, link string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, link, nil)
+	if err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(req)
+}
 
 func setResolvedSubscriptionName(c *gin.Context, subName string) {
 	c.Set(subscriptionNameContextKey, subName)
@@ -443,7 +452,7 @@ func renderPreparedV2ray(c *gin.Context, prepared preparedClientResponse) {
 			continue
 		//如果是订阅转换（以 http:// 或 https:// 开头，但不是HTTP/HTTPS代理节点）
 		case (strings.HasPrefix(v.Link, "http://") || strings.HasPrefix(v.Link, "https://")) && !protocol.IsHTTPLink(v.Link):
-			resp, err := http.Get(v.Link)
+			resp, err := getRemoteSubscription(c.Request.Context(), v.Link)
 			if err != nil {
 				utils.Error("Error getting link: %v", err)
 				return
@@ -611,7 +620,7 @@ func renderPreparedClash(c *gin.Context, prepared preparedClientResponse) {
 			continue
 		//如果是订阅转换（以 http:// 或 https:// 开头，但不是HTTP/HTTPS代理节点）
 		case (strings.HasPrefix(v.Link, "http://") || strings.HasPrefix(v.Link, "https://")) && !protocol.IsHTTPLink(v.Link):
-			resp, err := http.Get(v.Link)
+			resp, err := getRemoteSubscription(c.Request.Context(), v.Link)
 			if err != nil {
 				utils.Error("获取包含链接失败: %v", err)
 				continue
@@ -730,7 +739,7 @@ func renderPreparedSurge(c *gin.Context, prepared preparedClientResponse) {
 			continue
 		//如果是订阅转换（以 http:// 或 https:// 开头，但不是HTTP/HTTPS代理节点）
 		case (strings.HasPrefix(v.Link, "http://") || strings.HasPrefix(v.Link, "https://")) && !protocol.IsHTTPLink(v.Link):
-			resp, err := http.Get(v.Link)
+			resp, err := getRemoteSubscription(c.Request.Context(), v.Link)
 			if err != nil {
 				utils.Error("Error getting link: %v", err)
 				return
@@ -797,7 +806,7 @@ func renderPreparedSurge(c *gin.Context, prepared preparedClientResponse) {
 		}
 		DecodeClash = res
 	}
-	_, _ = c.Writer.WriteString(string(interval + "\n" + DecodeClash))
+	_, _ = c.Writer.WriteString(interval + "\n" + DecodeClash)
 }
 
 // getSubscriptionUsage 计算订阅的流量使用情况

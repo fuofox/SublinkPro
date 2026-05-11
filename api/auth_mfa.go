@@ -496,8 +496,3 @@ func ReauthMFA(c *gin.Context) {
 func GenerateScopedMFAResetToken(username string, expiresAt time.Time) (string, error) {
 	return signMFAResetToken(username, expiresAt)
 }
-
-func cleanupExpiredMFAChallenges() {
-	nowUnix := time.Now().Unix()
-	_ = database.DB.Where("expires_at < ? OR consumed_at > 0", nowUnix).Delete(&models.MFALoginChallenge{}).Error
-}

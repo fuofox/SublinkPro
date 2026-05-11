@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http/httptest"
 	"testing"
@@ -69,11 +70,11 @@ func performJSONRequest(t *testing.T, handler gin.HandlerFunc, method string, bo
 	}
 
 	recorder := httptest.NewRecorder()
-	context, _ := gin.CreateTestContext(recorder)
-	context.Request = httptest.NewRequest(method, "/", bytes.NewReader(requestBody))
-	context.Request.Header.Set("Content-Type", "application/json")
+	ginContext, _ := gin.CreateTestContext(recorder)
+	ginContext.Request = httptest.NewRequestWithContext(context.Background(), method, "/", bytes.NewReader(requestBody))
+	ginContext.Request.Header.Set("Content-Type", "application/json")
 
-	handler(context)
+	handler(ginContext)
 	return recorder
 }
 

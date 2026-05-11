@@ -69,18 +69,6 @@ var (
 	// autoTagRulesApplier 自动标签规则应用函数
 	// 由 services.InitSchedulerDependencies() 注入
 	autoTagRulesApplier AutoTagRulesApplier
-
-	// latencyAdjustInterval 延迟测试并发调整检查间隔
-	// 每完成这么多个任务后检查一次是否需要调整并发数
-	// 单位：任务个数
-	// 默认值：5（即每完成5个延迟测试任务检查一次）
-	latencyAdjustInterval = 5
-
-	// speedAdjustInterval 速度测试并发调整检查间隔
-	// 每完成这么多个任务后检查一次是否需要调整并发数
-	// 单位：任务个数
-	// 默认值：3（速度测试检查更频繁，因为对系统资源影响更大）
-	speedAdjustInterval = 3
 )
 
 // ================================================================================
@@ -120,9 +108,6 @@ func InjectDependencies(
 	adaptiveConcurrencyFactory = factory
 	taskManagerGetter = tmGetter
 	autoTagRulesApplier = tagApplier
-	latencyAdjustInterval = latencyInterval
-	speedAdjustInterval = speedInterval
-	// 同步更新导出变量
 	latencyAdjustCheckInterval = latencyInterval
 	speedAdjustCheckInterval = speedInterval
 }

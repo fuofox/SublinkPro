@@ -957,19 +957,6 @@ func generateSurgeProxyGroups(groups []ACLProxyGroup, enableIncludeAll bool) str
 	return strings.Join(lines, "\n")
 }
 
-// extractSurgeRegexFilter 从正则模式列表中提取 Surge 格式的 filter
-// 输入: ["(香港|HK)", "(日本|JP)"]
-// 输出: "香港|HK|日本|JP"
-func extractSurgeRegexFilter(filters []string) string {
-	var allOptions []string
-	for _, f := range filters {
-		// 去除首尾括号，提取内部选项
-		inner := strings.TrimPrefix(strings.TrimSuffix(f, ")"), "(")
-		allOptions = append(allOptions, inner)
-	}
-	return strings.Join(allOptions, "|")
-}
-
 // generateSurgeRules 生成 Surge 格式的规则
 func generateSurgeRules(rulesets []ACLRuleset, expand bool, useProxy bool, proxyLink string) (string, error) {
 	var lines []string

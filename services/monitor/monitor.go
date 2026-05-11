@@ -64,10 +64,8 @@ var (
 	once      sync.Once
 
 	// CPU使用率计算相关
-	lastCPUTime  time.Time
-	lastUserTime float64
-	lastSysTime  float64
-	cpuMutex     sync.Mutex
+	lastCPUTime time.Time
+	cpuMutex    sync.Mutex
 )
 
 // init 初始化启动时间

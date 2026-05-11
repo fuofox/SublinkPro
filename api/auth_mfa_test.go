@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base32"
@@ -74,10 +75,10 @@ func performFormRequest(t *testing.T, handler gin.HandlerFunc, values map[string
 
 	body := bytes.NewBufferString(encodeForm(values))
 	recorder := httptest.NewRecorder()
-	context, _ := gin.CreateTestContext(recorder)
-	context.Request = httptest.NewRequest(http.MethodPost, "/", body)
-	context.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	handler(context)
+	ginContext, _ := gin.CreateTestContext(recorder)
+	ginContext.Request = httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/", body)
+	ginContext.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	handler(ginContext)
 	return recorder
 }
 
@@ -98,13 +99,13 @@ func performJSONRequestWithContext(t *testing.T, handler gin.HandlerFunc, body a
 		t.Fatalf("marshal request body: %v", err)
 	}
 	recorder := httptest.NewRecorder()
-	context, _ := gin.CreateTestContext(recorder)
-	context.Request = httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(requestBody))
-	context.Request.Header.Set("Content-Type", "application/json")
+	ginContext, _ := gin.CreateTestContext(recorder)
+	ginContext.Request = httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/", bytes.NewReader(requestBody))
+	ginContext.Request.Header.Set("Content-Type", "application/json")
 	if username != "" {
-		context.Set("username", username)
+		ginContext.Set("username", username)
 	}
-	handler(context)
+	handler(ginContext)
 	return recorder
 }
 

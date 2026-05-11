@@ -226,7 +226,7 @@ func LoadClashConfigFromURLWithReporter(id int, urlStr string, subName string, d
 	}
 
 	// 创建请求并设置 User-Agent
-	req, err := http.NewRequest("GET", urlStr, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, urlStr, nil)
 	if err != nil {
 		utils.Error("URL %s，创建请求失败:  %v", urlStr, err)
 		return nil, err

@@ -84,7 +84,6 @@ var (
 	configMutex      sync.RWMutex                  // 读写锁保护配置
 	secretGetterFunc func(key string) string       // 从数据库获取敏感配置的函数
 	secretSetterFunc func(key, value string) error // 向数据库写入敏感配置的函数
-	initialized      bool
 )
 
 // SetCommandLineConfig 设置命令行配置（在 main 函数中调用）
@@ -238,7 +237,6 @@ func Load() *AppConfig {
 	handleSecretsInternal(cfg)
 
 	globalConfig = cfg
-	initialized = true
 
 	log.Printf("配置加载完成: Port=%d, ExpireDays=%d, DBPath=%s, LogPath=%s",
 		cfg.Port, cfg.ExpireDays, cfg.DBPath, cfg.LogPath)
@@ -256,7 +254,6 @@ func LoadBootstrap() *AppConfig {
 
 	cfg := buildBaseConfigInternal(configPath)
 	globalConfig = cfg
-	initialized = false
 
 	log.Printf("基础配置加载完成: Port=%d, DBPath=%s, LogPath=%s, DSN=%t",
 		cfg.Port, cfg.DBPath, cfg.LogPath, cfg.DSN != "")

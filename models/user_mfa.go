@@ -229,10 +229,6 @@ func (user *User) recoveryCodes() ([]TOTPRecoveryCode, error) {
 	return parseRecoveryCodes(user.TOTPRecoveryCodes)
 }
 
-func (user *User) pendingRecoveryCodes() ([]TOTPRecoveryCode, error) {
-	return parseRecoveryCodes(user.TOTPPendingRecoveryCodes)
-}
-
 func (user *User) currentTOTPSecret() (string, error) {
 	if strings.TrimSpace(user.TOTPSecret) == "" {
 		return "", nil

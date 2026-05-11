@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -295,7 +296,12 @@ func DecodeClash(proxys []Proxy, yamlfile string, customGroups ...[]CustomProxyG
 	var data []byte
 	var err error
 	if strings.Contains(yamlfile, "://") {
-		resp, err := http.Get(yamlfile)
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, yamlfile, nil)
+		if err != nil {
+			utils.Error("http.Get error: %v", err)
+			return nil, err
+		}
+		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			utils.Error("http.Get error: %v", err)
 			return nil, err

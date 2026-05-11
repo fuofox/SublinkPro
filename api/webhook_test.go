@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -72,20 +73,20 @@ func performWebhookJSONRequest(t *testing.T, handler gin.HandlerFunc, method str
 	}
 
 	recorder := httptest.NewRecorder()
-	context, _ := gin.CreateTestContext(recorder)
-	context.Request = httptest.NewRequest(method, path, bytes.NewReader(requestBody))
-	context.Request.Header.Set("Content-Type", "application/json")
+	ginContext, _ := gin.CreateTestContext(recorder)
+	ginContext.Request = httptest.NewRequestWithContext(context.Background(), method, path, bytes.NewReader(requestBody))
+	ginContext.Request.Header.Set("Content-Type", "application/json")
 	if strings.Contains(path, "/webhooks/") {
 		parts := strings.Split(strings.Trim(path, "/"), "/")
 		for i, part := range parts {
 			if part == "webhooks" && i+1 < len(parts) {
-				context.Params = gin.Params{{Key: "id", Value: parts[i+1]}}
+				ginContext.Params = gin.Params{{Key: "id", Value: parts[i+1]}}
 				break
 			}
 		}
 	}
 
-	handler(context)
+	handler(ginContext)
 	return recorder
 }
 

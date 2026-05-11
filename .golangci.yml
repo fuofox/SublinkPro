@@ -9,17 +9,24 @@ run:
 linters:
   default: none
   enable:
+    - bodyclose
     - errcheck
     - gosec
     - govet
     - ineffassign
+    - misspell
+    - noctx
     - staticcheck
+    - unconvert
+    - unused
+    - wastedassign
 
   settings:
     errcheck:
       check-type-assertions: true
       check-blank: false
       verbose: true
+      disable-default-exclusions: true
       exclude-functions:
         - fmt.Print
         - fmt.Printf
@@ -27,27 +34,42 @@ linters:
         - fmt.Fprint
         - fmt.Fprintf
         - fmt.Fprintln
+        - (*strings.Builder).Write
+        - (*strings.Builder).WriteByte
+        - (*strings.Builder).WriteRune
+        - (*strings.Builder).WriteString
+        - (*bytes.Buffer).Write
+        - (*bytes.Buffer).WriteByte
+        - (*bytes.Buffer).WriteRune
+        - (*bytes.Buffer).WriteString
+        - (io.Writer).Write
+        - io.Copy(*bytes.Buffer)
+        - io.Copy(os.Stdout)
+        - io/ioutil.ReadFile
     gosec:
       severity: high
       confidence: high
       excludes:
-        - G101
         - G103
-        - G104
         - G109
         - G115
         - G201
         - G202
         - G301
         - G302
-        - G304
         - G306
         - G404
     ineffassign:
       check-escaping-errors: true
     staticcheck:
       checks:
-        - SA*
+        - all
+        # 先保留少量高噪音项的排除，便于渐进收紧。
+        - '-ST1000'
+        - '-ST1003'
+        - '-ST1020'
+        - '-ST1021'
+        - '-ST1022'
       dot-import-whitelist:
         - fmt
       initialisms:
@@ -98,6 +120,13 @@ linters:
         - "400"
         - "404"
         - "500"
+    unused:
+      field-writes-are-uses: true
+      post-statements-are-reads: true
+      exported-fields-are-used: true
+      parameters-are-used: true
+      local-variables-are-used: false
+      generated-is-used: true
 formatters:
   enable:
     - gofmt

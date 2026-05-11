@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -206,17 +207,17 @@ func performClientRequest(t *testing.T, method, path string) *httptest.ResponseR
 	gin.SetMode(gin.TestMode)
 
 	recorder := httptest.NewRecorder()
-	context, _ := gin.CreateTestContext(recorder)
-	context.Request = httptest.NewRequest(method, path, nil)
-	GetClient(context)
+	ginContext, _ := gin.CreateTestContext(recorder)
+	ginContext.Request = httptest.NewRequestWithContext(context.Background(), method, path, nil)
+	GetClient(ginContext)
 	return recorder
 }
 
 func TestRenderPreparedV2raySkipsProtocolUnsupportedLinks(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	recorder := httptest.NewRecorder()
-	context, _ := gin.CreateTestContext(recorder)
-	context.Request = httptest.NewRequest(http.MethodGet, "/c/?client=v2ray", nil)
+	ginContext, _ := gin.CreateTestContext(recorder)
+	ginContext.Request = httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/c/?client=v2ray", nil)
 
 	prepared := preparedClientResponse{
 		ClientType: "v2ray",
@@ -260,7 +261,7 @@ func TestRenderPreparedV2raySkipsProtocolUnsupportedLinks(t *testing.T) {
 		},
 	}
 
-	renderPreparedV2ray(context, prepared)
+	renderPreparedV2ray(ginContext, prepared)
 	decoded := utils.Base64Decode(recorder.Body.String())
 	if strings.Contains(decoded, "mieru://") || strings.Contains(decoded, "mierus://") {
 		t.Fatalf("v2ray output leaked mieru link: %s", decoded)
@@ -410,10 +411,10 @@ func TestSubscriptionHandlersRequireRequestScopedSubscriptionName(t *testing.T) 
 		t.Run(tt.name, func(t *testing.T) {
 			gin.SetMode(gin.TestMode)
 			recorder := httptest.NewRecorder()
-			context, _ := gin.CreateTestContext(recorder)
-			context.Request = httptest.NewRequest(http.MethodGet, tt.path, nil)
+			ginContext, _ := gin.CreateTestContext(recorder)
+			ginContext.Request = httptest.NewRequestWithContext(context.Background(), http.MethodGet, tt.path, nil)
 
-			tt.handler(context)
+			tt.handler(ginContext)
 
 			if body := recorder.Body.String(); body != "订阅名为空" {
 				t.Fatalf("expected missing subscription name error, got %q", body)
@@ -430,10 +431,10 @@ func TestGetClientHeadRequestUsesRequestScopedSubscriptionName(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 	recorder := httptest.NewRecorder()
-	context, _ := gin.CreateTestContext(recorder)
-	context.Request = httptest.NewRequest(http.MethodHead, "/c/?token=head-token&client=v2ray", nil)
+	ginContext, _ := gin.CreateTestContext(recorder)
+	ginContext.Request = httptest.NewRequestWithContext(context.Background(), http.MethodHead, "/c/?token=head-token&client=v2ray", nil)
 
-	GetClient(context)
+	GetClient(ginContext)
 
 	if body := recorder.Body.String(); body != "" {
 		t.Fatalf("expected empty HEAD body, got %q", body)
@@ -441,7 +442,7 @@ func TestGetClientHeadRequestUsesRequestScopedSubscriptionName(t *testing.T) {
 	if got := recorder.Header().Get("subscription-userinfo"); got == "" {
 		t.Fatal("expected subscription-userinfo header to be set")
 	}
-	if value, ok := context.Get("subname"); !ok || value != "head-sub" {
+	if value, ok := ginContext.Get("subname"); !ok || value != "head-sub" {
 		t.Fatalf("expected request-scoped subname to be preserved, got %v ok=%v", value, ok)
 	}
 }

@@ -301,7 +301,12 @@ func MihomoSpeedTest(
 		Timeout: timeout,
 	}
 
-	resp, err := client.Get(testUrl)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, testUrl, nil)
+	if err != nil {
+		return 0, latency, 0, "", nil, fmt.Errorf("create request error: %v", err)
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return 0, latency, 0, "", nil, fmt.Errorf("http get error: %v", err)
 	}

@@ -88,7 +88,7 @@ func FetchAirportUsageInfo(airport *models.Airport) (*UsageInfo, error) {
 
 	// 优先使用 HEAD 请求，减少数据传输
 	var resp *http.Response
-	headReq, err := http.NewRequest("HEAD", airport.URL, nil)
+	headReq, err := http.NewRequestWithContext(context.Background(), http.MethodHead, airport.URL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("创建请求失败: %v", err)
 	}
@@ -106,7 +106,7 @@ func FetchAirportUsageInfo(airport *models.Airport) (*UsageInfo, error) {
 			utils.Debug("机场【%s】HEAD 请求返回状态码 %d，尝试 GET 请求", airport.Name, resp.StatusCode)
 		}
 
-		getReq, err := http.NewRequest("GET", airport.URL, nil)
+		getReq, err := http.NewRequestWithContext(context.Background(), http.MethodGet, airport.URL, nil)
 		if err != nil {
 			return nil, fmt.Errorf("创建请求失败: %v", err)
 		}

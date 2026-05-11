@@ -64,14 +64,6 @@ func assertEqualBool(t *testing.T, field string, expected, actual bool) {
 	}
 }
 
-// assertNotEmpty 验证字符串非空
-func assertNotEmpty(t *testing.T, field string, value string) {
-	t.Helper()
-	if value == "" {
-		t.Errorf("%s 不应为空", field)
-	}
-}
-
 // assertContains 验证字符串包含子串
 func assertContains(t *testing.T, field string, str, substr string) {
 	t.Helper()

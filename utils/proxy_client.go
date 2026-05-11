@@ -112,7 +112,7 @@ func FetchWithProxy(url string, useProxy bool, proxyLink string, timeout time.Du
 	}
 
 	// 创建请求
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create request error: %v", err)
 	}

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -243,7 +244,7 @@ func downloadGeoIPFile(url string, useProxy bool, proxyLink string) error {
 
 	// 发起请求
 	utils.Info("开始下载 GeoIP 数据库: %s", url)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("创建请求失败: %v", err)
 	}
@@ -453,7 +454,23 @@ func downloadGeoIPFileWithProgress(url string, useProxy bool, proxyLink string, 
 	if showConsoleProgress {
 		utils.Debug("[GeoIP] 下载地址: %s", url)
 	}
-	req, err := http.NewRequest("GET", url, nil)
+	downloadCtx, cancelDownload := context.WithCancel(context.Background())
+	defer cancelDownload()
+
+	downloadMu.Lock()
+	initialStop := stopDownload
+	downloadMu.Unlock()
+	if initialStop != nil {
+		go func() {
+			select {
+			case <-initialStop:
+				cancelDownload()
+			case <-downloadCtx.Done():
+			}
+		}()
+	}
+
+	req, err := http.NewRequestWithContext(downloadCtx, http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("创建请求失败: %v", err)
 	}
@@ -461,6 +478,9 @@ func downloadGeoIPFileWithProgress(url string, useProxy bool, proxyLink string, 
 
 	resp, err := client.Do(req)
 	if err != nil {
+		if downloadCtx.Err() != nil {
+			return fmt.Errorf("下载已被用户停止")
+		}
 		return fmt.Errorf("下载请求失败: %v", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
@@ -529,6 +549,9 @@ func downloadGeoIPFileWithProgress(url string, useProxy bool, proxyLink string, 
 			break
 		}
 		if readErr != nil {
+			if downloadCtx.Err() != nil {
+				return fmt.Errorf("下载已被用户停止")
+			}
 			return fmt.Errorf("读取响应失败: %v", readErr)
 		}
 	}

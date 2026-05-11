@@ -52,7 +52,6 @@ type Config struct {
 var (
 	globalBot *TelegramBot
 	botMutex  sync.RWMutex
-	botOnce   sync.Once
 )
 
 // GetBot 获取全局机器人实例

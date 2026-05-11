@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -94,7 +95,12 @@ func DecodeSurge(proxys, groups []string, file string) (string, error) {
 	var surge []byte
 	var err error
 	if strings.Contains(file, "://") {
-		resp, err := http.Get(file)
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, file, nil)
+		if err != nil {
+			log.Println("http.Get error", err)
+			return "", err
+		}
+		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			log.Println("http.Get error", err)
 			return "", err

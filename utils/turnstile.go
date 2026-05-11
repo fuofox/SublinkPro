@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -60,7 +61,14 @@ func VerifyTurnstile(token, secretKey, remoteIP, proxyLink string) (bool, error)
 	}
 
 	// 发送 POST 请求
-	resp, err := client.Post(TurnstileVerifyURL, "application/x-www-form-urlencoded", strings.NewReader(formData.Encode()))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, TurnstileVerifyURL, strings.NewReader(formData.Encode()))
+	if err != nil {
+		Error("创建 Turnstile 验证请求失败: %v", err)
+		return false, fmt.Errorf("创建验证请求失败: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		Error("Turnstile 验证请求失败: %v", err)
 		return false, fmt.Errorf("验证请求失败: %v", err)

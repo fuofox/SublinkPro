@@ -2,6 +2,7 @@ package notifications
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -95,7 +96,7 @@ func SendWebhook(config *WebhookConfig, payload Payload) error {
 		body = bytes.NewBufferString(bodyStr)
 	}
 
-	req, err := http.NewRequest(method, urlStr, body)
+	req, err := http.NewRequestWithContext(context.Background(), method, urlStr, body)
 	if err != nil {
 		utils.Error("创建 Webhook 请求失败: %v", err)
 		return err

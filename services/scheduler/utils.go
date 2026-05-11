@@ -2,21 +2,8 @@ package scheduler
 
 import (
 	"fmt"
-	"math"
 	"strings"
-	"time"
 )
-
-// formatDuration 格式化时长为人类可读字符串
-func formatDuration(d time.Duration) string {
-	if d < time.Minute {
-		return fmt.Sprintf("%.0f秒", d.Seconds())
-	}
-	if d < time.Hour {
-		return fmt.Sprintf("%.0f分%.0f秒", d.Minutes(), math.Mod(d.Seconds(), 60))
-	}
-	return fmt.Sprintf("%.0f时%.0f分", d.Hours(), math.Mod(d.Minutes(), 60))
-}
 
 // formatBytes 格式化字节数为人类可读格式
 func formatBytes(bytes int64) string {

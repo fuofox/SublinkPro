@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -345,7 +346,11 @@ func parseTemplateProxyGroups(configStr string) []string {
 	var templateContent string
 	if strings.Contains(clashTemplate, "://") {
 		// 远程模板，通过 HTTP 获取
-		resp, err := http.Get(clashTemplate)
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, clashTemplate, nil)
+		if err != nil {
+			return []string{}
+		}
+		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			return []string{}
 		}

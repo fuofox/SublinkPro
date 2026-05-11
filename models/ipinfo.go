@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -210,7 +211,12 @@ func fetchIPInfoFromAPI(ip string) (*IPInfo, error) {
 		Timeout: 10 * time.Second,
 	}
 
-	resp, err := client.Get(url)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("创建IP信息API请求失败: %w", err)
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("请求IP信息API失败: %w", err)
 	}
