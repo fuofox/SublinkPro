@@ -3,6 +3,7 @@ package models
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -210,6 +211,40 @@ func InitNodeCache() error {
 // UpdateNodeCache 更新节点缓存（供外部包使用）
 func UpdateNodeCache(id int, node Node) {
 	nodeCache.Set(id, node)
+}
+
+// FindNodeLinkConflict 查询除当前节点外是否存在相同原始链接的节点。
+func FindNodeLinkConflict(link string, excludeID int) (Node, bool, error) {
+	var existingNode Node
+	err := database.DB.Where("link = ? AND id != ?", link, excludeID).First(&existingNode).Error
+	if err == nil {
+		return existingNode, true, nil
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return Node{}, false, nil
+	}
+	return Node{}, false, err
+}
+
+// UpdateNodeFields 按字段更新节点并同步缓存。
+func UpdateNodeFields(id int, updates map[string]any) error {
+	if err := database.DB.Model(&Node{}).Where("id = ?", id).Updates(updates).Error; err != nil {
+		return err
+	}
+	if cachedNode, ok := nodeCache.Get(id); ok {
+		if link, ok := updates["link"].(string); ok {
+			cachedNode.Link = link
+			cachedNode.LinkHash = hashNodeLink(link)
+		}
+		if linkName, ok := updates["link_name"].(string); ok {
+			cachedNode.LinkName = linkName
+		}
+		if name, ok := updates["name"].(string); ok {
+			cachedNode.Name = name
+		}
+		nodeCache.Set(id, cachedNode)
+	}
+	return nil
 }
 
 // Add 添加节点

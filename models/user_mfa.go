@@ -243,6 +243,49 @@ func (user *User) pendingTOTPSecret() (string, error) {
 	return DecryptTOTPSecret(user.TOTPPendingSecret)
 }
 
+// CreateMFALoginChallenge 创建待验证的 MFA 登录挑战。
+func CreateMFALoginChallenge(challenge *MFALoginChallenge) error {
+	return database.DB.Create(challenge).Error
+}
+
+// FindMFALoginChallengeByChallengeID 按挑战 ID 查询 MFA 登录挑战。
+func FindMFALoginChallengeByChallengeID(challengeID string) (*MFALoginChallenge, error) {
+	var challenge MFALoginChallenge
+	if err := database.DB.Where("challenge_id = ?", challengeID).First(&challenge).Error; err != nil {
+		return nil, err
+	}
+	return &challenge, nil
+}
+
+// RecordMFAChallengeFailure 记录一次仍有效挑战的失败尝试。
+func RecordMFAChallengeFailure(challenge *MFALoginChallenge, now time.Time) error {
+	if challenge == nil {
+		return nil
+	}
+	return database.DB.Model(&MFALoginChallenge{}).
+		Where("id = ? AND consumed_at = 0 AND expires_at >= ? AND attempt_count < max_attempts", challenge.ID, now.Unix()).
+		UpdateColumn("attempt_count", gorm.Expr("attempt_count + 1")).Error
+}
+
+// ConsumeMFAChallenge 标记仍有效且未超限的 MFA 挑战为已消费。
+func ConsumeMFAChallenge(challenge *MFALoginChallenge, now time.Time) error {
+	if challenge == nil {
+		return fmt.Errorf("challenge missing")
+	}
+	consumedAt := now.Unix()
+	result := database.DB.Model(&MFALoginChallenge{}).
+		Where("id = ? AND consumed_at = 0 AND expires_at >= ? AND attempt_count < max_attempts", challenge.ID, consumedAt).
+		UpdateColumn("consumed_at", consumedAt)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected != 1 {
+		return fmt.Errorf("challenge already consumed")
+	}
+	challenge.ConsumedAt = consumedAt
+	return nil
+}
+
 func TOTPProvisioningURI(issuer, accountName, secret string) string {
 	label := url.PathEscape(fmt.Sprintf("%s:%s", issuer, accountName))
 	values := url.Values{}

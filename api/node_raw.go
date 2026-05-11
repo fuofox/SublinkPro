@@ -3,13 +3,11 @@ package api
 import (
 	"encoding/json"
 	"strconv"
-	"sublink/database"
 	"sublink/models"
 	"sublink/node/protocol"
 	"sublink/utils"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 // GetProtocolUIMeta 获取协议 UI 元数据（包含颜色、图标等）
@@ -79,14 +77,13 @@ func UpdateNodeRawInfo(c *gin.Context) {
 		return
 	}
 
-	// 检查新 Link 是否与其他节点冲突
-	var existingNode models.Node
-	err = database.DB.Where("link = ? AND id != ?", newLink, req.NodeID).First(&existingNode).Error
-	if err == nil {
-		utils.FailWithMsg(c, "已存在相同连接的节点: "+existingNode.Name)
-		return
-	} else if err != gorm.ErrRecordNotFound {
+	conflictNode, conflict, err := models.FindNodeLinkConflict(newLink, req.NodeID)
+	if err != nil {
 		utils.FailWithMsg(c, "检查节点冲突失败")
+		return
+	}
+	if conflict {
+		utils.FailWithMsg(c, "已存在相同连接的节点: "+conflictNode.Name)
 		return
 	}
 
@@ -112,8 +109,7 @@ func UpdateNodeRawInfo(c *gin.Context) {
 		}
 	}
 
-	err = database.DB.Model(&models.Node{}).Where("id = ?", req.NodeID).Updates(updates).Error
-	if err != nil {
+	if err := models.UpdateNodeFields(req.NodeID, updates); err != nil {
 		utils.FailWithMsg(c, "更新数据库失败")
 		return
 	}

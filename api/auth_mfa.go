@@ -8,14 +8,12 @@ import (
 	"fmt"
 	"strings"
 	"sublink/config"
-	"sublink/database"
 	"sublink/models"
 	"sublink/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
-	"gorm.io/gorm"
 )
 
 const mfaResetHeader = "X-MFA-Reset-Token"
@@ -109,7 +107,7 @@ func issuePendingMFAChallenge(user *models.User) (string, error) {
 		ExpiresAt:   expiresAt.Unix(),
 		MaxAttempts: models.TOTPChallengeMaxAttempts,
 	}
-	if err := database.DB.Create(challenge).Error; err != nil {
+	if err := models.CreateMFALoginChallenge(challenge); err != nil {
 		return "", err
 	}
 	claims := &pendingMFAClaims{
@@ -138,8 +136,8 @@ func parsePendingMFAChallenge(tokenString string) (*pendingMFAClaims, *models.MF
 	if !ok || !token.Valid || claims.Purpose != "mfa_login" || strings.TrimSpace(claims.ChallengeID) == "" {
 		return nil, nil, fmt.Errorf("invalid challenge token")
 	}
-	var challenge models.MFALoginChallenge
-	if err := database.DB.Where("challenge_id = ?", claims.ChallengeID).First(&challenge).Error; err != nil {
+	challenge, err := models.FindMFALoginChallengeByChallengeID(claims.ChallengeID)
+	if err != nil {
 		return nil, nil, err
 	}
 	if challenge.Purpose != "mfa_login" || challenge.Username != claims.Username {
@@ -152,34 +150,15 @@ func parsePendingMFAChallenge(tokenString string) (*pendingMFAClaims, *models.MF
 	if challenge.AttemptCount >= challenge.MaxAttempts {
 		return nil, nil, fmt.Errorf("challenge blocked")
 	}
-	return claims, &challenge, nil
+	return claims, challenge, nil
 }
 
 func recordMFAChallengeFailure(challenge *models.MFALoginChallenge) {
-	if challenge == nil {
-		return
-	}
-	_ = database.DB.Model(&models.MFALoginChallenge{}).
-		Where("id = ? AND consumed_at = 0 AND expires_at >= ? AND attempt_count < max_attempts", challenge.ID, time.Now().Unix()).
-		UpdateColumn("attempt_count", gorm.Expr("attempt_count + 1")).Error
+	_ = models.RecordMFAChallengeFailure(challenge, time.Now())
 }
 
 func consumeMFAChallenge(challenge *models.MFALoginChallenge) error {
-	if challenge == nil {
-		return fmt.Errorf("challenge missing")
-	}
-	consumedAt := time.Now().Unix()
-	result := database.DB.Model(&models.MFALoginChallenge{}).
-		Where("id = ? AND consumed_at = 0 AND expires_at >= ? AND attempt_count < max_attempts", challenge.ID, consumedAt).
-		UpdateColumn("consumed_at", consumedAt)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected != 1 {
-		return fmt.Errorf("challenge already consumed")
-	}
-	challenge.ConsumedAt = consumedAt
-	return nil
+	return models.ConsumeMFAChallenge(challenge, time.Now())
 }
 
 func requireCurrentUser(c *gin.Context) (*models.User, bool) {

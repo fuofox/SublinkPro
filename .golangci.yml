@@ -72,6 +72,14 @@ linters:
               desc: "routers 只注册路由，配置读取应放在 api 层"
             - pkg: sublink/utils
               desc: "routers 只注册路由，响应组装应放在 api 层"
+        api-no-gorm:
+          list-mode: original
+          files:
+            - "api/**/*.go"
+            - "!**/*_test.go"
+          deny:
+            - pkg: gorm.io/gorm
+              desc: "api 层不应直接依赖 GORM，查询语义应下沉到 models 或 services"
         db-drivers-only-in-database:
           list-mode: original
           files:

@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -176,6 +177,18 @@ func (a *Airport) Find() error {
 		return nil
 	}
 	return database.DB.Where("url = ? or name = ?", a.URL, a.Name).First(a).Error
+}
+
+// HasAirportIdentityConflict 检查指定名称或 URL 是否已被其他机场使用。
+func HasAirportIdentityConflict(excludeID int, name, url string) (bool, error) {
+	checkAirport := Airport{Name: name, URL: url}
+	if err := checkAirport.Find(); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return checkAirport.ID != excludeID, nil
 }
 
 // List 获取所有机场

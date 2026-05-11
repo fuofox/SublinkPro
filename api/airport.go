@@ -12,7 +12,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
-	"gorm.io/gorm"
 )
 
 // validateCron 验证5字段Cron表达式
@@ -266,13 +265,13 @@ func AirportUpdate(c *gin.Context) {
 		return
 	}
 
-	// 检查名称/URL是否与其他机场冲突
-	checkAirport := models.Airport{Name: req.Name, URL: req.URL}
-	if err := checkAirport.Find(); err == nil && checkAirport.ID != id {
-		utils.FailWithMsg(c, "机场已存在（名称或URL与其他机场重复）")
-		return
-	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	conflict, err := models.HasAirportIdentityConflict(id, req.Name, req.URL)
+	if err != nil {
 		utils.FailWithMsg(c, "更新失败")
+		return
+	}
+	if conflict {
+		utils.FailWithMsg(c, "机场已存在（名称或URL与其他机场重复）")
 		return
 	}
 
