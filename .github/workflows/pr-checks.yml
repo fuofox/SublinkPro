@@ -104,7 +104,7 @@ jobs:
       gotest: ${{ steps.backend-summary.outputs.gotest }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ needs.prepare-pr-check.outputs.checkout_repository }}
           ref: ${{ needs.prepare-pr-check.outputs.checkout_ref }}
@@ -112,7 +112,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '1.26.3'
           cache: true
@@ -124,7 +124,7 @@ jobs:
       - name: Run golangci-lint
         id: golangci
         continue-on-error: true
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v2.12.2
 
@@ -164,7 +164,7 @@ jobs:
       build: ${{ steps.frontend-summary.outputs.build }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ needs.prepare-pr-check.outputs.checkout_repository }}
           ref: ${{ needs.prepare-pr-check.outputs.checkout_ref }}
@@ -172,7 +172,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
 
@@ -186,7 +186,7 @@ jobs:
           echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ runner.os }}-yarn-${{ hashFiles('webs/yarn.lock') }}
