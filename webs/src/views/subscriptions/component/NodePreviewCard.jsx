@@ -9,6 +9,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import useResolvedColorScheme from 'hooks/useResolvedColorScheme';
 import { getProtocolPresentation } from '../../../utils/protocolPresentation';
 import { withAlpha } from '../../../utils/colorUtils';
+import { getNodeDisplayName } from './nodeDisplayName';
 
 /**
  * 获取状态颜色
@@ -60,7 +61,7 @@ export default function NodePreviewCard({ node, onClick }) {
 
   const delayDisplay = getDelayDisplay(node.DelayTime, node.DelayStatus);
   const speedDisplay = getSpeedDisplay(node.Speed, node.SpeedStatus);
-  const displayName = node.PreviewName || node.Name || node.OriginalName || '未知节点';
+  const displayName = getNodeDisplayName(node);
   const protocolInfo = getProtocolPresentation(node.Protocol);
   const protocolColor = protocolInfo.color || theme.palette.primary.main;
   const footerBackground = isDark ? withAlpha(palette.background.default, 0.92) : withAlpha(palette.background.default, 0.88);
@@ -254,7 +255,10 @@ NodePreviewCard.propTypes = {
   node: PropTypes.shape({
     OriginalName: PropTypes.string,
     PreviewName: PropTypes.string,
+    EffectiveName: PropTypes.string,
     Name: PropTypes.string,
+    LinkName: PropTypes.string,
+    NameMode: PropTypes.string,
     PreviewLink: PropTypes.string,
     Protocol: PropTypes.string,
     CountryFlag: PropTypes.string,

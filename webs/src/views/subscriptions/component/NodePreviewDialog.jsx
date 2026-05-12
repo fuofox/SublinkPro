@@ -21,6 +21,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Tooltip from '@mui/material/Tooltip';
+import { getNodeDisplayName } from './nodeDisplayName';
 
 // icons
 import CloseIcon from '@mui/icons-material/Close';
@@ -40,7 +41,6 @@ import NodePreviewDetailsPanel from './NodePreviewDetailsPanel';
 import IPDetailsDialog from 'components/IPDetailsDialog';
 import Alert from '@mui/material/Alert';
 import { AlertTitle } from '@mui/material';
-import useResolvedColorScheme from 'hooks/useResolvedColorScheme';
 
 // 每次加载的卡片数量
 const BATCH_SIZE = 100;
@@ -87,7 +87,6 @@ const formatExpireDate = (timestamp) => {
  */
 export default function NodePreviewDialog({ open, loading, data, tagColorMap, onClose }) {
   const theme = useTheme();
-  const { isDark } = useResolvedColorScheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const contentRef = useRef(null);
 
@@ -123,14 +122,16 @@ export default function NodePreviewDialog({ open, loading, data, tagColorMap, on
     if (!searchText.trim()) return data.Nodes;
 
     const lowerSearch = searchText.toLowerCase();
-    return data.Nodes.filter(
-      (node) =>
-        node.PreviewName?.toLowerCase().includes(lowerSearch) ||
+    return data.Nodes.filter((node) => {
+      const displayName = getNodeDisplayName(node);
+      return (
+        displayName.toLowerCase().includes(lowerSearch) ||
         node.OriginalName?.toLowerCase().includes(lowerSearch) ||
         node.Protocol?.toLowerCase().includes(lowerSearch) ||
         node.Group?.toLowerCase().includes(lowerSearch) ||
         node.Tags?.toLowerCase().includes(lowerSearch)
-    );
+      );
+    });
   }, [data?.Nodes, searchText]);
 
   // 当前显示的节点（切片）
@@ -487,23 +488,20 @@ export default function NodePreviewDialog({ open, loading, data, tagColorMap, on
                         </Stack>
                         {nodeStats.lowestDelayNode ? (
                           <>
-                            <Tooltip
-                              title={nodeStats.lowestDelayNode.PreviewName || nodeStats.lowestDelayNode.OriginalName}
-                              placement="top"
-                              arrow
-                            >
+                            <Tooltip title={getNodeDisplayName(nodeStats.lowestDelayNode)} placement="top" arrow>
                               <Typography
-                                variant="body2"
-                                fontWeight={600}
-                                color={isDark ? 'warning.main' : 'warning.dark'}
+                                variant="caption"
+                                color="text.primary"
                                 sx={{
+                                  fontWeight: 500,
+                                  maxWidth: '120px',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
                                   whiteSpace: 'nowrap',
                                   fontSize: isMobile ? 11 : 12
                                 }}
                               >
-                                {nodeStats.lowestDelayNode.PreviewName || nodeStats.lowestDelayNode.OriginalName}
+                                {getNodeDisplayName(nodeStats.lowestDelayNode)}
                               </Typography>
                             </Tooltip>
                             <Typography variant="caption" color="text.secondary" sx={{ fontSize: isMobile ? 10 : 11 }}>
@@ -535,11 +533,7 @@ export default function NodePreviewDialog({ open, loading, data, tagColorMap, on
                         </Stack>
                         {nodeStats.highestSpeedNode ? (
                           <>
-                            <Tooltip
-                              title={nodeStats.highestSpeedNode.PreviewName || nodeStats.highestSpeedNode.OriginalName}
-                              placement="top"
-                              arrow
-                            >
+                            <Tooltip title={getNodeDisplayName(nodeStats.highestSpeedNode)} placement="top" arrow>
                               <Typography
                                 variant="body2"
                                 fontWeight={600}
@@ -551,7 +545,7 @@ export default function NodePreviewDialog({ open, loading, data, tagColorMap, on
                                   fontSize: isMobile ? 11 : 12
                                 }}
                               >
-                                {nodeStats.highestSpeedNode.PreviewName || nodeStats.highestSpeedNode.OriginalName}
+                                {getNodeDisplayName(nodeStats.highestSpeedNode)}
                               </Typography>
                             </Tooltip>
                             <Typography variant="caption" color="text.secondary" sx={{ fontSize: isMobile ? 10 : 11 }}>

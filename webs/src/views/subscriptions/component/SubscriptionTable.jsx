@@ -16,6 +16,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { useTheme } from '@mui/material/styles';
 import SortableNodeList from './SortableNodeList';
 import { getSubscriptionNameChipSx } from './subscriptionNameChipStyles';
+import { getNodeDisplayName } from './nodeDisplayName';
 
 // icons
 import EditIcon from '@mui/icons-material/Edit';
@@ -176,7 +177,7 @@ export default function SubscriptionTable({
                             item._type === 'node' ? (
                               <Chip
                                 key={item._type + item.ID}
-                                label={item.Name}
+                                label={getNodeDisplayName(item)}
                                 size="small"
                                 variant="outlined"
                                 color="success"

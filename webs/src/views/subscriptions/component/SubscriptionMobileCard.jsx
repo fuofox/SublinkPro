@@ -14,6 +14,7 @@ import ListItemText from '@mui/material/ListItemText';
 
 import MainCard from 'ui-component/cards/MainCard';
 import SortableNodeList from './SortableNodeList';
+import { getNodeDisplayName } from './nodeDisplayName';
 
 // icons
 import EditIcon from '@mui/icons-material/Edit';
@@ -401,7 +402,7 @@ export default function SubscriptionMobileCard({
                               item._type === 'node' ? (
                                 <Chip
                                   key={item._type + item.ID}
-                                  label={item.Name}
+                                  label={getNodeDisplayName(item)}
                                   size="small"
                                   onClick={() => onCopyToClipboard(item.Link)}
                                   sx={getInfoChipSx(palette.success.main, true)}

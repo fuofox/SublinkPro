@@ -21,6 +21,7 @@ import useResolvedColorScheme from 'hooks/useResolvedColorScheme';
 import { withAlpha } from '../../../utils/colorUtils';
 import { getReadableTextTokens, getSurfaceTokens } from '../../../themes/surfaceTokens';
 import { getProtocolPresentation } from '../../../utils/protocolPresentation';
+import { getNodeDisplayName } from './nodeDisplayName';
 
 // icons
 import CloseIcon from '@mui/icons-material/Close';
@@ -62,7 +63,7 @@ export default function NodePreviewDetailsPanel({ open, node, tagColorMap, onClo
 
   if (!node) return null;
 
-  const displayName = node.PreviewName || node.Name || node.OriginalName || '未知节点';
+  const displayName = getNodeDisplayName(node);
   const protocolInfo = getProtocolPresentation(node.Protocol);
   const protocolColor = protocolInfo.color || palette.primary.main;
 

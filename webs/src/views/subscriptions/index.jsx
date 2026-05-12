@@ -44,6 +44,7 @@ import { getScripts } from 'api/scripts';
 import { getTags } from 'api/tags';
 import { buildUnlockRulesPayload, normalizeUnlockRules, setUnlockMeta } from 'views/nodes/utils';
 import { getRegisteredProtocolNames } from 'utils/protocolPresentation';
+import { getNodeDisplayName } from './component/nodeDisplayName';
 
 // components
 import {
@@ -279,7 +280,7 @@ export default function SubscriptionList() {
       nodes.forEach((node) => {
         next[node.ID] = {
           ID: node.ID,
-          Name: node.EffectiveName || node.Name || node.LinkName,
+          Name: getNodeDisplayName(node),
           Group: node.Group,
           Source: node.Source,
           LinkCountry: node.LinkCountry,
@@ -823,7 +824,7 @@ export default function SubscriptionList() {
     (sub.Nodes || []).forEach((node, idx) => {
       sortData.push({
         ID: node.ID,
-        Name: node.EffectiveName || node.Name || node.LinkName,
+        Name: getNodeDisplayName(node),
         Sort: node.Sort !== undefined ? node.Sort : idx,
         IsGroup: false
       });
