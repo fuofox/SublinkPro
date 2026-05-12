@@ -47,7 +47,6 @@ export default function SubscriptionTable({
   onDelete,
   onCopy,
   onPreview,
-  showPreview = false,
   onChainProxy,
   onStartSort,
   onConfirmSort,
@@ -98,13 +97,11 @@ export default function SubscriptionTable({
                 <TableCell>{sub.CreateDate}</TableCell>
                 <TableCell align="right">
                   <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                    {showPreview && (
-                      <Tooltip title="预览节点">
-                        <IconButton size="small" color="info" onClick={() => onPreview(sub)}>
-                          <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
+                    <Tooltip title="预览节点">
+                      <IconButton size="small" color="info" onClick={() => onPreview(sub)}>
+                        <VisibilityIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="复制本配置为新副本">
                       <IconButton size="small" color="secondary" onClick={() => onCopy(sub)}>
                         <ContentCopyIcon fontSize="small" />

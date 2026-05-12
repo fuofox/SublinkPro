@@ -41,7 +41,7 @@ SublinkPro 支持多种配置方式，优先级从高到低为：
 | `SUBLINK_ADMIN_PASSWORD_REST` | 重置管理员密码                         | 输入新管理员密码                            |
 | `SUBLINK_MFA_RESET_SECRET` | 生成受限 TOTP 应急重置令牌的密钥（仅环境变量生效） | - |
 | `SUBLINK_DEMO_MODE` | 启用演示模式（内存数据库、禁用部分敏感操作） | false |
-| `SUBLINK_FEATURE` | 试验性功能开关                         | 目前可以设置其值为`SubNodePreview`开启订阅节点预览功能 |
+| `SUBLINK_FEATURE` | 试验性功能开关                         | 预留/试验性功能开关，以逗号分隔，节点预览已转为正式功能无需配置 |
 
 ---
 

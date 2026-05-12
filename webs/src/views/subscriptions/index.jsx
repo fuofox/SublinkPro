@@ -18,7 +18,6 @@ import CategoryIcon from '@mui/icons-material/Category';
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
 import Pagination from 'components/Pagination';
-import useConfig from 'hooks/useConfig';
 import {
   getSubscriptions,
   addSubscription,
@@ -66,10 +65,6 @@ import {
 export default function SubscriptionList() {
   const theme = useTheme();
   const matchDownMd = useMediaQuery(theme.breakpoints.down('md'));
-  const { isFeatureEnabled } = useConfig();
-
-  // 功能开关：预览功能只有启用 SubNodePreview 时才显示
-  const showPreview = isFeatureEnabled('SubNodePreview');
 
   const [subscriptions, setSubscriptions] = useState([]);
   const [templates, setTemplates] = useState([]);
@@ -1032,7 +1027,6 @@ export default function SubscriptionList() {
           onDelete={handleDelete}
           onCopy={handleCopy}
           onPreview={handlePreviewSubscription}
-          showPreview={showPreview}
           onChainProxy={handleChainProxy}
           onStartSort={handleStartSort}
           onConfirmSort={handleConfirmSort}
@@ -1062,7 +1056,6 @@ export default function SubscriptionList() {
           onDelete={handleDelete}
           onCopy={handleCopy}
           onPreview={handlePreviewSubscription}
-          showPreview={showPreview}
           onChainProxy={handleChainProxy}
           onStartSort={handleStartSort}
           onConfirmSort={handleConfirmSort}
@@ -1143,7 +1136,6 @@ export default function SubscriptionList() {
         onToggleAllAvailable={handleToggleAllAvailable}
         onToggleAllSelected={handleToggleAllSelected}
         onPreview={handlePreview}
-        showPreview={showPreview}
         previewLoading={previewLoading}
       />
 

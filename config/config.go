@@ -859,7 +859,7 @@ func MigrateFromOldConfig() bool {
 }
 
 // GetEnabledFeatures 获取启用的功能列表
-// 从环境变量 SUBLINK_FEATURE 读取，格式为逗号分隔的功能名（如 SubNodePreview,FeatureA,FeatureB）
+// 从环境变量 SUBLINK_FEATURE 读取，格式为逗号分隔的功能名（如 FeatureA,FeatureB）
 func GetEnabledFeatures() []string {
 	featureStr := os.Getenv(envPrefix + "FEATURE")
 	if featureStr == "" {
