@@ -44,7 +44,7 @@ import { getScripts } from 'api/scripts';
 import { getTags } from 'api/tags';
 import { buildUnlockRulesPayload, normalizeUnlockRules, setUnlockMeta } from 'views/nodes/utils';
 import { getRegisteredProtocolNames } from 'utils/protocolPresentation';
-import { getNodeDisplayName } from './component/nodeDisplayName';
+import { getNodeDisplayName } from 'utils/nodeDisplayName';
 
 // components
 import {

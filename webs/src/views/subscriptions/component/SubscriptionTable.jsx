@@ -16,7 +16,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { useTheme } from '@mui/material/styles';
 import SortableNodeList from './SortableNodeList';
 import { getSubscriptionNameChipSx } from './subscriptionNameChipStyles';
-import { getNodeDisplayName } from './nodeDisplayName';
+import { getNodeDisplayName } from 'utils/nodeDisplayName';
 
 // icons
 import EditIcon from '@mui/icons-material/Edit';

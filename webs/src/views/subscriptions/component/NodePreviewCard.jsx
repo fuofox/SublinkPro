@@ -9,7 +9,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import useResolvedColorScheme from 'hooks/useResolvedColorScheme';
 import { getProtocolPresentation } from '../../../utils/protocolPresentation';
 import { withAlpha } from '../../../utils/colorUtils';
-import { getNodeDisplayName } from './nodeDisplayName';
+import { getNodeDisplayName } from 'utils/nodeDisplayName';
 
 /**
  * 获取状态颜色

@@ -21,7 +21,7 @@ import useResolvedColorScheme from 'hooks/useResolvedColorScheme';
 import { withAlpha } from '../../../utils/colorUtils';
 import { getReadableTextTokens, getSurfaceTokens } from '../../../themes/surfaceTokens';
 import { getProtocolPresentation } from '../../../utils/protocolPresentation';
-import { getNodeDisplayName } from './nodeDisplayName';
+import { getNodeDisplayName } from 'utils/nodeDisplayName';
 
 // icons
 import CloseIcon from '@mui/icons-material/Close';

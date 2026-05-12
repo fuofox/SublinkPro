@@ -21,7 +21,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Tooltip from '@mui/material/Tooltip';
-import { getNodeDisplayName } from './nodeDisplayName';
+import { getNodeDisplayName } from 'utils/nodeDisplayName';
 
 // icons
 import CloseIcon from '@mui/icons-material/Close';

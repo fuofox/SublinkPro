@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { getNodeDisplayName } from 'utils/nodeDisplayName';
 
 // material-ui
 import { useTheme, alpha } from '@mui/material/styles';
@@ -1916,7 +1917,7 @@ export default function DashboardDefault() {
     {
       title: '最快速度',
       value: fastestNode?.Speed ? `${fastestNode.Speed.toFixed(2)} MB/s` : '--',
-      subValue: fastestNode?.Name || '暂无数据',
+      subValue: fastestNode ? getNodeDisplayName(fastestNode) : '暂无数据',
       icon: SpeedIcon,
       gradientColors: ['#10b981', '#059669'],
       accentColor: '#10b981',
@@ -1926,7 +1927,7 @@ export default function DashboardDefault() {
     {
       title: '最低延迟',
       value: lowestDelayNode?.DelayTime ? `${lowestDelayNode.DelayTime} ms` : '--',
-      subValue: lowestDelayNode?.Name || '暂无数据',
+      subValue: lowestDelayNode ? getNodeDisplayName(lowestDelayNode) : '暂无数据',
       icon: TimerIcon,
       gradientColors: ['#f59e0b', '#d97706'],
       accentColor: '#f59e0b',

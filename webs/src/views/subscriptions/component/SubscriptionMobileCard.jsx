@@ -14,7 +14,7 @@ import ListItemText from '@mui/material/ListItemText';
 
 import MainCard from 'ui-component/cards/MainCard';
 import SortableNodeList from './SortableNodeList';
-import { getNodeDisplayName } from './nodeDisplayName';
+import { getNodeDisplayName } from 'utils/nodeDisplayName';
 
 // icons
 import EditIcon from '@mui/icons-material/Edit';
