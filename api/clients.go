@@ -171,8 +171,8 @@ func prepareClientResponse(c *gin.Context, clientType, token string) (preparedCl
 		return preparedClientResponse{}, false
 	}
 
-	// 更新访问统计
-	share.RecordAccess()
+	// 异步更新访问统计，避免订阅生成热路径等待数据库写入。
+	share.RecordAccessAsync()
 	prepared, ok := buildPreparedResponseFromSubscription(sub, clientType, share.ID)
 	if !ok {
 		return preparedClientResponse{}, false

@@ -135,3 +135,37 @@ func TestSubscriptionShareRecordAccessSetsLastAccessAt(t *testing.T) {
 		t.Fatalf("expected last_access_at to be set, got %v", stored.LastAccessAt)
 	}
 }
+
+func TestSubscriptionShareRecordAccessAsyncUpdatesEventually(t *testing.T) {
+	setupSubscriptionShareTestDB(t)
+
+	share := &SubscriptionShare{
+		SubscriptionID: 1,
+		Name:           "record-access-async",
+		ExpireType:     ExpireTypeNever,
+	}
+
+	if err := share.Add(); err != nil {
+		t.Fatalf("add share: %v", err)
+	}
+
+	share.RecordAccessAsync()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		var stored SubscriptionShare
+		if err := database.DB.First(&stored, share.ID).Error; err != nil {
+			t.Fatalf("reload share: %v", err)
+		}
+		if stored.AccessCount == 1 && stored.LastAccessAt != nil && !stored.LastAccessAt.IsZero() {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	var stored SubscriptionShare
+	if err := database.DB.First(&stored, share.ID).Error; err != nil {
+		t.Fatalf("reload share after wait: %v", err)
+	}
+	t.Fatalf("expected async access to be recorded, got count=%d last_access_at=%v", stored.AccessCount, stored.LastAccessAt)
+}
