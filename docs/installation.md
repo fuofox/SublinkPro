@@ -70,7 +70,7 @@ docker run --name sublinkpro -p 8000:8000 \
 ## 📝 一键安装/更新脚本
 
 ```bash
-wget https://raw.githubusercontent.com/ZeroDeng01/sublinkPro/refs/heads/main/install.sh && sh install.sh
+sh -c "$(wget -qO- https://raw.githubusercontent.com/ZeroDeng01/sublinkPro/refs/heads/main/install.sh)"
 ```
 
 > [!NOTE]
@@ -85,7 +85,7 @@ wget https://raw.githubusercontent.com/ZeroDeng01/sublinkPro/refs/heads/main/ins
 ## 🗑️ 一键卸载脚本
 
 ```bash
-wget https://raw.githubusercontent.com/ZeroDeng01/sublinkPro/refs/heads/main/uninstall.sh && sh uninstall.sh
+sh -c "$(wget -qO- https://raw.githubusercontent.com/ZeroDeng01/sublinkPro/refs/heads/main/uninstall.sh)"
 ```
 
 > [!NOTE]
@@ -100,7 +100,7 @@ wget https://raw.githubusercontent.com/ZeroDeng01/sublinkPro/refs/heads/main/uni
 如果您使用一键脚本安装，可以再次运行安装脚本进行更新：
 
 ```bash
-wget https://raw.githubusercontent.com/ZeroDeng01/sublinkPro/refs/heads/main/install.sh && sh install.sh
+sh -c "$(wget -qO- https://raw.githubusercontent.com/ZeroDeng01/sublinkPro/refs/heads/main/install.sh)"
 ```
 
 脚本会自动检测已安装的版本，并提供以下选项：
