@@ -55,6 +55,8 @@ SublinkPro 支持多种配置方式，优先级从高到低为：
 
 运行时等价于执行 `cloudflared tunnel --no-autoupdate run`，token 通过 `TUNNEL_TOKEN` 环境变量传递，避免出现在进程参数中。
 
+完整图文教程见 [Cloudflare Tunnel 远程访问](features/cloudflare-tunnel.md)。
+
 ---
 
 ## 命令行参数

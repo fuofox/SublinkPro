@@ -64,6 +64,7 @@
 | 🗂️ **分组排序** | 分组内机场优先级拖拽排序，控制订阅输出中的节点顺序 | [📖](docs/development.md) |
 | 📋 **订阅分享** | 多链接管理、过期策略、访问统计 | [📖](docs/features/subscription-share.md) |
 | 🌐 **Host 管理** | 域名映射、DNS 配置、CDN 优选 | [📖](docs/features/host.md) |
+| ☁️ **Cloudflare Tunnel** | 无公网 IP 暴露管理界面、页面托管 cloudflared | [📖](docs/features/cloudflare-tunnel.md) |
 | 🤖 **Telegram Bot** | 远程测速、订阅管理、系统监控 | [📖](docs/features/telegram-bot.md) |
 | 📜 **脚本系统** | 节点过滤、内容后处理、多脚本链式执行 | [📖](docs/script_support.md) |
 | 🔔 **Webhooks** | 支持 PushDeer、Bark、钉钉、方糖等多平台通知 | [📖](docs/configuration.md) |
@@ -160,6 +161,7 @@ docker-compose up -d
 | [✈️ 机场管理](docs/features/airport.md) | 订阅导入、定时更新、流量监控 |
 | [📋 订阅分享](docs/features/subscription-share.md) | 多链接管理、过期策略、访问统计 |
 | [🌐 Host 管理](docs/features/host.md) | 域名映射、DNS 配置、测速持久化 |
+| [☁️ Cloudflare Tunnel](docs/features/cloudflare-tunnel.md) | 创建 Tunnel、获取 token、配置公网访问 |
 | [🤖 Telegram 机器人](docs/features/telegram-bot.md) | 命令列表、配置指南 |
 | [📜 脚本功能](docs/script_support.md) | 节点过滤、内容后处理、函数参考 |
 | [🔐 双重验证（MFA）](docs/features/mfa.md) | TOTP 设置、恢复码、应急重置流程 |

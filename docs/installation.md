@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
 ```
 
-如需通过 Cloudflare Tunnel 暴露服务，可在启动后进入 **用户中心 -> Cloudflare Tunnel** 填写 token 并启动；启用自动连接后会随服务启动连接 Tunnel。
+如需通过 Cloudflare Tunnel 暴露服务，可在启动后进入 **用户中心 -> Cloudflare Tunnel** 填写 token 并启动；启用自动连接后会随服务启动连接 Tunnel。完整步骤见 [Cloudflare Tunnel 远程访问](features/cloudflare-tunnel.md)。
 
 官方 Docker 镜像已内置 `cloudflared`，非 Docker 部署则需要先按 Cloudflare 官方文档安装 `cloudflared`。
 
