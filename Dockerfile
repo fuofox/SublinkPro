@@ -31,9 +31,6 @@ RUN CGO_ENABLED=0 go build -tags=prod -ldflags="-s -w" -o sublinkPro
 # 3. 运行镜像
 FROM alpine:latest
 ARG TARGETARCH
-ARG CLOUDFLARED_VERSION=2026.5.0
-ARG CLOUDFLARED_SHA256_AMD64=0095e46fdc88855d801c4d304cb1f5dd4bd656116c47ab94c2ad0ae7cda1c7ec
-ARG CLOUDFLARED_SHA256_ARM64=2dc0945345677d27de3ae390a31c3b168866b48766da5f4cfd3fc473ce572303
 WORKDIR /app
 
 # ============================================
@@ -69,10 +66,7 @@ RUN apk add --no-cache tzdata ca-certificates curl && \
       arm64|aarch64) cloudflared_arch="arm64" ;; \
       *) echo "unsupported cloudflared architecture: $arch" >&2; exit 1 ;; \
     esac && \
-    checksum_var="CLOUDFLARED_SHA256_$(echo "$cloudflared_arch" | tr '[:lower:]' '[:upper:]')" && \
-    checksum="$(eval echo \"\$$checksum_var\")" && \
-    curl -fsSL "https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/cloudflared-linux-${cloudflared_arch}" -o /usr/local/bin/cloudflared && \
-    echo "${checksum}  /usr/local/bin/cloudflared" | sha256sum -c - && \
+    curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${cloudflared_arch}" -o /usr/local/bin/cloudflared && \
     chmod +x /usr/local/bin/cloudflared && \
     cloudflared version
 RUN mkdir -p /app/db /app/logs /app/template && chmod 777 /app/db /app/logs /app/template
