@@ -45,6 +45,18 @@ SublinkPro 支持多种配置方式，优先级从高到低为：
 
 ---
 
+## Cloudflare Tunnel
+
+用户中心的 **Cloudflare Tunnel** 标签页可以托管本机 `cloudflared` 进程，将当前 SublinkPro 实例连接到 Cloudflare Zero Trust 中的 remotely-managed Tunnel。
+
+- Docker 镜像已内置 `cloudflared`，通常只需要在页面中填写 Tunnel token 并点击启动。
+- 非 Docker 部署需要先安装 `cloudflared`，并确保 `cloudflared` 命令位于 `PATH` 中。
+- 页面不会回显 token 原文，状态接口只返回遮罩后的 token。
+
+运行时等价于执行 `cloudflared tunnel --no-autoupdate run`，token 通过 `TUNNEL_TOKEN` 环境变量传递，避免出现在进程参数中。
+
+---
+
 ## 命令行参数
 
 ```bash

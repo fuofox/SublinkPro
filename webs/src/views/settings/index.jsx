@@ -15,6 +15,7 @@ import TelegramIcon from '@mui/icons-material/Telegram';
 import TuneIcon from '@mui/icons-material/Tune';
 import StorageIcon from '@mui/icons-material/Storage';
 import PsychologyIcon from '@mui/icons-material/Psychology';
+import CloudQueueIcon from '@mui/icons-material/CloudQueue';
 
 // project imports
 import MainCard from 'ui-component/cards/MainCard';
@@ -24,6 +25,7 @@ import TelegramSettings from './components/TelegramSettings';
 import NodeDedupSettings from './components/NodeDedupSettings';
 import DatabaseMigrationSettings from './components/DatabaseMigrationSettings';
 import AIAssistantSettings from './components/AIAssistantSettings';
+import CloudflareTunnelSettings from './components/CloudflareTunnelSettings';
 
 // ==============================|| Tab Panel ||============================== //
 
@@ -91,7 +93,8 @@ export default function UserSettings() {
           />
           <Tab icon={<TuneIcon sx={{ mr: 1 }} />} iconPosition="start" label="节点去重" {...a11yProps(3)} />
           <Tab icon={<PsychologyIcon sx={{ mr: 1 }} />} iconPosition="start" label="AI 助手" {...a11yProps(4)} />
-          <Tab icon={<StorageIcon sx={{ mr: 1 }} />} iconPosition="start" label="数据迁移" {...a11yProps(5)} />
+          <Tab icon={<CloudQueueIcon sx={{ mr: 1 }} />} iconPosition="start" label="Cloudflare Tunnel" {...a11yProps(5)} />
+          <Tab icon={<StorageIcon sx={{ mr: 1 }} />} iconPosition="start" label="数据迁移" {...a11yProps(6)} />
         </Tabs>
       </Box>
 
@@ -116,6 +119,10 @@ export default function UserSettings() {
       </TabPanel>
 
       <TabPanel value={tabValue} index={5}>
+        <CloudflareTunnelSettings showMessage={showMessage} />
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={6}>
         <DatabaseMigrationSettings showMessage={showMessage} />
       </TabPanel>
 

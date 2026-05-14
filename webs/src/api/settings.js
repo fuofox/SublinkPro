@@ -119,6 +119,43 @@ export function testAISettings(data) {
   });
 }
 
+export function getCloudflaredStatus() {
+  return request({
+    url: '/v1/settings/cloudflared',
+    method: 'get'
+  });
+}
+
+export function updateCloudflaredConfig(data) {
+  return request({
+    url: '/v1/settings/cloudflared',
+    method: 'post',
+    data
+  });
+}
+
+export function startCloudflared(data) {
+  return request({
+    url: '/v1/settings/cloudflared/start',
+    method: 'post',
+    data
+  });
+}
+
+export function stopCloudflared() {
+  return request({
+    url: '/v1/settings/cloudflared/stop',
+    method: 'post'
+  });
+}
+
+export function removeCloudflaredToken() {
+  return request({
+    url: '/v1/settings/cloudflared/token',
+    method: 'delete'
+  });
+}
+
 // 导入 SQLite 备份/数据库
 export function importDatabaseMigration(formData) {
   return request({

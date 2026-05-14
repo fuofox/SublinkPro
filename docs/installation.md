@@ -29,6 +29,10 @@ services:
     restart: unless-stopped
 ```
 
+如需通过 Cloudflare Tunnel 暴露服务，可在启动后进入 **用户中心 -> Cloudflare Tunnel** 填写 token 并启动；启用自动连接后会随服务启动连接 Tunnel。
+
+官方 Docker 镜像已内置 `cloudflared`，非 Docker 部署则需要先按 Cloudflare 官方文档安装 `cloudflared`。
+
 启动服务：
 
 ```bash
@@ -265,4 +269,3 @@ https://zeabur.com/projects
      * 点击 "Add Domain" 添加你的域名
      * 按照提示配置 DNS CNAME 记录指向 Zeabur 提供的目标地址
    - 设置完域名后即可通过域名访问,使用默认账号 `admin` / `123456` 登录
-

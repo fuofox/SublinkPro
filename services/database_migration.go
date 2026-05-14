@@ -600,7 +600,7 @@ func checkDatabaseMigrationContext(ctx context.Context) error {
 
 func loadPreservedTargetSettings(tx *gorm.DB) (map[string]string, error) {
 	result := make(map[string]string)
-	for _, key := range []string{"jwt_secret"} {
+	for _, key := range []string{"jwt_secret", "cloudflared_enabled", "cloudflared_tunnel_token_encrypted"} {
 		var setting models.SystemSetting
 		err := tx.Where(map[string]any{"key": key}).Take(&setting).Error
 		if err == nil {
@@ -681,7 +681,7 @@ func importSystemSettings(state *databaseMigrationState) error {
 
 	filtered := make([]models.SystemSetting, 0, len(settings))
 	for _, setting := range settings {
-		if setting.Key == "jwt_secret" {
+		if shouldPreserveTargetSetting(setting.Key) {
 			continue
 		}
 		if len(setting.Key) > 191 {
@@ -701,6 +701,15 @@ func importSystemSettings(state *databaseMigrationState) error {
 	}
 	state.result.Imported["system_settings"] = len(filtered)
 	return nil
+}
+
+func shouldPreserveTargetSetting(key string) bool {
+	switch key {
+	case "jwt_secret", "cloudflared_enabled", "cloudflared_tunnel_token_encrypted":
+		return true
+	default:
+		return false
+	}
 }
 
 func importWebhooks(state *databaseMigrationState) error {

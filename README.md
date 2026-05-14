@@ -114,6 +114,9 @@ docker-compose up -d
 > [!TIP]
 > 更多安装方式（Docker、一键脚本、更新升级等）请参阅 [📦 安装部署指南](docs/installation.md)
 
+> [!TIP]
+> Docker 镜像已内置 `cloudflared`。登录后可在 `用户中心 -> Cloudflare Tunnel` 填写 token 并启动；启用自动连接后会随服务启动连接 Tunnel。
+
 ### 从 SQLite 迁移到 MySQL / PostgreSQL
 
 如果您早期使用的是 SQLite，现在希望迁移到 MySQL 或 PostgreSQL，建议按以下流程操作：
