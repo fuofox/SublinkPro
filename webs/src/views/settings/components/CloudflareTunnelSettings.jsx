@@ -12,6 +12,7 @@ import Divider from '@mui/material/Divider';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
+import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
@@ -31,6 +32,7 @@ import { getCloudflaredStatus, removeCloudflaredToken, startCloudflared, stopClo
 const defaultStatus = {
   installed: false,
   path: '',
+  version: '',
   running: false,
   enabled: false,
   hasToken: false,
@@ -39,6 +41,10 @@ const defaultStatus = {
   lastError: '',
   commandLabel: 'cloudflared tunnel --no-autoupdate run'
 };
+
+const cloudflareTunnelDocsUrl = 'https://github.com/ZeroDeng01/sublinkPro/blob/main/docs/features/cloudflare-tunnel.md';
+const cloudflaredInstallDocsUrl = `${cloudflareTunnelDocsUrl}#安装-cloudflared`;
+const cloudflareTunnelTokenDocsUrl = `${cloudflareTunnelDocsUrl}#第二步复制-tunnel-token`;
 
 export default function CloudflareTunnelSettings({ showMessage }) {
   const [status, setStatus] = useState(defaultStatus);
@@ -180,7 +186,11 @@ export default function CloudflareTunnelSettings({ showMessage }) {
                 sx={{ color: (theme) => (theme.palette.mode === 'dark' ? theme.palette.warning.main : theme.palette.warning.dark) }}
               >
                 当前运行环境未检测到 cloudflared。Docker 官方镜像会内置 cloudflared；非 Docker 部署需要先安装 cloudflared 并确保命令在 PATH
-                中可用。
+                中可用。{' '}
+                <Link href={cloudflaredInstallDocsUrl} target="_blank" rel="noreferrer" color="inherit" underline="always">
+                  查看本项目安装指南
+                </Link>
+                。
               </Alert>
             )}
 
@@ -221,6 +231,11 @@ export default function CloudflareTunnelSettings({ showMessage }) {
                     cloudflared 路径：{status.path}
                   </Typography>
                 )}
+                {status.version && (
+                  <Typography variant="body2" color="text.secondary">
+                    cloudflared 版本：{status.version}
+                  </Typography>
+                )}
               </Stack>
             </Box>
 
@@ -244,7 +259,15 @@ export default function CloudflareTunnelSettings({ showMessage }) {
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 placeholder={status.hasToken ? '留空则继续使用已保存 token' : '粘贴 cloudflared service install 命令中的 token'}
-                helperText="保存或启动时会加密存储 token"
+                helperText={
+                  <span>
+                    保存或启动时会加密存储 token。Token 来自 Cloudflare Zero Trust 的 Tunnel 安装命令最后一段；可参考{' '}
+                    <Link href={cloudflareTunnelTokenDocsUrl} target="_blank" rel="noreferrer">
+                      获取 token 指引
+                    </Link>
+                    。
+                  </span>
+                }
                 disabled={status.running}
                 slotProps={{
                   input: {

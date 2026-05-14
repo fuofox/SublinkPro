@@ -34,6 +34,7 @@ type Config struct {
 type Status struct {
 	Installed    bool   `json:"installed"`
 	Path         string `json:"path"`
+	Version      string `json:"version"`
 	Running      bool   `json:"running"`
 	Enabled      bool   `json:"enabled"`
 	HasToken     bool   `json:"hasToken"`
@@ -121,10 +122,15 @@ func AutoStart() {
 // Status 返回当前 cloudflared 状态。
 func (m *Manager) Status() Status {
 	path, installed := lookupCloudflared()
+	version := ""
+	if installed {
+		version = cloudflaredVersion(path)
+	}
 	config, err := LoadConfig()
 	status := Status{
 		Installed:    installed,
 		Path:         path,
+		Version:      version,
 		CommandLabel: "cloudflared tunnel --no-autoupdate run",
 	}
 	if err == nil {
@@ -360,6 +366,31 @@ func lookupCloudflared() (string, bool) {
 		return "", false
 	}
 	return path, true
+}
+
+func cloudflaredVersion(path string) string {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	output, err := exec.CommandContext(ctx, path, "version").CombinedOutput()
+	if err != nil {
+		return ""
+	}
+	return parseVersionOutput(string(output))
+}
+
+func parseVersionOutput(output string) string {
+	line := strings.TrimSpace(output)
+	if idx := strings.IndexAny(line, "\r\n"); idx >= 0 {
+		line = strings.TrimSpace(line[:idx])
+	}
+	fields := strings.Fields(line)
+	for i, field := range fields {
+		if strings.EqualFold(field, "version") && i+1 < len(fields) {
+			return fields[i+1]
+		}
+	}
+	return line
 }
 
 func settingValue(key string) string {

@@ -52,3 +52,23 @@ func TestRedactAssignment(t *testing.T) {
 		t.Fatalf("redacted message = %q, want %q", got, want)
 	}
 }
+
+func TestParseVersionOutput(t *testing.T) {
+	tests := []struct {
+		name   string
+		output string
+		want   string
+	}{
+		{name: "standard output", output: "cloudflared version 2026.5.0 (built 2026-05-01)\n", want: "2026.5.0"},
+		{name: "full version line fallback", output: "cloudflared dev-build\nextra", want: "cloudflared dev-build"},
+		{name: "empty", output: "  ", want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := parseVersionOutput(tt.output); got != tt.want {
+				t.Fatalf("parseVersionOutput() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

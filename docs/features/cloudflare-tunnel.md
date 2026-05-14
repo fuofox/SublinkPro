@@ -91,9 +91,9 @@ winget install --id Cloudflare.cloudflared
 cloudflared version
 ```
 
-也可以到 Cloudflare 官方下载页或 GitHub Releases 下载 Windows 安装包 / 可执行文件：
+也可以到 Cloudflare 官方下载页或 GitHub Releases 下载 Windows 可执行文件：
 
-- [Cloudflare Downloads](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
+- [Cloudflare Downloads](https://developers.cloudflare.com/tunnel/downloads/)
 - [cloudflared Releases](https://github.com/cloudflare/cloudflared/releases)
 
 如果你下载的是单个 `cloudflared.exe`，请把它所在目录加入系统 `PATH`，然后重新打开终端验证：
@@ -130,6 +130,7 @@ cloudflared version
 echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared noble main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
 sudo apt-get update
 sudo apt-get install cloudflared
+cloudflared version
 ```
 
 ### RHEL / CentOS / Rocky Linux / AlmaLinux / Fedora / Amazon Linux
@@ -209,7 +210,7 @@ cloudflared version
 > [!TIP]
 > SublinkPro 不需要你运行 `cloudflared service install`。你只需要安装 `cloudflared` 命令，然后把 Cloudflare 页面里安装命令最后一段 token 粘贴到 SublinkPro 页面。SublinkPro 会托管 `cloudflared` 进程的启动和停止。
 
-官方下载页：[Cloudflare Downloads](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)。
+官方下载页：[Cloudflare Downloads](https://developers.cloudflare.com/tunnel/downloads/)。
 
 ---
 
